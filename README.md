@@ -1,5 +1,12 @@
 # ai-brain
 
+[![CI](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/ai-brain)](https://www.npmjs.com/package/ai-brain)
+[![npm downloads](https://img.shields.io/npm/dm/ai-brain)](https://www.npmjs.com/package/ai-brain)
+[![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/jorge-moreira)
+
+> Powered by [graphify](https://github.com/anomalyco/graphify) — the knowledge graph engine that indexes your notes and exposes them to AI tools via MCP. Visit [graphify.ai](https://graphify.ai) to learn more.
+
 Your personal AI memory, connected to all your AI tools.
 
 ## Quick start
