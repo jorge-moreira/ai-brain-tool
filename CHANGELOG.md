@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.0.0...v1.1.0) (2026-04-22)
+
+
+### Features
+
+* **platforms:** add installAlwaysOn and full /brain skill content ([a2efc99](https://github.com/jorge-moreira/ai-brain-tool/commit/a2efc999cdf304b4cd24d635e3baf680374f50b5))
+
 # 1.0.0 (2026-04-22)
 
 
