@@ -1,0 +1,26 @@
+{
+  "name": "ai-brain",
+  "version": "0.1.0",
+  "description": "Your personal AI memory, connected to all your AI tools",
+  "type": "module",
+  "bin": {
+    "ai-brain": "./bin/ai-brain.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "node bin/ai-brain.js"
+  },
+  "files": ["bin/", "src/"],
+  "dependencies": {
+    "@inquirer/prompts": "^7.0.0",
+    "chalk": "^5.0.0",
+    "commander": "^12.0.0",
+    "execa": "^9.0.0",
+    "ora": "^8.0.0",
+    "semver": "^7.0.0"
+  },
+  "devDependencies": {}
+}
