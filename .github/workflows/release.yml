@@ -14,13 +14,11 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    # Only run after CI passes
-    needs: []
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
