@@ -1,18 +1,11 @@
 # ai-brain
 
-[![CI](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/%40jorge-moreiva.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreiva.dev/ai-brain-tool)
-[![npm downloads](https://img.shields.io/npm/dm/%40jorge-moreiva.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreiva.dev/ai-brain-tool)
-[![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/jorge-moreira)
-
-> Powered by [graphify](https://github.com/safishamsi/graphify) — the knowledge graph engine that indexes your notes and exposes them to AI tools via MCP. Visit [graphifylabs.ai](https://graphifylabs.ai/) to learn more.
-
 Your personal AI memory, connected to all your AI tools.
 
 ## Quick start
 
 ```bash
-npx @jorge-moreiva.dev/ai-brain-tool setup
+npx ai-brain setup
 ```
 
 Runs the interactive wizard: creates your brain folder, installs graphify, configures every detected AI tool (Claude Code, OpenCode, Cursor, Gemini CLI, GitHub Copilot CLI, OpenAI Codex CLI), and optionally sets up Obsidian.
@@ -25,19 +18,29 @@ Runs the interactive wizard: creates your brain folder, installs graphify, confi
 
 Run the interactive setup wizard.
 
-- On a fresh machine with no brain: full wizard (create folder, git, AI tools, Obsidian).
-- Run inside an existing brain folder (e.g. after `git clone`): new-machine mode — only recreates `.venv` and patches local AI tool configs.
+- **Fresh machine:** full wizard — creates the brain folder, initialises git, installs graphify, configures AI tools, sets up Obsidian.
+- **Inside an existing brain folder** (e.g. after `git clone`): new-machine mode — only recreates `.venv` and patches local AI tool configs.
+
+What the wizard configures per selected AI tool:
+- MCP server entry pointing to the brain's `graph.json`
+- `/brain` skill installed globally in the tool
+- Always-on context file written into the brain folder (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/ai-brain.mdc`, or `.github/copilot-instructions.md`)
+
+Git options asked during setup:
+- Git repository or local folder only
+- Optional remote URL
+- Whether to commit the extraction cache (saves tokens on new machines)
+- **Auto-sync** — whether `/brain update` should commit and push automatically after each graph rebuild
 
 ```bash
 npx ai-brain setup
-npx ai-brain setup --help
 ```
 
 ---
 
 ### `ai-brain update`
 
-Rebuild the knowledge graph from `raw/` and sync via git (if the brain is a git repo).
+Rebuild the knowledge graph from `raw/` using graphify. If auto-sync was enabled during setup (`.brain-config.json: { "gitSync": true }`), commits and pushes after the rebuild with a meaningful message based on what changed.
 
 ```bash
 npx ai-brain update
@@ -101,72 +104,17 @@ raw/templates/
 
 ---
 
-## Obsidian setup
-
-[Download Obsidian](https://obsidian.md/download) if you haven't already.
-
-During `ai-brain setup`, if you choose to use your brain folder as an Obsidian vault, the tool will:
-
-- Pre-configure the **Templates plugin** pointing at `raw/templates/markdown/_bundled/`
-- Copy the bundled `.obsidian/` config files (app, appearance, graph, core plugins)
-
-### Markdown templates
-
-14 note templates are bundled and ready to use immediately via Obsidian's Templates plugin (`raw/templates/markdown/_bundled/`):
-
-| Template | Purpose |
-|---|---|
-| `book-template.md` | Book notes and reviews |
-| `course-template.md` | Online course notes |
-| `daily-note-template.md` | Daily journal entries |
-| `exploration-template.md` | Open-ended research |
-| `lecture-template.md` | Lecture and talk notes |
-| `meeting-template.md` | Meeting notes |
-| `paper-template.md` | Academic paper notes |
-| `person-template.md` | People and contacts |
-| `project-template.md` | Project tracking |
-| `prompt-template.md` | AI prompt library |
-| `quote-template.md` | Quotes and highlights |
-| `term-template.md` | Glossary definitions |
-| `thought-template.md` | Ideas and thoughts |
-| `tool-template.md` | Tool and software notes |
-
-To use them: open Obsidian → Command Palette → **"Templates: Insert template"**.
-
-> To add your own, run `ai-brain templates add` — new templates go into `_custom/` and are never overwritten on upgrade.
-
-### Web Clipper templates
-
-3 web clipper templates are bundled (`raw/templates/web-clipper/_bundled/`):
-
-| Template | Purpose |
-|---|---|
-| `article-template.json` | Clip articles from the web |
-| `documentation-template.json` | Clip documentation pages |
-| `youtube-template.json` | Clip YouTube videos |
-
-These **cannot be imported automatically** — you need to import each `.json` file manually into the Obsidian Web Clipper browser extension.
-
-**Steps:**
-
-1. Install the [Obsidian Web Clipper](https://obsidian.md/clipper) browser extension
-2. Open the extension → **Settings** → **Templates**
-3. For each `.json` file in `raw/templates/web-clipper/_bundled/`, click **Import template** and select the file
-4. See the [Web Clipper templates documentation](https://obsidian.md/help/web-clipper/templates) for full details on customising or creating your own
-
-> To create a custom web clipper template, run `ai-brain templates add` and select **Web Clipper**. The starter `.json` will be placed in `raw/templates/web-clipper/_custom/`.
-
----
-
 ## Inside AI tools
 
-After setup, a `/brain` skill is installed in each configured AI tool:
+After setup, a `/brain` skill is installed in each configured AI tool. Commands run from inside the brain folder manage the brain; query commands work from any project.
 
 ```
-/brain update
-/brain status
-/brain query "what do I know about X?"
-/brain path "concept A" "concept B"
+/brain update              — rebuild graph from raw/ (+ auto-sync if enabled)
+/brain add <url>           — fetch a URL and add it to raw/
+/brain templates           — list available templates
+/brain query "<question>"  — query the knowledge graph via MCP
+/brain path "<A>" "<B>"    — find shortest path between two concepts via MCP
+/brain status              — show graph stats and tool version
 ```
 
 ---
@@ -176,7 +124,7 @@ After setup, a `/brain` skill is installed in each configured AI tool:
 After cloning your brain repo on a new machine:
 
 ```bash
-cd ai-brain
+cd your-brain
 npx ai-brain setup
 ```
 
