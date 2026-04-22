@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "0.1.0",
+  "name": "AI Brain Article",
+  "behavior": "create",
+  "noteContentFormat": "{{content}}",
+  "properties": [
+    {
+      "name": "title",
+      "value": "{{title}}",
+      "type": "text"
+    },
+    {
+      "name": "source",
+      "value": "{{url}}",
+      "type": "text"
+    },
+    {
+      "name": "author",
+      "value": "{{author|split:\", \"|wikilink|join}}",
+      "type": "multitext"
+    },
+    {
+      "name": "published",
+      "value": "{{published|date:\"YYYY-MM-DD\"}}",
+      "type": "date"
+    },
+    {
+      "name": "created",
+      "value": "{{date|date:\"YYYY-MM-DD\"}}",
+      "type": "date"
+    },
+    {
+      "name": "description",
+      "value": "{{description}}",
+      "type": "text"
+    },
+    {
+      "name": "tags",
+      "value": "article",
+      "type": "multitext"
+    }
+  ],
+  "triggers": [
+    "schema:@Article",
+    "schema:@BlogPosting",
+    "schema:@NewsArticle"
+  ],
+  "noteNameFormat": "{{date|date:\"YYYY-MM-DD\"}} {{title|safe_name}}",
+  "path": "raw/articles"
+}

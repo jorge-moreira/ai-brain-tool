@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+import { program } from 'commander'
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'))
+
+program
+  .name('ai-brain')
+  .description('Your personal AI memory, connected to all your AI tools')
+  .version(pkg.version, '-v, --version')
+
+program
+  .command('setup')
+  .description('Run the interactive setup wizard (first-time use or new machine)')
+  .action(async () => { const { run } = await import('../src/commands/setup.js'); await run() })
+
+program
+  .command('update')
+  .description('Rebuild the knowledge graph and sync via git')
+  .action(async () => { const { run } = await import('../src/commands/update.js'); await run() })
+
+program
+  .command('status')
+  .description('Show brain health: version, graph stats, MCP connection')
+  .action(async () => { const { run } = await import('../src/commands/status.js'); await run() })
+
+const templates = program
+  .command('templates')
+  .description('List all templates (bundled and custom)')
+  .action(async () => { const { run } = await import('../src/commands/templates.js'); await run() })
+
+templates
+  .command('add')
+  .description('Create a new custom template from a starter file')
+  .action(async () => { const { run } = await import('../src/commands/templates-add.js'); await run() })
+
+program
+  .command('upgrade')
+  .description('Update graphify and refresh bundled templates')
+  .action(async () => { const { run } = await import('../src/commands/upgrade.js'); await run() })
+
+program.parse()
