@@ -1,5 +1,5 @@
 {
-  "name": "ai-brain",
+  "name": "@jorge-moreiva-dev/ai-brain-tool",
   "version": "0.1.0",
   "description": "Your personal AI memory, connected to all your AI tools",
   "type": "module",
@@ -17,6 +17,9 @@
     "bin/",
     "src/"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@inquirer/prompts": "^7.0.0",
     "chalk": "^5.0.0",
