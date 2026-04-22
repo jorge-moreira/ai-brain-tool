@@ -5,9 +5,7 @@
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
     ["@semantic-release/npm", {
-      "npmPublish": true,
-      "pkgRoot": ".",
-      "npmExtraOptions": "--access public"
+      "npmPublish": true
     }],
     ["@semantic-release/github", {
       "assets": []
