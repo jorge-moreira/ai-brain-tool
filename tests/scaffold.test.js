@@ -1,10 +1,10 @@
 import { test, after } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync, existsSync, readdirSync } from 'fs'
+import { mkdtempSync, rmSync, existsSync, readdirSync, readFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
-const { createBrainFolder } = await import('../src/scaffold.js')
+const { createBrainFolder, writeBrainConfig } = await import('../src/scaffold.js')
 
 test('createBrainFolder creates expected directory structure', async () => {
   const tmp = mkdtempSync(join(tmpdir(), 'brain-test-'))
@@ -22,7 +22,6 @@ test('createBrainFolder creates expected directory structure', async () => {
   assert.ok(existsSync(join(brainPath, 'raw', 'templates', 'web-clipper', '_bundled')))
   assert.ok(existsSync(join(brainPath, 'raw', 'templates', 'web-clipper', '_custom')))
   assert.ok(existsSync(join(brainPath, 'graphify-out')))
-  assert.ok(existsSync(join(brainPath, 'AGENTS.md')))
   assert.ok(existsSync(join(brainPath, '.graphifyignore')))
 })
 
@@ -57,4 +56,24 @@ test('createBrainFolder does not create .obsidian/ when includeObsidian is false
   await createBrainFolder({ brainPath, includeObsidian: false })
 
   assert.ok(!existsSync(join(brainPath, '.obsidian')))
+})
+
+test('writeBrainConfig writes .brain-config.json with gitSync flag', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
+  after(() => rmSync(tmp, { recursive: true, force: true }))
+
+  writeBrainConfig({ brainPath: tmp, gitSync: true })
+
+  const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
+  assert.equal(cfg.gitSync, true)
+})
+
+test('writeBrainConfig gitSync=false is stored correctly', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
+  after(() => rmSync(tmp, { recursive: true, force: true }))
+
+  writeBrainConfig({ brainPath: tmp, gitSync: false })
+
+  const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
+  assert.equal(cfg.gitSync, false)
 })

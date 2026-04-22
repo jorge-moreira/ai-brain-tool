@@ -10,7 +10,8 @@ process.env.HOME = tmp
 after(() => rmSync(tmp, { recursive: true, force: true }))
 
 const { detectAll } = await import('../src/platforms/index.js')
-const { patch: patchClaude, skillContent } = await import('../src/platforms/claude.js')
+const { patch: patchClaude, installAlwaysOn: claudeAlwaysOn, skillContent } = await import('../src/platforms/claude.js')
+const { installAlwaysOn: opencodeAlwaysOn } = await import('../src/platforms/opencode.js')
 
 test('detectAll returns array of platform objects', async () => {
   const results = await detectAll()
@@ -65,4 +66,39 @@ test('claude patch is idempotent — running twice does not duplicate entries', 
   const mcp = JSON.parse(readFileSync(join(claudeDir, 'mcp.json'), 'utf8'))
   const keys = Object.keys(mcp.mcpServers)
   assert.equal(keys.filter(k => k === 'ai-brain').length, 1)
+})
+
+test('claude installAlwaysOn writes CLAUDE.md with ai-brain section', async () => {
+  const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
+  after(() => rmSync(brainPath, { recursive: true, force: true }))
+
+  await claudeAlwaysOn({ brainPath })
+
+  const claudeMd = join(brainPath, 'CLAUDE.md')
+  assert.ok(existsSync(claudeMd))
+  const content = readFileSync(claudeMd, 'utf8')
+  assert.ok(content.includes('## ai-brain'))
+})
+
+test('claude installAlwaysOn is idempotent — does not duplicate section', async () => {
+  const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
+  after(() => rmSync(brainPath, { recursive: true, force: true }))
+
+  await claudeAlwaysOn({ brainPath })
+  await claudeAlwaysOn({ brainPath })
+
+  const content = readFileSync(join(brainPath, 'CLAUDE.md'), 'utf8')
+  assert.equal(content.split('## ai-brain').length - 1, 1, 'section should appear exactly once')
+})
+
+test('opencode installAlwaysOn writes AGENTS.md with ai-brain section', async () => {
+  const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
+  after(() => rmSync(brainPath, { recursive: true, force: true }))
+
+  await opencodeAlwaysOn({ brainPath })
+
+  const agentsMd = join(brainPath, 'AGENTS.md')
+  assert.ok(existsSync(agentsMd))
+  const content = readFileSync(agentsMd, 'utf8')
+  assert.ok(content.includes('## ai-brain'))
 })
