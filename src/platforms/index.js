@@ -26,5 +26,6 @@ export async function configureSelected({ selected, brainPath, homeDir = homedir
   for (const platform of selected) {
     await platform.module.patch({ brainPath, homeDir })
     await platform.module.installSkill({ homeDir })
+    await platform.module.installAlwaysOn({ brainPath, homeDir })
   }
 }
