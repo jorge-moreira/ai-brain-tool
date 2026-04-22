@@ -11,7 +11,8 @@
   },
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "start": "node bin/ai-brain.js"
+    "start": "node bin/ai-brain.js",
+    "prepare": "husky"
   },
   "files": [
     "bin/",
@@ -25,16 +26,18 @@
     "chalk": "^5.0.0",
     "commander": "^12.0.0",
     "execa": "^9.0.0",
-    "ora": "^8.0.0",
-    "semver": "^7.0.0"
+    "ora": "^8.0.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.6",
     "@semantic-release/npm": "^12.0.2",
     "@semantic-release/release-notes-generator": "^14.1.0",
+    "husky": "^9.1.7",
     "semantic-release": "^24.2.9"
   }
 }
