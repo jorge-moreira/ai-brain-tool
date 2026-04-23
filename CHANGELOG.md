@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.3.0...v1.3.1) (2026-04-23)
+
+
+### Bug Fixes
+
+* update command ([e39f71a](https://github.com/jorge-moreira/ai-brain-tool/commit/e39f71ae3587c8dba871cb6a053f00f1318993b7))
+
 # [1.3.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.2.0...v1.3.0) (2026-04-23)
 
 
