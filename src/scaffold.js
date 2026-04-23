@@ -22,9 +22,8 @@ const dirs = [
   'graphify-out',
 ]
 
-export function writeBrainConfig({ brainPath, gitSync, wiki = false, obsidian = false, obsidianDir = null }) {
-  const config = { gitSync: !!gitSync, wiki: !!wiki, obsidian: !!obsidian }
-  if (obsidianDir) config.obsidianDir = obsidianDir
+export function writeBrainConfig({ brainPath, gitSync }) {
+  const config = { gitSync: !!gitSync }
   writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify(config, null, 2), 'utf8')
 }
 
