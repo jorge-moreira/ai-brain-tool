@@ -1,10 +1,8 @@
 <div align="center">
-  <a href="#"><img src="https://raw.githubusercontent.com/jorge-moreira/ai-brain-tool/main/docs/logo.svg" alt="ai-brain-tool"/></a>
+  <a href="#"><img src="https://raw.githubusercontent.com/jorge-moreira/ai-brain-tool/main/docs/logo.svg" height="150" alt="ai-brain-tool"/></a>
   
-  <strong>Your personal AI memory, connected to all your AI tools</strong>
-
-
-
+  <h3>Your personal AI memory, connected to all your AI tools</h3>
+  <br>
 
 [![CI](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40jorge-moreiva.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreiva.dev/ai-brain-tool)
