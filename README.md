@@ -1,8 +1,8 @@
 <p align="center">
-  <a href="#"><img src="https://raw.githubusercontent.com/jorge-moreira/ai-brain-tool/main/docs/logo.svg" width="260" height="64" alt="ai-brain-tool"/></a>
+  <a href="#"><img src="https://raw.githubusercontent.com/jorge-moreira/ai-brain-tool/main/docs/logo.svg" alt="ai-brain-tool"/></a>
   
   <strong>Your personal AI memory, connected to all your AI tools</strong>
-</p>
+
 
 
 
@@ -20,6 +20,7 @@
 
 [Quick Start](#quick-start) · [Commands](#commands) · [Template Ownership](#template-ownership) · [Inside AI Tools](#inside-ai-tools) · [New Machine Setup](#new-machine-setup) · [Options](#options) · [Credits](#credits)
 
+</p>
 
 ---
 
