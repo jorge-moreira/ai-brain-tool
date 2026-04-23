@@ -77,25 +77,3 @@ test('writeBrainConfig gitSync=false is stored correctly', () => {
   const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
   assert.equal(cfg.gitSync, false)
 })
-
-test('writeBrainConfig stores wiki and obsidian flags', () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
-  after(() => rmSync(tmp, { recursive: true, force: true }))
-
-  writeBrainConfig({ brainPath: tmp, gitSync: true, wiki: true, obsidian: true, obsidianDir: '/tmp/vault' })
-
-  const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
-  assert.equal(cfg.wiki, true)
-  assert.equal(cfg.obsidian, true)
-  assert.equal(cfg.obsidianDir, '/tmp/vault')
-})
-
-test('writeBrainConfig omits obsidianDir when not set', () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
-  after(() => rmSync(tmp, { recursive: true, force: true }))
-
-  writeBrainConfig({ brainPath: tmp, gitSync: false, wiki: false, obsidian: false })
-
-  const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
-  assert.equal('obsidianDir' in cfg, false)
-})

@@ -2,8 +2,6 @@
 
 Your personal AI memory, connected to all your AI tools.
 
-Powered by **[graphify](https://github.com/safishamsi/graphify)** — the knowledge graph engine that turns folders of notes, code, papers, and media into a queryable graph your AI tools can traverse.
-
 ## Quick start
 
 ```bash
@@ -140,9 +138,3 @@ The tool detects the existing brain, skips scaffolding, and only recreates `.ven
 --help, -h      Show help for any command
 --version, -v   Show the current tool version
 ```
-
----
-
-## Credits
-
-ai-brain is a facade over **[graphify](https://github.com/safishamsi/graphify)** by [@safishamsi](https://github.com/safishamsi). All graph extraction, clustering, wiki generation, Obsidian export, and MCP serving is done by graphify. This tool adds the setup wizard, platform integrations, and `/brain` skill layer on top.
