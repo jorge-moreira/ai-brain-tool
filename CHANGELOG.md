@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.2.0...v1.3.0) (2026-04-23)
+
+
+### Features
+
+* opt-in graphify extras (office, video) and Dependabot for pip + npm ([8ec1958](https://github.com/jorge-moreira/ai-brain-tool/commit/8ec195875ebc5500a227eed85335de3c7ba2ffcf))
+
 # [1.2.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.1.0...v1.2.0) (2026-04-23)
 
 
