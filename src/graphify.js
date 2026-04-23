@@ -72,8 +72,18 @@ export async function upgradeVenv(brainPath) {
 }
 
 // Run graphify to rebuild the graph from raw/
-export async function runGraphify(brainPath) {
-  await execa(venvPythonPath(brainPath), ['-m', 'graphify', join(brainPath, 'raw'), '--update'], {
+// Options:
+//   wiki        {boolean} — also generate graphify-out/wiki/
+//   obsidian    {boolean} — also generate Obsidian vault inside brain folder
+//   obsidianDir {string}  — write Obsidian vault to a custom directory instead
+export async function runGraphify(brainPath, { wiki = false, obsidian = false, obsidianDir = null } = {}) {
+  const args = ['-m', 'graphify', join(brainPath, 'raw'), '--update']
+  if (wiki) args.push('--wiki')
+  if (obsidian || obsidianDir) {
+    args.push('--obsidian')
+    if (obsidianDir) args.push('--obsidian-dir', obsidianDir)
+  }
+  await execa(venvPythonPath(brainPath), args, {
     stdio: 'inherit',
     cwd: brainPath,
   })
