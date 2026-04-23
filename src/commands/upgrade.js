@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import ora from 'ora'
-import { cpSync } from 'fs'
+import { cpSync, readFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { readConfig } from '../config.js'
@@ -17,9 +17,16 @@ export async function run() {
   }
   const { brainPath } = config
 
+  // Read extras from brain config so upgrade preserves the installed extras
+  let extras = []
+  try {
+    const brainCfg = JSON.parse(readFileSync(join(brainPath, '.brain-config.json'), 'utf8'))
+    extras = brainCfg.extras ?? []
+  } catch { /* ignore — use defaults */ }
+
   const spinnerVenv = ora('Upgrading graphify...').start()
-  await upgradeVenv(brainPath)
-  spinnerVenv.succeed('Graphify upgraded')
+  await upgradeVenv(brainPath, extras)
+  spinnerVenv.succeed(`Graphify upgraded${extras.length ? ` [${extras.join(', ')}]` : ''}`)
 
   const spinnerTmpl = ora('Refreshing bundled templates...').start()
 
