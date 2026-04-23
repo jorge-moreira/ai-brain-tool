@@ -28,6 +28,12 @@ export function writeBrainConfig({ brainPath, gitSync, extras = [] }) {
   writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify(config, null, 2), 'utf8')
 }
 
+export function readBrainConfig(brainPath) {
+  const configPath = join(brainPath, '.brain-config.json')
+  if (!existsSync(configPath)) return { gitSync: false, extras: [] }
+  return JSON.parse(readFileSync(configPath, 'utf8'))
+}
+
 export function writeBrainPackageJson({ brainPath }) {
   const toolPkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'))
   const brainPkg = {

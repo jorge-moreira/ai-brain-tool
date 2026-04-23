@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync, existsSync, readdirSync, readFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
-const { createBrainFolder, writeBrainConfig } = await import('../src/scaffold.js')
+const { createBrainFolder, writeBrainConfig, readBrainConfig } = await import('../src/scaffold.js')
 
 test('createBrainFolder creates expected directory structure', async () => {
   const tmp = mkdtempSync(join(tmpdir(), 'brain-test-'))
@@ -76,4 +76,24 @@ test('writeBrainConfig gitSync=false is stored correctly', () => {
 
   const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
   assert.equal(cfg.gitSync, false)
+})
+
+test('readBrainConfig returns gitSync and extras from .brain-config.json', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
+  after(() => rmSync(tmp, { recursive: true, force: true }))
+
+  writeBrainConfig({ brainPath: tmp, gitSync: true, extras: ['mcp', 'pdf'] })
+
+  const cfg = readBrainConfig(tmp)
+  assert.equal(cfg.gitSync, true)
+  assert.deepEqual(cfg.extras, ['mcp', 'pdf'])
+})
+
+test('readBrainConfig returns defaults when no config file exists', () => {
+  const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
+  after(() => rmSync(tmp, { recursive: true, force: true }))
+
+  const cfg = readBrainConfig(tmp)
+  assert.equal(cfg.gitSync, false)
+  assert.deepEqual(cfg.extras, [])
 })
