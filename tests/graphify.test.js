@@ -22,7 +22,13 @@ test('venvExists returns false for non-existent path', () => {
   assert.equal(result, false)
 })
 
-test('venvExists returns true after venv creation', async () => {
+test('venvExists returns true after venv creation', async (t) => {
+  const python = await detectPython()
+  if (!python) {
+    t.skip('Python 3.10+ not available in this environment')
+    return
+  }
+
   const tmp = mkdtempSync(join(tmpdir(), 'venv-test-'))
   const { createVenv } = await import('../src/graphify.js')
 
