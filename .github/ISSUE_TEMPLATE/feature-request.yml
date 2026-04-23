@@ -1,0 +1,42 @@
+name: 🚀 Feature Request
+description: Suggest an idea, feature, or enhancement
+labels: ["enhancement"]
+title: "[FEATURE]:"
+
+body:
+  - type: checkboxes
+    id: verified
+    attributes:
+      label: Feature hasn't been suggested before
+      options:
+        - label: I have verified this feature hasn't been suggested before
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the enhancement
+      description: What do you want to change or add? What are the benefits of implementing this?
+      placeholder: Describe your feature request in detail...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: What alternative solutions have you considered?
+      placeholder: |
+        - Option A
+        - Option B
+    validations:
+      required: false
+
+  - type: input
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this to you?
+      placeholder: low | medium | high
+    validations:
+      required: false
