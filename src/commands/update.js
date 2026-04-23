@@ -12,14 +12,14 @@ export async function run() {
     console.error(chalk.red('  No brain configured. Run: npx ai-brain setup'))
     process.exit(1)
   }
-  const { brainPath, gitSync, wiki, obsidian, obsidianDir } = config
+  const { brainPath } = config
 
   const spinner = ora('Rebuilding knowledge graph...').start()
-  await runGraphify(brainPath, { wiki, obsidian, obsidianDir })
+  await runGraphify(brainPath)
   spinner.succeed('Knowledge graph rebuilt')
 
   const isGit = existsSync(join(brainPath, '.git'))
-  if (isGit && gitSync) {
+  if (isGit) {
     const spinnerGit = ora('Syncing via git...').start()
     try {
       await execa('git', ['add', '.'], { cwd: brainPath })
