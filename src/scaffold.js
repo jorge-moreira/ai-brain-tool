@@ -23,8 +23,8 @@ const dirs = [
   'graphify-out',
 ]
 
-export function writeBrainConfig({ brainPath, gitSync }) {
-  const config = { gitSync: !!gitSync }
+export function writeBrainConfig({ brainPath, gitSync, extras = [] }) {
+  const config = { gitSync: !!gitSync, extras }
   writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify(config, null, 2), 'utf8')
 }
 

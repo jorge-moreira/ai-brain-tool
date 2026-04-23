@@ -1,7 +1,20 @@
 import { execa } from 'execa'
-import { existsSync } from 'fs'
-import { join } from 'path'
+import { existsSync, readFileSync } from 'fs'
+import { join, dirname } from 'path'
 import { platform } from 'process'
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+// Pinned version read from requirements.txt — single source of truth for Dependabot
+const REQUIREMENTS = readFileSync(join(__dirname, '..', 'requirements.txt'), 'utf8')
+const GRAPHIFYY_VERSION = REQUIREMENTS.match(/graphifyy\[mcp\]==(.+)/)[1].trim()
+
+// Build the pip package specifier from a list of extras (always includes mcp)
+function buildPkg(extras = []) {
+  const all = ['mcp', ...extras.filter(e => e !== 'mcp')]
+  return `graphifyy[${all.join(',')}]==${GRAPHIFYY_VERSION}`
+}
 
 // Returns path to the venv Python executable
 export function venvPythonPath(brainPath) {
@@ -43,12 +56,9 @@ export async function detectPackageManager() {
   }
 }
 
-// Pinned version installed on setup — bump this when a new release is vetted
-const GRAPHIFYY_VERSION = '0.4.29'
-
-// Create .venv and install graphify[mcp]
-export async function createVenv(brainPath) {
-  const pkg = `graphifyy[mcp]==${GRAPHIFYY_VERSION}`
+// Create .venv and install graphifyy with requested extras (always includes mcp)
+export async function createVenv(brainPath, extras = []) {
+  const pkg = buildPkg(extras)
   const pm = await detectPackageManager()
   if (pm === 'uv') {
     await execa('uv', ['venv', join(brainPath, '.venv')], { stdio: 'inherit' })
@@ -61,13 +71,14 @@ export async function createVenv(brainPath) {
   }
 }
 
-// Upgrade graphify[mcp] in existing .venv
-export async function upgradeVenv(brainPath) {
+// Upgrade graphifyy in existing .venv, preserving the configured extras
+export async function upgradeVenv(brainPath, extras = []) {
+  const pkg = buildPkg(extras)
   const pm = await detectPackageManager()
   if (pm === 'uv') {
-    await execa('uv', ['pip', 'install', '--upgrade', 'graphifyy[mcp]', '--python', venvPythonPath(brainPath)], { stdio: 'inherit' })
+    await execa('uv', ['pip', 'install', '--upgrade', pkg, '--python', venvPythonPath(brainPath)], { stdio: 'inherit' })
   } else {
-    await execa(venvPythonPath(brainPath), ['-m', 'pip', 'install', '--upgrade', 'graphifyy[mcp]'], { stdio: 'inherit' })
+    await execa(venvPythonPath(brainPath), ['-m', 'pip', 'install', '--upgrade', pkg], { stdio: 'inherit' })
   }
 }
 

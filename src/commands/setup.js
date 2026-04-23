@@ -2,7 +2,7 @@ import { input, select, checkbox, confirm } from '@inquirer/prompts'
 import chalk from 'chalk'
 import ora from 'ora'
 import { join, resolve } from 'path'
-import { existsSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 
 import { createBrainFolder, writeBrainConfig, writeBrainPackageJson } from '../scaffold.js'
 import { createVenv, venvExists } from '../graphify.js'
@@ -94,11 +94,21 @@ async function freshSetup() {
     })
   }
 
+  section('Graphify extras')
+
+  const extras = await checkbox({
+    message: 'Which file types do you want graphify to process? (mcp is always included)',
+    choices: [
+      { name: 'Office documents  — Word, Excel (.docx, .xlsx)', value: 'office' },
+      { name: 'Video / Audio     — mp4, mp3, YouTube URLs (requires faster-whisper + yt-dlp)', value: 'video' },
+    ],
+  })
+
   section('Scaffold')
 
   const spinnerScaffold = ora('Creating brain folder...').start()
   await createBrainFolder({ brainPath, includeObsidian: false })
-  writeBrainConfig({ brainPath, gitSync })
+  writeBrainConfig({ brainPath, gitSync, extras })
   writeBrainPackageJson({ brainPath })
   spinnerScaffold.succeed(`Created ${brainPath}`)
 
@@ -113,9 +123,9 @@ async function freshSetup() {
     spinnerGit.succeed('Initialized git repo')
   }
 
-  const spinnerVenv = ora('Installing dependencies...').start()
-  await createVenv(brainPath)
-  spinnerVenv.succeed('Installed graphify')
+  const spinnerVenv = ora('Installing graphify...').start()
+  await createVenv(brainPath, extras)
+  spinnerVenv.succeed(`Installed graphify${extras.length ? ` [${extras.join(', ')}]` : ''}`)
 
   section('AI tools')
 
@@ -159,7 +169,7 @@ async function freshSetup() {
 
   writeConfig({ brainPath })
 
-  printSummary({ brainPath, gitMode, remoteUrl, gitSync, selected, obsidianChoice })
+  printSummary({ brainPath, gitMode, remoteUrl, gitSync, extras, selected, obsidianChoice })
 }
 
 async function newMachineSetup(brainPath) {
@@ -169,9 +179,16 @@ async function newMachineSetup(brainPath) {
   await execa('npm', ['install', '--prefer-offline'], { cwd: brainPath })
   spinnerNpm.succeed('Tool installed locally')
 
+  // Read extras from existing config so the same extras are reinstalled
+  let extras = []
+  try {
+    const cfg = JSON.parse(readFileSync(join(brainPath, '.brain-config.json'), 'utf8'))
+    extras = cfg.extras ?? []
+  } catch { /* ignore — use defaults */ }
+
   const spinnerVenv = ora('Recreating Python environment...').start()
-  await createVenv(brainPath)
-  spinnerVenv.succeed('Installed graphify')
+  await createVenv(brainPath, extras)
+  spinnerVenv.succeed(`Installed graphify${extras.length ? ` [${extras.join(', ')}]` : ''}`)
 
   const platforms = await detectAll()
   const platformChoices = platforms.map(p => ({
@@ -196,7 +213,7 @@ async function newMachineSetup(brainPath) {
   console.log(chalk.dim('\n  Restart your AI tools to connect to the brain.\n'))
 }
 
-function printSummary({ brainPath, gitMode, remoteUrl, gitSync, selected, obsidianChoice }) {
+function printSummary({ brainPath, gitMode, remoteUrl, gitSync, extras, selected, obsidianChoice }) {
   const platformNames = selected.map(p => p.name).join(', ') || 'none'
   const gitStatus = gitMode === 'git'
     ? (remoteUrl ? `git  ${chalk.dim(remoteUrl)}` : 'git  (no remote yet)')
@@ -210,6 +227,7 @@ function printSummary({ brainPath, gitMode, remoteUrl, gitSync, selected, obsidi
   item('Brain', chalk.cyan(brainPath))
   item('Git', gitStatus)
   item('Auto-sync', syncStatus)
+  item('Graphify', extras.length ? `mcp, ${extras.join(', ')}` : 'mcp')
   item('Platforms', platformNames)
   if (obsidianChoice !== 'skip') item('Obsidian', 'vault configured')
 
