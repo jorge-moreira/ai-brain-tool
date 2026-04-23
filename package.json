@@ -23,7 +23,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@inquirer/prompts": "^7.0.0",
+    "@inquirer/prompts": "^8.4.2",
     "chalk": "^5.0.0",
     "commander": "^14.0.3",
     "execa": "^9.0.0",
