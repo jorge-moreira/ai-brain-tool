@@ -97,7 +97,6 @@ async function freshSetup() {
 
   const spinnerScaffold = ora('Creating brain folder...').start()
   await createBrainFolder({ brainPath, includeObsidian: false })
-  writeBrainConfig({ brainPath, gitSync })
   spinnerScaffold.succeed(`Created ${brainPath}`)
 
   if (gitMode === 'git') {
@@ -129,6 +128,13 @@ async function freshSetup() {
   await configureSelected({ selected, brainPath })
   spinnerPlatforms.succeed(`Configured ${selected.length} AI tool(s)`)
 
+  section('Graph outputs')
+
+  const wiki = await confirm({
+    message: 'Generate a browsable wiki on each update? (graphify-out/wiki/ — agent-crawlable index + one article per community)',
+    default: false,
+  })
+
   section('Obsidian')
 
   const obsidianChoice = await select({
@@ -140,20 +146,24 @@ async function freshSetup() {
     ],
   })
 
+  let obsidian = false
+  let obsidianDir = null
+
   if (obsidianChoice === 'brain') {
+    obsidian = true
     const spinnerObs = ora('Configuring Obsidian...').start()
     await createBrainFolder({ brainPath, includeObsidian: true })
     spinnerObs.succeed('Configured Obsidian vault')
   } else if (obsidianChoice === 'separate') {
-    const vaultPath = await input({ message: 'Path to your Obsidian vault:' })
-    const spinnerObs = ora('Configuring Obsidian...').start()
-    await createBrainFolder({ brainPath, includeObsidian: true })
-    spinnerObs.succeed(`Configured Obsidian (vault at ${vaultPath})`)
+    obsidian = true
+    obsidianDir = await input({ message: 'Path to your Obsidian vault (graphify will write the graph export there):' })
+    obsidianDir = resolve(obsidianDir)
   }
 
+  writeBrainConfig({ brainPath, gitSync, wiki, obsidian, obsidianDir })
   writeConfig({ brainPath })
 
-  printSummary({ brainPath, gitMode, remoteUrl, gitSync, selected, obsidianChoice })
+  printSummary({ brainPath, gitMode, remoteUrl, gitSync, wiki, selected, obsidianChoice, obsidianDir })
 }
 
 async function newMachineSetup(brainPath) {
@@ -186,7 +196,7 @@ async function newMachineSetup(brainPath) {
   console.log(chalk.dim('\n  Restart your AI tools to connect to the brain.\n'))
 }
 
-function printSummary({ brainPath, gitMode, remoteUrl, gitSync, selected, obsidianChoice }) {
+function printSummary({ brainPath, gitMode, remoteUrl, gitSync, wiki, selected, obsidianChoice, obsidianDir }) {
   const platformNames = selected.map(p => p.name).join(', ') || 'none'
   const gitStatus = gitMode === 'git'
     ? (remoteUrl ? `git  ${chalk.dim(remoteUrl)}` : 'git  (no remote yet)')
@@ -200,8 +210,9 @@ function printSummary({ brainPath, gitMode, remoteUrl, gitSync, selected, obsidi
   item('Brain', chalk.cyan(brainPath))
   item('Git', gitStatus)
   item('Auto-sync', syncStatus)
+  item('Wiki', wiki ? chalk.green('enabled') : chalk.dim('disabled'))
   item('Platforms', platformNames)
-  if (obsidianChoice !== 'skip') item('Obsidian', 'vault configured')
+  if (obsidianChoice !== 'skip') item('Obsidian', obsidianDir ? chalk.cyan(obsidianDir) : 'vault in brain folder')
 
   console.log(chalk.dim('\n  ─── Next steps ─────────────────────────────────'))
   console.log(`  1. Restart your AI tools`)
@@ -210,9 +221,13 @@ function printSummary({ brainPath, gitMode, remoteUrl, gitSync, selected, obsidi
 
   if (obsidianChoice !== 'skip') {
     console.log(chalk.dim('\n  ─── Obsidian ────────────────────────────────────'))
-    console.log(`  4. Open Obsidian → Open folder → ${chalk.cyan(brainPath)}`)
-    console.log(`  5. Enable the Templates plugin (already configured)`)
-    console.log(`  6. See ${chalk.cyan('raw/templates/web-clipper/README.md')} for web clipper setup`)
+    if (!obsidianDir) {
+      console.log(`  4. Open Obsidian → Open folder → ${chalk.cyan(brainPath)}`)
+      console.log(`  5. Enable the Templates plugin (already configured)`)
+    } else {
+      console.log(`  4. graphify will write the Obsidian graph export to ${chalk.cyan(obsidianDir)} on each update`)
+    }
+    console.log(`  See ${chalk.cyan('raw/templates/web-clipper/README.md')} for web clipper setup`)
   }
 
   console.log()
