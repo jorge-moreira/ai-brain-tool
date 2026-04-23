@@ -1,1 +1,1 @@
-graphifyy[mcp]==0.4.29
+graphifyy[mcp]==0.5.0
