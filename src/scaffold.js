@@ -1,13 +1,14 @@
 import { mkdir, writeFile, cp } from 'fs/promises'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { writeFileSync } from 'fs'
+import { writeFileSync, readFileSync, existsSync } from 'fs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TEMPLATES_DIR = join(__dirname, 'templates')
 
-const GRAPHIFYIGNORE = `# Exclude templates from graph indexing
+const GRAPHIFYIGNORE = `# Exclude templates and node_modules from graph indexing
 raw/templates/
+node_modules/
 `
 
 const dirs = [
@@ -25,6 +26,18 @@ const dirs = [
 export function writeBrainConfig({ brainPath, gitSync }) {
   const config = { gitSync: !!gitSync }
   writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify(config, null, 2), 'utf8')
+}
+
+export function writeBrainPackageJson({ brainPath }) {
+  const toolPkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'))
+  const brainPkg = {
+    private: true,
+    description: 'AI brain — do not publish',
+    dependencies: {
+      [toolPkg.name]: `^${toolPkg.version}`,
+    },
+  }
+  writeFileSync(join(brainPath, 'package.json'), JSON.stringify(brainPkg, null, 2) + '\n', 'utf8')
 }
 
 export async function createBrainFolder({ brainPath, includeObsidian }) {

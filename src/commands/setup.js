@@ -4,11 +4,12 @@ import ora from 'ora'
 import { join, resolve } from 'path'
 import { existsSync } from 'fs'
 
-import { createBrainFolder, writeBrainConfig } from '../scaffold.js'
+import { createBrainFolder, writeBrainConfig, writeBrainPackageJson } from '../scaffold.js'
 import { createVenv, venvExists } from '../graphify.js'
 import { detectAll, configureSelected } from '../platforms/index.js'
 import { initRepo, writeGitignore } from '../git.js'
 import { writeConfig } from '../config.js'
+import { execa } from 'execa'
 
 const BRAIN_MARKER = ['raw', '.graphifyignore', '.brain-config.json']
 
@@ -98,7 +99,12 @@ async function freshSetup() {
   const spinnerScaffold = ora('Creating brain folder...').start()
   await createBrainFolder({ brainPath, includeObsidian: false })
   writeBrainConfig({ brainPath, gitSync })
+  writeBrainPackageJson({ brainPath })
   spinnerScaffold.succeed(`Created ${brainPath}`)
+
+  const spinnerNpm = ora('Installing tool locally (enables npx ai-brain commands)...').start()
+  await execa('npm', ['install', '--prefer-offline'], { cwd: brainPath })
+  spinnerNpm.succeed('Tool installed locally')
 
   if (gitMode === 'git') {
     const spinnerGit = ora('Initializing git repo...').start()
@@ -159,7 +165,11 @@ async function freshSetup() {
 async function newMachineSetup(brainPath) {
   console.log(chalk.yellow('\n  Existing brain detected — running new-machine setup.\n'))
 
-  const spinnerVenv = ora('Recreating dependencies...').start()
+  const spinnerNpm = ora('Installing tool locally...').start()
+  await execa('npm', ['install', '--prefer-offline'], { cwd: brainPath })
+  spinnerNpm.succeed('Tool installed locally')
+
+  const spinnerVenv = ora('Recreating Python environment...').start()
   await createVenv(brainPath)
   spinnerVenv.succeed('Installed graphify')
 

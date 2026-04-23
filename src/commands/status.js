@@ -14,7 +14,7 @@ const pkg = JSON.parse(rf(join(__dirname, '../../package.json'), 'utf8'))
 export async function run() {
   const config = readConfig()
   if (!config) {
-    console.error(chalk.red('  No brain configured. Run: npx ai-brain setup'))
+    console.error(chalk.red('  No brain configured. Run: ai-brain setup'))
     process.exit(1)
   }
   const { brainPath } = config
@@ -48,7 +48,7 @@ export async function run() {
       console.log(`  Graph:          ${chalk.yellow('could not read graph.json')}`)
     }
   } else {
-    console.log(`  Graph:          ${chalk.dim('not built yet — run: npx ai-brain update')}`)
+    console.log(`  Graph:          ${chalk.dim('not built yet — run: ai-brain update')}`)
   }
 
   console.log()
