@@ -6,7 +6,7 @@ import { addTemplate } from '../templates-lib.js'
 export async function run() {
   const config = readConfig()
   if (!config) {
-    console.error(chalk.red('  No brain configured. Run: npx ai-brain setup'))
+    console.error(chalk.red('  No brain configured. Run: ai-brain setup'))
     process.exit(1)
   }
   const { brainPath } = config

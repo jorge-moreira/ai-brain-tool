@@ -5,7 +5,10 @@ import { execa } from 'execa'
 const GITIGNORE = (commitCache) => `# macOS
 .DS_Store
 
-# Python environment — recreated by "npx ai-brain setup" on a new machine
+# Node — tool installed locally for npx ai-brain commands
+node_modules/
+
+# Python environment — recreated by "ai-brain setup" on a new machine
 .venv/
 venv/
 __pycache__/
