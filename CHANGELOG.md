@@ -1,3 +1,16 @@
+# [1.2.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.1.0...v1.2.0) (2026-04-23)
+
+
+### Features
+
+* expose graphify --wiki and --obsidian flags, add graphify credit ([fae2e27](https://github.com/jorge-moreira/ai-brain-tool/commit/fae2e279b70b9abbb8eca198c5c867ef0c6340af))
+* install tool locally in brain folder for reliable npx ai-brain commands ([a65e2bd](https://github.com/jorge-moreira/ai-brain-tool/commit/a65e2bdfb298961eefdde4f9db77011d513c0f3e))
+
+
+### Reverts
+
+* Revert "feat: expose graphify --wiki and --obsidian flags, add graphify credit" ([cc5192f](https://github.com/jorge-moreira/ai-brain-tool/commit/cc5192ff139cae5b9c46f5ce29c0271345ca9f34))
+
 # [1.1.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.0.0...v1.1.0) (2026-04-22)
 
 
