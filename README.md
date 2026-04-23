@@ -1,11 +1,32 @@
-# ai-brain
+<p align="center">
+  <a href="#"><img src="https://raw.githubusercontent.com/jorge-moreira/ai-brain-tool/main/docs/logo.svg" width="260" height="64" alt="ai-brain-tool"/></a>
+  
+  <strong>Your personal AI memory, connected to all your AI tools</strong>
+</p>
 
-Your personal AI memory, connected to all your AI tools.
+
+
+[![CI](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/%40jorge-moreiva.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreiva.dev/ai-brain-tool)
+[![npm downloads](https://img.shields.io/npm/dm/%40jorge-moreiva.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreiva.dev/ai-brain-tool)
+[![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/jorge-moreira)
+
+
+*Powered by* **[graphify](https://github.com/safishamsi/graphify)**
+
+<a href="https://graphifylabs.ai"><img src="https://raw.githubusercontent.com/safishamsi/graphify/v4/docs/logo-text.svg" width="260" height="64" alt="Graphify"/></a>
+
+> The knowledge graph engine that turns folders of notes,  code, papers, and media into a queryable graph your AI tools can traverse.
+
+[Quick Start](#quick-start) · [Commands](#commands) · [Template Ownership](#template-ownership) · [Inside AI Tools](#inside-ai-tools) · [New Machine Setup](#new-machine-setup) · [Options](#options) · [Credits](#credits)
+
+
+---
 
 ## Quick start
 
 ```bash
-npx ai-brain setup
+npx @jorge-moreiva.dev/ai-brain-tool setup
 ```
 
 Runs the interactive wizard: creates your brain folder, installs graphify, configures every detected AI tool (Claude Code, OpenCode, Cursor, Gemini CLI, GitHub Copilot CLI, OpenAI Codex CLI), and optionally sets up Obsidian.
@@ -33,7 +54,7 @@ Git options asked during setup:
 - **Auto-sync** — whether `/brain update` should commit and push automatically after each graph rebuild
 
 ```bash
-npx ai-brain setup
+npx @jorge-moreiva.dev/ai-brain-tool setup
 ```
 
 ---
@@ -43,7 +64,7 @@ npx ai-brain setup
 Rebuild the knowledge graph from `raw/` using graphify. If auto-sync was enabled during setup (`.brain-config.json: { "gitSync": true }`), commits and pushes after the rebuild with a meaningful message based on what changed.
 
 ```bash
-npx ai-brain update
+npx @jorge-moreiva.dev/ai-brain-tool update
 ```
 
 Equivalent inside any AI tool: `/brain update`
@@ -55,7 +76,7 @@ Equivalent inside any AI tool: `/brain update`
 Show brain health: tool version, graphify version, graph node/edge count, brain path.
 
 ```bash
-npx ai-brain status
+npx @jorge-moreiva.dev/ai-brain-tool status
 ```
 
 ---
@@ -65,7 +86,7 @@ npx ai-brain status
 List all templates — both tool-managed (`_bundled/`) and yours (`_custom/`).
 
 ```bash
-npx ai-brain templates
+npx @jorge-moreiva.dev/ai-brain-tool templates
 ```
 
 ---
@@ -75,7 +96,7 @@ npx ai-brain templates
 Create a new custom template from a minimal starter file. Places the file in `raw/templates/markdown/_custom/` or `raw/templates/web-clipper/_custom/`. Files in `_custom/` are never touched by upgrades.
 
 ```bash
-npx ai-brain templates add
+npx @jorge-moreiva.dev/ai-brain-tool templates add
 ```
 
 ---
@@ -85,7 +106,7 @@ npx ai-brain templates add
 Upgrade graphify in `.venv/` and refresh all bundled templates in `_bundled/`. Your custom templates in `_custom/` are never touched.
 
 ```bash
-npx ai-brain upgrade
+npx @jorge-moreiva.dev/ai-brain-tool upgrade
 ```
 
 ---
@@ -112,6 +133,8 @@ After setup, a `/brain` skill is installed in each configured AI tool. Commands 
 /brain update              — rebuild graph from raw/ (+ auto-sync if enabled)
 /brain add <url>           — fetch a URL and add it to raw/
 /brain templates           — list available templates
+/brain wiki                — generate agent-crawlable wiki (graphify-out/wiki/)
+/brain obsidian            — generate Obsidian vault export
 /brain query "<question>"  — query the knowledge graph via MCP
 /brain path "<A>" "<B>"    — find shortest path between two concepts via MCP
 /brain status              — show graph stats and tool version
@@ -125,7 +148,7 @@ After cloning your brain repo on a new machine:
 
 ```bash
 cd your-brain
-npx ai-brain setup
+npx @jorge-moreiva.dev/ai-brain-tool setup
 ```
 
 The tool detects the existing brain, skips scaffolding, and only recreates `.venv` and patches your local AI tool configs.
@@ -138,3 +161,9 @@ The tool detects the existing brain, skips scaffolding, and only recreates `.ven
 --help, -h      Show help for any command
 --version, -v   Show the current tool version
 ```
+
+---
+
+## Credits
+
+ai-brain is a facade over **[graphify](https://github.com/safishamsi/graphify)** by [@safishamsi](https://github.com/safishamsi). All graph extraction, clustering, wiki generation, Obsidian export, and MCP serving is done by graphify. This tool adds the setup wizard, platform integrations, and `/brain` skill layer on top.

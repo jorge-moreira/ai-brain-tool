@@ -18,6 +18,8 @@ Your personal AI brain, powered by graphify.
 /brain update              — rebuild the graph from raw/ and sync via git  (run inside brain folder)
 /brain add <url>           — fetch a URL and add it to raw/                (run inside brain folder)
 /brain templates           — list available templates                       (run inside brain folder)
+/brain wiki                — generate agent-crawlable wiki from the graph  (run inside brain folder)
+/brain obsidian            — generate Obsidian vault export from the graph (run inside brain folder)
 /brain query <question>    — query the knowledge graph                     (works from anywhere)
 /brain path <a> <b>        — find shortest path between two concepts        (works from anywhere)
 /brain status              — show graph stats and tool version              (works from anywhere)
@@ -70,6 +72,33 @@ Use the \`skill\` tool to load the skill named \`graphify\`, then follow its ins
 \`\`\`bash
 npx ai-brain templates
 \`\`\`
+
+---
+
+## For /brain wiki
+
+Use the \`skill\` tool to load the skill named \`graphify\`, then follow its instructions as if the user typed:
+
+\`\`\`
+/graphify ./raw --wiki
+\`\`\`
+
+This generates \`graphify-out/wiki/\` — an agent-crawlable index and one markdown article per community.
+
+---
+
+## For /brain obsidian
+
+Check the brain config for an optional custom vault path:
+
+\`\`\`bash
+cat .brain-config.json
+\`\`\`
+
+Use the \`skill\` tool to load the skill named \`graphify\`, then follow its instructions as if the user typed:
+
+- If \`obsidianDir\` is set: \`/graphify ./raw --obsidian --obsidian-dir <obsidianDir>\`
+- Otherwise: \`/graphify ./raw --obsidian\`
 
 ---
 
