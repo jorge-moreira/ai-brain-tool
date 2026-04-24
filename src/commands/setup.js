@@ -8,7 +8,7 @@ import { createBrainFolder, writeBrainConfig, writeBrainPackageJson } from '../s
 import { createVenv, venvExists } from '../graphify.js'
 import { detectAll, configureSelected } from '../platforms/index.js'
 import { initRepo, writeGitignore } from '../git.js'
-import { writeConfig } from '../config.js'
+import { writeConfig, addBrain, ensureConfigDir } from '../config.js'
 import { execa } from 'execa'
 
 const BRAIN_MARKER = ['raw', '.graphifyignore', '.brain-config.json']
@@ -26,6 +26,9 @@ function item(label, value) {
 }
 
 export async function run() {
+  ensureConfigDir()
+  writeConfig({ brains: {} })
+
   console.log(chalk.bold.cyan('\n  ai-brain') + chalk.bold(' setup wizard'))
   console.log(chalk.dim('  Your personal AI memory, connected to all your AI tools.\n'))
 
@@ -212,7 +215,12 @@ async function newMachineSetup(brainPath) {
   await configureSelected({ selected, brainPath })
   spinnerPlatforms.succeed(`Configured ${selected.length} AI tool(s)`)
 
-  writeConfig({ brainPath })
+  const brainId = await input({
+    message: 'Brain ID (short name, e.g., work, personal):',
+    default: 'ai-brain',
+  })
+
+  addBrain(brainId, brainPath)
 
   console.log(chalk.green('\n  Setup complete!'))
   item('Brain', brainPath)

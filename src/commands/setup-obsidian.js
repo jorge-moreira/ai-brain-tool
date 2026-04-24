@@ -1,6 +1,6 @@
 import chalk from 'chalk'
-import { readConfig, readBrainConfig } from '../config.js'
-import { existsSync, readFileSync, mkdirSync, cpSync, writeFileSync } from 'fs'
+import { resolveBrain, readBrainConfig } from '../config.js'
+import { existsSync, mkdirSync, cpSync, writeFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -8,18 +8,28 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const TEMPLATES_DIR = join(__dirname, '..', 'templates')
 
 export async function run(args, options = {}) {
-  const config = readConfig()
-  if (!config || !config.brainPath) {
+  let brainId = options.brainId || args.find(a => !a.startsWith('-'))
+  let resolved
+
+  try {
+    resolved = resolveBrain(brainId)
+  } catch (e) {
+    console.error(chalk.red(`  ${e.message}`))
+    throw new Error('BRAIN_NOT_RESOLVED')
+  }
+
+  const resolvedId = resolved.id
+  const brainPath = resolved.path
+
+  if (!brainPath) {
     console.error(chalk.red('  No brain configured. Run: ai-brain setup'))
     throw new Error('NO_BRAIN_CONFIGURED')
   }
-  const { brainPath } = config
 
   const brainConfig = readBrainConfig(brainPath)
-
   const currentObsidianDir = brainConfig?.obsidianDir
 
-  console.log('\n  ai-brain setup-obsidian\n')
+  console.log(`\n  ai-brain setup-obsidian${resolvedId ? ` (${resolvedId})` : ''}\n`)
 
   if (currentObsidianDir) {
     console.log(`  Current vault:   ${currentObsidianDir}`)
