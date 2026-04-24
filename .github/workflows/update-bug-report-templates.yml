@@ -8,8 +8,8 @@ on:
       version_count:
         description: Number of versions to fetch
         required: false
-        default: "10"
-        type: string
+        default: 10
+        type: number
 
 permissions:
   contents: write
@@ -26,7 +26,8 @@ jobs:
         run: |
           VERSION_COUNT="${{ github.event.inputs.version_count }}"
           if [ -z "$VERSION_COUNT" ]; then VERSION_COUNT=10; fi
-          gh api repos/${{ github.repository }}/releases --paginate -q '.[].tag_name' | head -n $VERSION_COUNT | jq -R . | jq -s . > versions.json
+          
+          gh api repos/${{ github.repository }}/releases --paginate -q 'map(.tag_name) | .[0:10]' > versions.json
           
           yq -i '.body[] | select(.id == "version").attributes.options = load("versions.json")' .github/ISSUE_TEMPLATE/bug-report.yml
           
