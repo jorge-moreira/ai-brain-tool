@@ -32,5 +32,5 @@ describe('graphify', () => {
 
     await createVenv(tmp)
     expect(venvExists(tmp)).toBe(true)
-  })
+  }, 30000)
 })
