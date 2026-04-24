@@ -1,3 +1,21 @@
+## [1.5.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.4.1...v1.5.0) (2026-04-24)
+
+### 🚀 Features
+
+* add setup-obsidian command & fix platforms setup ([#29](https://github.com/jorge-moreira/ai-brain-tool/issues/29)) ([92187f7](https://github.com/jorge-moreira/ai-brain-tool/commit/92187f7c454691234929afd2088c7b12937ffbb1))
+
+### 🔧 Maintenance
+
+* bot permissions to write the bug-report template ([#27](https://github.com/jorge-moreira/ai-brain-tool/issues/27)) ([7e983f5](https://github.com/jorge-moreira/ai-brain-tool/commit/7e983f509b979e2f170b6c0aad539f6cece56c96))
+* **deps-dev:** bump @semantic-release/github from 11.0.6 to 12.0.6 ([#24](https://github.com/jorge-moreira/ai-brain-tool/issues/24)) ([1c7744d](https://github.com/jorge-moreira/ai-brain-tool/commit/1c7744d85d904cfe2a3a45a36b78f6dd46979ec5))
+* fix bug-report template and workflow for update it ([#28](https://github.com/jorge-moreira/ai-brain-tool/issues/28)) ([3ccce00](https://github.com/jorge-moreira/ai-brain-tool/commit/3ccce001cd7c34458d9f776890d32d3ab5ab2fc3))
+* fix templates and workflows ([5b5920e](https://github.com/jorge-moreira/ai-brain-tool/commit/5b5920e6ac9dd8ac242c74fef0f117f01adafdea))
+* update issue templates ([#25](https://github.com/jorge-moreira/ai-brain-tool/issues/25)) ([7f67462](https://github.com/jorge-moreira/ai-brain-tool/commit/7f6746217dbac6025004a061c573794d06715121))
+* update version list in bug report template ([faa4d12](https://github.com/jorge-moreira/ai-brain-tool/commit/faa4d128e9c4705afef532f32a6e31656ff1bfb9))
+* update version list in bug report template ([b675dea](https://github.com/jorge-moreira/ai-brain-tool/commit/b675dea503fa4794a1a6396cb58c8eae02837511))
+* update version list in bug report template ([ab05489](https://github.com/jorge-moreira/ai-brain-tool/commit/ab0548923f43ee9a2ff4e8a3bac63bb9604efd0d))
+* upgrade checkout action to v6 and set GH_TOKEN ([e80e073](https://github.com/jorge-moreira/ai-brain-tool/commit/e80e0738c1bddd25bc7b435ffc94a2544cc5405c))
+
 ## [1.4.1](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.4.0...v1.4.1) (2026-04-24)
 
 ### 🐞 Bug Fixes
