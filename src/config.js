@@ -24,3 +24,13 @@ export function writeConfig(data) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
   writeFileSync(path, JSON.stringify(data, null, 2), 'utf8')
 }
+
+export function readBrainConfig(brainPath) {
+  const configPath = join(brainPath, '.brain-config.json')
+  if (!existsSync(configPath)) return { gitSync: false, extras: [], obsidianDir: null }
+  try {
+    return JSON.parse(readFileSync(configPath, 'utf8'))
+  } catch {
+    return { gitSync: false, extras: [], obsidianDir: null }
+  }
+}

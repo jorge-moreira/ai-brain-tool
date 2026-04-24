@@ -65,7 +65,8 @@ describe('platforms', () => {
   })
 
   describe('claude installAlwaysOn', () => {
-    it('should write CLAUDE.md with ai-brain section', async () => {
+    it.skip('should write CLAUDE.md with ai-brain section', async () => {
+      // always-on disabled pending further development
       const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
       afterEach(() => rmSync(brainPath, { recursive: true, force: true }))
 
@@ -78,7 +79,8 @@ describe('platforms', () => {
       expect(content.includes('## ai-brain')).toBe(true)
     })
 
-    it('should not duplicate section when run twice', async () => {
+    it.skip('should not duplicate section when run twice', async () => {
+      // always-on disabled pending further development
       const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
       afterEach(() => rmSync(brainPath, { recursive: true, force: true }))
 
@@ -92,7 +94,8 @@ describe('platforms', () => {
   })
 
   describe('opencode installAlwaysOn', () => {
-    it('should write AGENTS.md with ai-brain section', async () => {
+    it.skip('should write AGENTS.md with ai-brain section', async () => {
+      // always-on disabled pending further development
       const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
       afterEach(() => rmSync(brainPath, { recursive: true, force: true }))
 

@@ -106,9 +106,11 @@ async function freshSetup() {
 
   section('Scaffold')
 
+  let obsidianDir = null
+
   const spinnerScaffold = ora('Creating brain folder...').start()
   await createBrainFolder({ brainPath, includeObsidian: false })
-  writeBrainConfig({ brainPath, gitSync, extras })
+  writeBrainConfig({ brainPath, gitSync, extras, obsidianDir })
   writeBrainPackageJson({ brainPath })
   spinnerScaffold.succeed(`Created ${brainPath}`)
 
@@ -159,15 +161,17 @@ async function freshSetup() {
   if (obsidianChoice === 'brain') {
     const spinnerObs = ora('Configuring Obsidian...').start()
     await createBrainFolder({ brainPath, includeObsidian: true })
+    obsidianDir = brainPath
     spinnerObs.succeed('Configured Obsidian vault')
   } else if (obsidianChoice === 'separate') {
     const vaultPath = await input({ message: 'Path to your Obsidian vault:' })
     const spinnerObs = ora('Configuring Obsidian...').start()
     await createBrainFolder({ brainPath, includeObsidian: true })
+    obsidianDir = vaultPath
     spinnerObs.succeed(`Configured Obsidian (vault at ${vaultPath})`)
   }
 
-  writeConfig({ brainPath })
+  writeBrainConfig({ brainPath, gitSync, extras, obsidianDir })
 
   printSummary({ brainPath, gitMode, remoteUrl, gitSync, extras, selected, obsidianChoice })
 }
@@ -181,9 +185,11 @@ async function newMachineSetup(brainPath) {
 
   // Read extras from existing config so the same extras are reinstalled
   let extras = []
+  let obsidianDir = null
   try {
     const cfg = JSON.parse(readFileSync(join(brainPath, '.brain-config.json'), 'utf8'))
     extras = cfg.extras ?? []
+    obsidianDir = cfg.obsidianDir ?? null
   } catch { /* ignore — use defaults */ }
 
   const spinnerVenv = ora('Recreating Python environment...').start()

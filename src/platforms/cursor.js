@@ -1,19 +1,17 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { join } from 'path'
+import { join, dirname } from 'path'
 import { homedir } from 'os'
+import { fileURLToPath } from 'url'
 
-// Cursor uses .cursor/rules/graphify.mdc with alwaysApply: true
-const CURSOR_RULE = `---
-description: ai-brain knowledge folder
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const BRAIN_SKILL_MARKER = `---
+description: ai-brain skill
 alwaysApply: true
 ---
 
-This is an ai-brain knowledge folder powered by graphify.
-
-- Use \`/brain query "<question>"\` or \`/brain path "<A>" "<B>"\` to query the knowledge graph
-- Use \`/brain update\` to rebuild the graph after adding notes to raw/
-- Read graphify-out/GRAPH_REPORT.md for god nodes and community structure if it exists
 `
+
+const BRAIN_SKILL_MD = BRAIN_SKILL_MARKER + readFileSync(join(__dirname, 'brain-skills.md'), 'utf8')
 
 export function detect(homeDir = homedir()) {
   return existsSync(join(homeDir, '.cursor'))
@@ -43,13 +41,12 @@ export async function patch({ brainPath, homeDir = homedir() }) {
   writeFileSync(mcpPath, JSON.stringify(config, null, 2), 'utf8')
 }
 
-export async function installSkill() {}
+export async function installSkill({ homeDir = homedir() } = {}) {
+  const skillDir = join(homeDir, '.cursor', 'rules')
+  mkdirSync(skillDir, { recursive: true })
+  writeFileSync(join(skillDir, 'brain.mdc'), BRAIN_SKILL_MARKER + BRAIN_SKILL_MD, 'utf8')
+}
 
-export async function installAlwaysOn({ brainPath } = {}) {
-  const rulesDir = join(brainPath, '.cursor', 'rules')
-  mkdirSync(rulesDir, { recursive: true })
-  const target = join(rulesDir, 'ai-brain.mdc')
-  if (!existsSync(target)) {
-    writeFileSync(target, CURSOR_RULE, 'utf8')
-  }
+export async function installAlwaysOn() {
+  // Skills are used instead of always-on rules
 }
