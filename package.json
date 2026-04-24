@@ -17,7 +17,7 @@
     "start": "node bin/ai-brain.js",
     "start:bun": "bun run bin/ai-brain.js",
     "prepare": "husky",
-    "release": "semantic-release"
+    "release": "--bun semantic-release"
   },
   "files": [
     "bin/",
