@@ -1,6 +1,6 @@
 {
   "name": "@jorge-moreiva.dev/ai-brain-tool",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Your personal AI memory, connected to all your AI tools",
   "type": "module",
   "bin": {

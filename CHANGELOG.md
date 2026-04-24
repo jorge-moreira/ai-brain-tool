@@ -1,3 +1,9 @@
+## [1.4.1](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.4.0...v1.4.1) (2026-04-24)
+
+### 🐞 Bug Fixes
+
+* add missing requirements.txt file to bundled package ([#23](https://github.com/jorge-moreira/ai-brain-tool/issues/23)) ([40dab91](https://github.com/jorge-moreira/ai-brain-tool/commit/40dab91ec62658558c7485852da6d435999d56e4))
+
 ## [1.4.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.3.1...v1.4.0) (2026-04-24)
 
 ### 🚀 Features
