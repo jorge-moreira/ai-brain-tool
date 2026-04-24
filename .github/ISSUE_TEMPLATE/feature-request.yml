@@ -32,11 +32,14 @@ body:
     validations:
       required: false
 
-  - type: input
+  - type: dropdown
     id: priority
     attributes:
       label: Priority
       description: How important is this to you?
-      placeholder: low | medium | high
+      options:
+        - low
+        - medium
+        - high
     validations:
       required: false
