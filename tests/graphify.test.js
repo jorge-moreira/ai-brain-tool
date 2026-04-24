@@ -20,7 +20,8 @@ describe('graphify', () => {
     expect(venvExists('/tmp/definitely-does-not-exist-brain')).toBe(false)
   })
 
-  it('should return true after venv creation', async () => {
+  // TODO: migrate to integration tests - requires network access for venv creation
+  it.skip('should return true after venv creation', async () => {
     const { detectPython, venvExists, createVenv } = await import('../src/graphify.js')
     const python = await detectPython()
     if (!python) {
