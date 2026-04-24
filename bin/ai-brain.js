@@ -42,4 +42,13 @@ program
   .description('Update graphify and refresh bundled templates')
   .action(async () => { const { run } = await import('../src/commands/upgrade.js'); await run() })
 
+program
+  .command('setup-obsidian')
+  .description('Configure or update the Obsidian vault path')
+  .option('-u, --update', 'update existing vault configuration')
+  .action(async (options) => {
+    const { run } = await import('../src/commands/setup-obsidian.js')
+    await run(options.update ? ['--update'] : [])
+  })
+
 program.parse()

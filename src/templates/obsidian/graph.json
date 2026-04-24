@@ -1,6 +1,6 @@
 {
   "collapse-filter": true,
-  "search": "path:graphify-out/wiki  -path:graphify-out/wiki/graph ",
+  "search": "path:graphify-out/obsidian  -path:graphify-out/obsidian/graph ",
   "showTags": false,
   "showAttachments": false,
   "hideUnresolved": false,

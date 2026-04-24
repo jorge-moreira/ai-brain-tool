@@ -1,20 +1,10 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { join } from 'path'
+import { join, dirname } from 'path'
 import { homedir } from 'os'
+import { fileURLToPath } from 'url'
 
-// Codex reads AGENTS.md — same file as OpenCode
-const ALWAYS_ON_SECTION = `## ai-brain
-
-This is an ai-brain knowledge folder powered by graphify.
-
-Rules:
-- Use \`/brain query "<question>"\` or \`/brain path "<A>" "<B>"\` to query the knowledge graph
-- Use \`/brain update\` to rebuild the graph after adding notes to raw/
-- Use \`/brain add <url>\` to fetch and add a URL to the brain
-- Read graphify-out/GRAPH_REPORT.md for god nodes and community structure if it exists
-`
-
-const ALWAYS_ON_MARKER = '## ai-brain'
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const BRAIN_SKILL_MD = readFileSync(join(__dirname, 'brain-skills.md'), 'utf8')
 
 export function detect(homeDir = homedir()) {
   return existsSync(join(homeDir, '.codex'))
@@ -40,12 +30,12 @@ export async function patch({ brainPath, homeDir = homedir() }) {
   writeFileSync(configPath, cleaned + entry, 'utf8')
 }
 
-export async function installSkill() {}
+export async function installSkill({ homeDir = homedir() } = {}) {
+  const skillDir = join(homeDir, '.codex', 'skills', 'brain')
+  mkdirSync(skillDir, { recursive: true })
+  writeFileSync(join(skillDir, 'SKILL.md'), BRAIN_SKILL_MD, 'utf8')
+}
 
-export async function installAlwaysOn({ brainPath } = {}) {
-  const target = join(brainPath, 'AGENTS.md')
-  let content = existsSync(target) ? readFileSync(target, 'utf8') : ''
-  if (content.includes(ALWAYS_ON_MARKER)) return
-  const separator = content.trim() ? '\n\n' : ''
-  writeFileSync(target, content.trimEnd() + separator + ALWAYS_ON_SECTION, 'utf8')
+export async function installAlwaysOn() {
+  // Skills are used instead of always-on rules
 }
