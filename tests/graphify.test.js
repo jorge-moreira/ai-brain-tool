@@ -1,4 +1,4 @@
-import { describe, it, expect, after } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { mkdtempSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
@@ -28,7 +28,7 @@ describe('graphify', () => {
     }
 
     const tmp = mkdtempSync(join(tmpdir(), 'venv-test-'))
-    after(() => rmSync(tmp, { recursive: true, force: true }))
+    afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
     await createVenv(tmp)
     expect(venvExists(tmp)).toBe(true)
