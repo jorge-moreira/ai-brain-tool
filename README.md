@@ -163,6 +163,12 @@ The tool detects the existing brain, skips scaffolding, and only recreates `.ven
 
 ---
 
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions, testing, and contribution guidelines.
+
+---
+
 ## Credits
 
 ai-brain-tool is a facade over **[graphify](https://github.com/safishamsi/graphify)** by [@safishamsi](https://github.com/safishamsi). All graph extraction, clustering, wiki generation, Obsidian export, and MCP serving is done by graphify. This tool adds the setup wizard, platform integrations, and `/brain` skill layer on top.

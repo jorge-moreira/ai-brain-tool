@@ -1,104 +1,108 @@
-import { test, after } from 'node:test'
-import assert from 'node:assert/strict'
+import { describe, it, expect, afterEach } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
-const tmp = mkdtempSync(join(tmpdir(), 'platform-test-'))
-process.env.HOME = tmp
+describe('platforms', () => {
+  describe('detectAll', () => {
+    it('should return an array of platform objects with name and detected properties', async () => {
+      const { detectAll } = await import('../src/platforms/index.js')
+      const results = await detectAll()
+      expect(Array.isArray(results)).toBe(true)
+      expect(results.every(r => typeof r.name === 'string')).toBe(true)
+      expect(results.every(r => typeof r.detected === 'boolean')).toBe(true)
+    })
+  })
 
-after(() => rmSync(tmp, { recursive: true, force: true }))
+  describe('claude patch', () => {
+    it('should create mcp.json with ai-brain entry', async () => {
+      const fakeHome = mkdtempSync(join(tmpdir(), 'claude-test-'))
+      const claudeDir = join(fakeHome, '.claude')
+      mkdirSync(claudeDir, { recursive: true })
+      afterEach(() => rmSync(fakeHome, { recursive: true, force: true }))
 
-const { detectAll } = await import('../src/platforms/index.js')
-const { patch: patchClaude, installAlwaysOn: claudeAlwaysOn, skillContent } = await import('../src/platforms/claude.js')
-const { installAlwaysOn: opencodeAlwaysOn } = await import('../src/platforms/opencode.js')
+      const { patch } = await import('../src/platforms/claude.js')
+      await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
 
-test('detectAll returns array of platform objects', async () => {
-  const results = await detectAll()
-  assert.ok(Array.isArray(results))
-  assert.ok(results.every(r => typeof r.name === 'string'))
-  assert.ok(results.every(r => typeof r.detected === 'boolean'))
-})
+      const mcpPath = join(claudeDir, 'mcp.json')
+      expect(existsSync(mcpPath)).toBe(true)
+      const mcp = JSON.parse(readFileSync(mcpPath, 'utf8'))
+      expect(mcp.mcpServers['ai-brain']).toBeDefined()
+      expect(mcp.mcpServers['ai-brain'].type).toBe('stdio')
+    })
 
-test('claude patch creates mcp.json with ai-brain entry', async () => {
-  const fakeHome = mkdtempSync(join(tmpdir(), 'claude-test-'))
-  const claudeDir = join(fakeHome, '.claude')
-  mkdirSync(claudeDir, { recursive: true })
+    it('should merge with existing mcp.json entries', async () => {
+      const fakeHome = mkdtempSync(join(tmpdir(), 'claude-test-'))
+      const claudeDir = join(fakeHome, '.claude')
+      mkdirSync(claudeDir, { recursive: true })
+      writeFileSync(join(claudeDir, 'mcp.json'), JSON.stringify({
+        mcpServers: { 'other-server': { type: 'stdio', command: 'other' } }
+      }), 'utf8')
+      afterEach(() => rmSync(fakeHome, { recursive: true, force: true }))
 
-  after(() => rmSync(fakeHome, { recursive: true, force: true }))
+      const { patch } = await import('../src/platforms/claude.js')
+      await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
 
-  await patchClaude({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
+      const mcp = JSON.parse(readFileSync(join(claudeDir, 'mcp.json'), 'utf8'))
+      expect(mcp.mcpServers['other-server']).toBeDefined()
+      expect(mcp.mcpServers['ai-brain']).toBeDefined()
+    })
 
-  const mcpPath = join(claudeDir, 'mcp.json')
-  assert.ok(existsSync(mcpPath))
-  const mcp = JSON.parse(readFileSync(mcpPath, 'utf8'))
-  assert.ok(mcp.mcpServers['ai-brain'])
-  assert.equal(mcp.mcpServers['ai-brain'].type, 'stdio')
-})
+    it('should not duplicate entries when run twice', async () => {
+      const fakeHome = mkdtempSync(join(tmpdir(), 'claude-test-'))
+      const claudeDir = join(fakeHome, '.claude')
+      mkdirSync(claudeDir, { recursive: true })
+      afterEach(() => rmSync(fakeHome, { recursive: true, force: true }))
 
-test('claude patch merges with existing mcp.json entries', async () => {
-  const fakeHome = mkdtempSync(join(tmpdir(), 'claude-test-'))
-  const claudeDir = join(fakeHome, '.claude')
-  mkdirSync(claudeDir, { recursive: true })
-  writeFileSync(join(claudeDir, 'mcp.json'), JSON.stringify({
-    mcpServers: { 'other-server': { type: 'stdio', command: 'other' } }
-  }), 'utf8')
+      const { patch } = await import('../src/platforms/claude.js')
+      await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
+      await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
 
-  after(() => rmSync(fakeHome, { recursive: true, force: true }))
+      const mcp = JSON.parse(readFileSync(join(claudeDir, 'mcp.json'), 'utf8'))
+      const aiBrainCount = Object.keys(mcp.mcpServers).filter(k => k === 'ai-brain').length
+      expect(aiBrainCount).toBe(1)
+    })
+  })
 
-  await patchClaude({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
+  describe('claude installAlwaysOn', () => {
+    it('should write CLAUDE.md with ai-brain section', async () => {
+      const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
+      afterEach(() => rmSync(brainPath, { recursive: true, force: true }))
 
-  const mcp = JSON.parse(readFileSync(join(claudeDir, 'mcp.json'), 'utf8'))
-  assert.ok(mcp.mcpServers['other-server'])  // existing entry preserved
-  assert.ok(mcp.mcpServers['ai-brain'])       // new entry added
-})
+      const { installAlwaysOn } = await import('../src/platforms/claude.js')
+      await installAlwaysOn({ brainPath })
 
-test('claude patch is idempotent — running twice does not duplicate entries', async () => {
-  const fakeHome = mkdtempSync(join(tmpdir(), 'claude-test-'))
-  const claudeDir = join(fakeHome, '.claude')
-  mkdirSync(claudeDir, { recursive: true })
+      const claudeMd = join(brainPath, 'CLAUDE.md')
+      expect(existsSync(claudeMd)).toBe(true)
+      const content = readFileSync(claudeMd, 'utf8')
+      expect(content.includes('## ai-brain')).toBe(true)
+    })
 
-  after(() => rmSync(fakeHome, { recursive: true, force: true }))
+    it('should not duplicate section when run twice', async () => {
+      const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
+      afterEach(() => rmSync(brainPath, { recursive: true, force: true }))
 
-  await patchClaude({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
-  await patchClaude({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
+      const { installAlwaysOn } = await import('../src/platforms/claude.js')
+      await installAlwaysOn({ brainPath })
+      await installAlwaysOn({ brainPath })
 
-  const mcp = JSON.parse(readFileSync(join(claudeDir, 'mcp.json'), 'utf8'))
-  const keys = Object.keys(mcp.mcpServers)
-  assert.equal(keys.filter(k => k === 'ai-brain').length, 1)
-})
+      const content = readFileSync(join(brainPath, 'CLAUDE.md'), 'utf8')
+      expect(content.split('## ai-brain').length - 1).toBe(1)
+    })
+  })
 
-test('claude installAlwaysOn writes CLAUDE.md with ai-brain section', async () => {
-  const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
-  after(() => rmSync(brainPath, { recursive: true, force: true }))
+  describe('opencode installAlwaysOn', () => {
+    it('should write AGENTS.md with ai-brain section', async () => {
+      const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
+      afterEach(() => rmSync(brainPath, { recursive: true, force: true }))
 
-  await claudeAlwaysOn({ brainPath })
+      const { installAlwaysOn } = await import('../src/platforms/opencode.js')
+      await installAlwaysOn({ brainPath })
 
-  const claudeMd = join(brainPath, 'CLAUDE.md')
-  assert.ok(existsSync(claudeMd))
-  const content = readFileSync(claudeMd, 'utf8')
-  assert.ok(content.includes('## ai-brain'))
-})
-
-test('claude installAlwaysOn is idempotent — does not duplicate section', async () => {
-  const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
-  after(() => rmSync(brainPath, { recursive: true, force: true }))
-
-  await claudeAlwaysOn({ brainPath })
-  await claudeAlwaysOn({ brainPath })
-
-  const content = readFileSync(join(brainPath, 'CLAUDE.md'), 'utf8')
-  assert.equal(content.split('## ai-brain').length - 1, 1, 'section should appear exactly once')
-})
-
-test('opencode installAlwaysOn writes AGENTS.md with ai-brain section', async () => {
-  const brainPath = mkdtempSync(join(tmpdir(), 'brain-always-on-'))
-  after(() => rmSync(brainPath, { recursive: true, force: true }))
-
-  await opencodeAlwaysOn({ brainPath })
-
-  const agentsMd = join(brainPath, 'AGENTS.md')
-  assert.ok(existsSync(agentsMd))
-  const content = readFileSync(agentsMd, 'utf8')
-  assert.ok(content.includes('## ai-brain'))
+      const agentsMd = join(brainPath, 'AGENTS.md')
+      expect(existsSync(agentsMd)).toBe(true)
+      const content = readFileSync(agentsMd, 'utf8')
+      expect(content.includes('## ai-brain')).toBe(true)
+    })
+  })
 })

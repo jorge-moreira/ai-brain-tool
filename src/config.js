@@ -2,8 +2,10 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
 import { homedir } from 'os'
 import { join, dirname } from 'path'
 
+const _home = () => process.env.__HOME__ || homedir()
+
 export function configPath() {
-  return join(homedir(), '.ai-brain-config.json')
+  return join(_home(), '.ai-brain-config.json')
 }
 
 export function readConfig() {
