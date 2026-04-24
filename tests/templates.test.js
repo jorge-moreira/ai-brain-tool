@@ -1,47 +1,46 @@
-import { test } from 'node:test'
-import assert from 'node:assert/strict'
+import { describe, it, expect } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readdirSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
-const { listTemplates } = await import('../src/templates-lib.js')
-const { addTemplate } = await import('../src/templates-lib.js')
+describe('templates', () => {
+  it('should return bundled and custom arrays for listTemplates', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'tmpl-test-'))
+    mkdirSync(join(tmp, 'raw/templates/markdown/_bundled'), { recursive: true })
+    mkdirSync(join(tmp, 'raw/templates/markdown/_custom'), { recursive: true })
+    mkdirSync(join(tmp, 'raw/templates/web-clipper/_bundled'), { recursive: true })
+    mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
 
-test('listTemplates returns bundled and custom arrays', async () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'tmpl-test-'))
-  mkdirSync(join(tmp, 'raw/templates/markdown/_bundled'), { recursive: true })
-  mkdirSync(join(tmp, 'raw/templates/markdown/_custom'), { recursive: true })
-  mkdirSync(join(tmp, 'raw/templates/web-clipper/_bundled'), { recursive: true })
-  mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
+    writeFileSync(join(tmp, 'raw/templates/markdown/_bundled/book-template.md'), '# book', 'utf8')
+    writeFileSync(join(tmp, 'raw/templates/markdown/_custom/my-template.md'), '# mine', 'utf8')
 
-  writeFileSync(join(tmp, 'raw/templates/markdown/_bundled/book-template.md'), '# book', 'utf8')
-  writeFileSync(join(tmp, 'raw/templates/markdown/_custom/my-template.md'), '# mine', 'utf8')
+    const { listTemplates } = await import('../src/templates-lib.js')
+    const result = listTemplates(tmp)
+    expect(result.markdown.bundled).toContain('book-template.md')
+    expect(result.markdown.custom).toContain('my-template.md')
 
-  const result = listTemplates(tmp)
-  assert.ok(result.markdown.bundled.includes('book-template.md'))
-  assert.ok(result.markdown.custom.includes('my-template.md'))
+    rmSync(tmp, { recursive: true, force: true })
+  })
 
-  rmSync(tmp, { recursive: true, force: true })
-})
+  it('should create a markdown template file in _custom/', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'tmpl-test-'))
+    mkdirSync(join(tmp, 'raw/templates/markdown/_custom'), { recursive: true })
 
-test('addTemplate creates file in _custom/ with starter content', async () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'tmpl-test-'))
-  mkdirSync(join(tmp, 'raw/templates/markdown/_custom'), { recursive: true })
+    const { addTemplate } = await import('../src/templates-lib.js')
+    await addTemplate({ brainPath: tmp, type: 'markdown', name: 'research-interview' })
 
-  await addTemplate({ brainPath: tmp, type: 'markdown', name: 'research-interview' })
+    expect(existsSync(join(tmp, 'raw/templates/markdown/_custom/research-interview-template.md'))).toBe(true)
+    rmSync(tmp, { recursive: true, force: true })
+  })
 
-  assert.ok(existsSync(join(tmp, 'raw/templates/markdown/_custom/research-interview-template.md')))
+  it('should create a web-clipper template .json file in _custom/', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'tmpl-test-'))
+    mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
 
-  rmSync(tmp, { recursive: true, force: true })
-})
+    const { addTemplate } = await import('../src/templates-lib.js')
+    await addTemplate({ brainPath: tmp, type: 'web-clipper', name: 'podcast' })
 
-test('addTemplate for web-clipper creates .json file in _custom/', async () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'tmpl-test-'))
-  mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
-
-  await addTemplate({ brainPath: tmp, type: 'web-clipper', name: 'podcast' })
-
-  assert.ok(existsSync(join(tmp, 'raw/templates/web-clipper/_custom/podcast-template.json')))
-
-  rmSync(tmp, { recursive: true, force: true })
+    expect(existsSync(join(tmp, 'raw/templates/web-clipper/_custom/podcast-template.json'))).toBe(true)
+    rmSync(tmp, { recursive: true, force: true })
+  })
 })

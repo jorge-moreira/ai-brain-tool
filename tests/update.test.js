@@ -1,5 +1,4 @@
-import { test, after } from 'node:test'
-import assert from 'node:assert/strict'
+import { describe, it, expect, afterEach } from 'vitest'
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'fs'
 import { execSync } from 'child_process'
 import { tmpdir } from 'os'
@@ -33,49 +32,51 @@ function getCommitMessage(brainPath) {
   return `brain: update ${changes.join(', ')}`
 }
 
-test('getCommitMessage returns meaningful message when files changed', () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'update-test-'))
-  after(() => rmSync(tmp, { recursive: true, force: true }))
+describe('update', () => {
+  it('should return meaningful message when files have changed', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'update-test-'))
+    afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
-  initGitRepo(tmp)
-  mkdirSync(join(tmp, 'raw', 'notes'), { recursive: true })
-  writeFileSync(join(tmp, 'raw/notes/rust-ownership.md'), '# Rust Ownership', 'utf8')
-  writeFileSync(join(tmp, '.gitignore'), 'node_modules/', 'utf8')
-  execSync('git add .', { cwd: tmp, stdio: 'ignore' })
-  execSync('git commit -m "initial"', { cwd: tmp, stdio: 'ignore' })
+    initGitRepo(tmp)
+    mkdirSync(join(tmp, 'raw', 'notes'), { recursive: true })
+    writeFileSync(join(tmp, 'raw/notes/rust-ownership.md'), '# Rust Ownership', 'utf8')
+    writeFileSync(join(tmp, '.gitignore'), 'node_modules/', 'utf8')
+    execSync('git add .', { cwd: tmp, stdio: 'ignore' })
+    execSync('git commit -m "initial"', { cwd: tmp, stdio: 'ignore' })
 
-  writeFileSync(join(tmp, 'raw/notes/new-concept.md'), '# New Concept', 'utf8')
-  execSync('git add .', { cwd: tmp, stdio: 'ignore' })
-  const output = execSync('git diff --stat --cached HEAD', { cwd: tmp, encoding: 'utf8' })
+    writeFileSync(join(tmp, 'raw/notes/new-concept.md'), '# New Concept', 'utf8')
+    execSync('git add .', { cwd: tmp, stdio: 'ignore' })
+    const output = execSync('git diff --stat --cached HEAD', { cwd: tmp, encoding: 'utf8' })
 
-  assert.ok(output.includes('new-concept') || output.includes('raw/notes'), `Expected diff to show changes, got: ${output}`)
-})
+    expect(output.includes('new-concept') || output.includes('raw/notes')).toBe(true)
+  })
 
-test('getCommitMessage returns fallback when no changes', () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'update-test-'))
-  after(() => rmSync(tmp, { recursive: true, force: true }))
+  it('should return fallback message when no changes exist', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'update-test-'))
+    afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
-  initGitRepo(tmp)
-  makeDummyCommit(tmp, 'raw/notes/rust-ownership.md', '# Rust Ownership')
+    initGitRepo(tmp)
+    makeDummyCommit(tmp, 'raw/notes/rust-ownership.md', '# Rust Ownership')
 
-  const message = getCommitMessage(tmp)
-  assert.equal(message, 'Update AI brain')
-})
+    const message = getCommitMessage(tmp)
+    expect(message).toBe('Update AI brain')
+  })
 
-test('getCommitMessage extracts up to 3 files', () => {
-  const tmp = mkdtempSync(join(tmpdir(), 'update-test-'))
-  after(() => rmSync(tmp, { recursive: true, force: true }))
+  it('should extract up to 3 files in the commit message', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'update-test-'))
+    afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
-  initGitRepo(tmp)
-  makeDummyCommit(tmp, 'raw/notes/rust-ownership.md', '# Rust Ownership')
+    initGitRepo(tmp)
+    makeDummyCommit(tmp, 'raw/notes/rust-ownership.md', '# Rust Ownership')
 
-  writeFileSync(join(tmp, 'raw/notes/file1.md'), '# File 1', 'utf8')
-  writeFileSync(join(tmp, 'raw/notes/file2.md'), '# File 2', 'utf8')
-  writeFileSync(join(tmp, 'raw/notes/file3.md'), '# File 3', 'utf8')
-  writeFileSync(join(tmp, 'raw/notes/file4.md'), '# File 4', 'utf8')
+    writeFileSync(join(tmp, 'raw/notes/file1.md'), '# File 1', 'utf8')
+    writeFileSync(join(tmp, 'raw/notes/file2.md'), '# File 2', 'utf8')
+    writeFileSync(join(tmp, 'raw/notes/file3.md'), '# File 3', 'utf8')
+    writeFileSync(join(tmp, 'raw/notes/file4.md'), '# File 4', 'utf8')
 
-  const message = getCommitMessage(tmp)
-  const fileCount = message.split(',').length
+    const message = getCommitMessage(tmp)
+    const fileCount = message.split(',').length
 
-  assert.ok(fileCount <= 3)
+    expect(fileCount).toBeLessThanOrEqual(3)
+  })
 })
