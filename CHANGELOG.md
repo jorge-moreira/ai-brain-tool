@@ -1,3 +1,15 @@
+## [1.4.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.3.1...v1.4.0) (2026-04-24)
+
+### 🚀 Features
+
+* add bun support and development tooling ([#18](https://github.com/jorge-moreira/ai-brain-tool/issues/18)) ([0dad607](https://github.com/jorge-moreira/ai-brain-tool/commit/0dad607d2329506089a4ec64eef45e6cac85f9af))
+
+### 🐞 Bug Fixes
+
+* package.json to use runtime node.js version ([#20](https://github.com/jorge-moreira/ai-brain-tool/issues/20)) ([2cd48bd](https://github.com/jorge-moreira/ai-brain-tool/commit/2cd48bdeee03c609914fc407d3396f75e6041658))
+* release workflow ([#19](https://github.com/jorge-moreira/ai-brain-tool/issues/19)) ([a36c8c4](https://github.com/jorge-moreira/ai-brain-tool/commit/a36c8c4b2460e3fce4fd71b0cdaa7999a62dc0f1))
+* release workflow to use --bun flag on correct place ([#21](https://github.com/jorge-moreira/ai-brain-tool/issues/21)) ([cbc3c79](https://github.com/jorge-moreira/ai-brain-tool/commit/cbc3c79536b9ae649c3e6f83f216f6f6101627cc))
+
 ## [1.3.1](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.3.0...v1.3.1) (2026-04-23)
 
 
