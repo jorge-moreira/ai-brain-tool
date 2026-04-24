@@ -20,7 +20,8 @@
   },
   "files": [
     "bin/",
-    "src/"
+    "src/",
+    "requirements.txt"
   ],
   "publishConfig": {
     "access": "public"
