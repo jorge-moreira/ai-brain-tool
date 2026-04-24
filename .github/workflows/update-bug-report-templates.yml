@@ -1,0 +1,36 @@
+name: Update Issue Template Versions
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version_count:
+        description: Number of versions to fetch
+        required: false
+        default: "10"
+        type: string
+
+jobs:
+  update-form:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update bug-report.yml with latest releases
+        run: |
+          VERSION_COUNT="${{ github.event.inputs.version_count }}"
+          if [ -z "$VERSION_COUNT" ]; then VERSION_COUNT=10; fi
+          gh api repos/${{ github.repository }}/releases --paginate -q '.[].tag_name' | head -n $VERSION_COUNT | jq -R . | jq -s . > versions.json
+          
+          yq -i '.body[] | select(.id == "version").attributes.options = load("versions.json")' .github/ISSUE_TEMPLATE/bug-report.yml
+          
+          rm -f versions.json
+
+      - name: Commit and Push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/ISSUE_TEMPLATE/bug-report.yml
+          git commit -m "chore: update version list in bug report template" || exit 0
+          git push
