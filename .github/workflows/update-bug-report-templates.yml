@@ -11,11 +11,16 @@ on:
         default: "10"
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   update-form:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update bug-report.yml with latest releases
         run: |
