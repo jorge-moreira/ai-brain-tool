@@ -133,6 +133,29 @@ describe('commands/setup-obsidian', () => {
       await expect(run(['nonexistent'], {})).rejects.toThrow('BRAIN_NOT_RESOLVED')
     })
 
+    it('should throw when no brain configured', async () => {
+      resolveBrainSpy.mockReturnValue({ id: null, path: null, isLocal: false })
+
+      const { run } = await import('../../src/commands/setup-obsidian.js')
+      await expect(run([], {})).rejects.toThrow('NO_BRAIN_CONFIGURED')
+    })
+
+    it('should use inquirer when vaultPath not provided', async () => {
+      const brainPath = '/tmp/work'
+      mkdirSync(brainPath, { recursive: true })
+      
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
+      
+      const inquirer = await import('inquirer')
+      inquirer.default.prompt.mockResolvedValue({ vaultPath: brainPath })
+
+      const { run } = await import('../../src/commands/setup-obsidian.js')
+      await run([], {})
+
+      expect(inquirer.default.prompt).toHaveBeenCalled()
+    })
+
     it('should create vault directory if not exists', async () => {
       const brainPath = '/tmp/work'
       const vaultPath = join('/tmp', 'new-vault-' + Date.now())

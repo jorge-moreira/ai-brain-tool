@@ -1,9 +1,17 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
+vi.mock('execa', () => ({
+  execa: vi.fn()
+}))
+
 describe('git', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
   afterEach(() => {
     // Cleanup handled in each test
   })
@@ -28,11 +36,16 @@ describe('git', () => {
     rmSync(tmp, { recursive: true, force: true })
   })
 
-  it('should create a .git directory when initRepo is called', async () => {
+  it('should add remote origin when remoteUrl is provided', async () => {
     const tmp = mkdtempSync(join(tmpdir(), 'git-test-'))
+    const { execa } = await import('execa')
+    execa.mockResolvedValue({ stdout: '', stderr: '' })
+    
     const { initRepo } = await import('../src/git.js')
-    await initRepo({ brainPath: tmp, remoteUrl: null })
-    expect(existsSync(join(tmp, '.git'))).toBe(true)
+    await initRepo({ brainPath: tmp, remoteUrl: 'https://github.com/user/repo.git' })
+    
+    expect(execa).toHaveBeenCalledWith('git', ['init'], { cwd: tmp })
+    expect(execa).toHaveBeenCalledWith('git', ['remote', 'add', 'origin', 'https://github.com/user/repo.git'], { cwd: tmp })
     rmSync(tmp, { recursive: true, force: true })
   })
 })

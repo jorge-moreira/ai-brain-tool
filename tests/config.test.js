@@ -152,6 +152,12 @@ describe('config', () => {
       addBrain('work', join(tmpHome, 'work'))
       expect(isBrainIdAvailable('work')).toBe(false)
     })
+
+    it('should return true when config does not exist', async () => {
+      rmSync(join(tmpHome, '.ai-brain-tool', 'config.json'), { force: true })
+      const { isBrainIdAvailable } = await import('../src/config.js')
+      expect(isBrainIdAvailable('anybrain')).toBe(true)
+    })
   })
 
   describe('readBrainConfig', () => {
@@ -177,6 +183,26 @@ describe('config', () => {
       expect(config.gitSync).toBe(true)
       expect(config.extras).toEqual(['office'])
       expect(config.obsidianDir).toBe('/obsidian')
+    })
+
+    it('should return defaults when config file is invalid JSON', async () => {
+      const { readBrainConfig } = await import('../src/config.js')
+      const brainPath = join(tmpHome, 'brain')
+      mkdirSync(brainPath, { recursive: true })
+      writeFileSync(join(brainPath, '.brain-config.json'), 'invalid json {{{')
+      const config = readBrainConfig(brainPath)
+      expect(config.gitSync).toBe(false)
+      expect(config.extras).toEqual([])
+      expect(config.obsidianDir).toBeNull()
+      expect(config.id).toBeNull()
+    })
+  })
+
+  describe('readConfig', () => {
+    it('should throw CONFIG_PARSE_ERROR when config is invalid JSON', async () => {
+      writeFileSync(join(tmpHome, '.ai-brain-tool', 'config.json'), 'invalid json {{{', 'utf8')
+      const { readConfig } = await import('../src/config.js')
+      expect(() => readConfig()).toThrow('CONFIG_PARSE_ERROR')
     })
   })
 })

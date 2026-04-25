@@ -76,4 +76,46 @@ describe('commands/templates', () => {
 
     rmSync(tmp, { recursive: true, force: true })
   })
+
+  it('should list custom markdown templates when present', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'tmpl-custom-'))
+    mkdirSync(join(tmp, 'raw/templates/markdown/_bundled'), { recursive: true })
+    mkdirSync(join(tmp, 'raw/templates/markdown/_custom'), { recursive: true })
+    mkdirSync(join(tmp, 'raw/templates/markdown/_custom/my-template.md'), { recursive: true })
+    mkdirSync(join(tmp, 'raw/templates/web-clipper/_bundled'), { recursive: true })
+    mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
+
+    const config = await import('../../src/config.js')
+    config.readConfig.mockReturnValue({ brainPath: tmp })
+
+    const { run } = await import('../../src/commands/templates.js')
+    await run()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('my-template.md')
+    )
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should list custom web clipper templates when present', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'tmpl-web-'))
+    mkdirSync(join(tmp, 'raw/templates/markdown/_bundled'), { recursive: true })
+    mkdirSync(join(tmp, 'raw/templates/markdown/_custom'), { recursive: true })
+    mkdirSync(join(tmp, 'raw/templates/web-clipper/_bundled'), { recursive: true })
+    mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
+    mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom/web-template.html'), { recursive: true })
+
+    const config = await import('../../src/config.js')
+    config.readConfig.mockReturnValue({ brainPath: tmp })
+
+    const { run } = await import('../../src/commands/templates.js')
+    await run()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('web-template.html')
+    )
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
 })

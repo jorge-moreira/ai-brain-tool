@@ -65,6 +65,88 @@ describe('commands/status', () => {
     rmSync(tmp, { recursive: true, force: true })
   })
 
+  it('should show graphify version when available', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'status-test-'))
+    mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
+
+    const config = await import('../../src/config.js')
+    config.readConfig.mockReturnValue({ brainPath: tmp })
+
+    const { execa } = await import('execa')
+    execa.mockResolvedValue({ stdout: '1.0.0', stderr: '' })
+
+    const { run } = await import('../../src/commands/status.js')
+    await run()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Graphify:')
+    )
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should show error reading graphify version', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'status-test-'))
+    mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
+
+    const config = await import('../../src/config.js')
+    config.readConfig.mockReturnValue({ brainPath: tmp })
+
+    const { execa } = await import('execa')
+    execa.mockRejectedValue(new Error('failed'))
+
+    const { run } = await import('../../src/commands/status.js')
+    await run()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Graphify:')
+    )
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should show graph not built message when graph.json missing', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'status-test-'))
+    mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
+
+    const config = await import('../../src/config.js')
+    config.readConfig.mockReturnValue({ brainPath: tmp })
+
+    const { execa } = await import('execa')
+    execa.mockRejectedValue(new Error('no graphify'))
+
+    const { run } = await import('../../src/commands/status.js')
+    await run()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('not built yet')
+    )
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should show error when graph.json is invalid JSON', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'status-test-'))
+    mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
+    mkdirSync(join(tmp, 'graphify-out'), { recursive: true })
+    writeFileSync(join(tmp, 'graphify-out/graph.json'), 'invalid json {{{', 'utf8')
+
+    const config = await import('../../src/config.js')
+    config.readConfig.mockReturnValue({ brainPath: tmp })
+
+    const { execa } = await import('execa')
+    execa.mockRejectedValue(new Error('no graphify'))
+
+    const { run } = await import('../../src/commands/status.js')
+    await run()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('could not read graph.json')
+    )
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
   it('should show graph stats when graph.json exists', async () => {
     const tmp = mkdtempSync(join(tmpdir(), 'status-test-'))
     mkdirSync(join(tmp, 'graphify-out'), { recursive: true })
