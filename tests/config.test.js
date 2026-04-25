@@ -54,6 +54,37 @@ describe('config', () => {
       addBrain('work', join(tmpHome, 'work'))
       expect(() => resolveBrain()).toThrow('Not in a brain folder')
     })
+
+    it('should resolve brain when cwd matches brain path', async () => {
+      const { addBrain, resolveBrain } = await import('../src/config.js')
+      const brainPath = join(tmpHome, 'work')
+      mkdirSync(brainPath, { recursive: true })
+      addBrain('work', brainPath)
+      const originalCwd = process.cwd
+      process.cwd = () => brainPath
+      try {
+        const resolved = resolveBrain()
+        expect(resolved.id).toBe('work')
+      } finally {
+        process.cwd = originalCwd
+      }
+    })
+
+    it('should resolve from local .brain-config.json in cwd', async () => {
+      const { resolveBrain } = await import('../src/config.js')
+      const brainPath = join(tmpHome, 'brain')
+      mkdirSync(brainPath, { recursive: true })
+      writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify({ id: 'mybrain' }))
+      const originalCwd = process.cwd
+      process.cwd = () => brainPath
+      try {
+        const resolved = resolveBrain()
+        expect(resolved.id).toBe('mybrain')
+      } finally {
+        process.cwd = originalCwd
+        rmSync(join(brainPath, '.brain-config.json'))
+      }
+    })
   })
 
   describe('listBrains', () => {
@@ -85,6 +116,14 @@ describe('config', () => {
       const config = readConfig()
       expect(config.brains.work).toContain('ai-brain-test-')
     })
+
+    it('should create config if not exists', async () => {
+      const { removeBrain, addBrain, readConfig } = await import('../src/config.js')
+      rmSync(join(tmpHome, '.ai-brain-tool', 'config.json'), { force: true })
+      addBrain('work', join(tmpHome, 'work'))
+      const config = readConfig()
+      expect(config.brains.work).toBeDefined()
+    })
   })
 
   describe('removeBrain', () => {
@@ -99,6 +138,45 @@ describe('config', () => {
     it('should throw when brain not found', async () => {
       const { removeBrain } = await import('../src/config.js')
       expect(() => removeBrain('nonexistent')).toThrow('not found')
+    })
+  })
+
+  describe('isBrainIdAvailable', () => {
+    it('should return true when brain id is available', async () => {
+      const { isBrainIdAvailable } = await import('../src/config.js')
+      expect(isBrainIdAvailable('newbrain')).toBe(true)
+    })
+
+    it('should return false when brain id is taken', async () => {
+      const { addBrain, isBrainIdAvailable } = await import('../src/config.js')
+      addBrain('work', join(tmpHome, 'work'))
+      expect(isBrainIdAvailable('work')).toBe(false)
+    })
+  })
+
+  describe('readBrainConfig', () => {
+    it('should return defaults when file does not exist', async () => {
+      const { readBrainConfig } = await import('../src/config.js')
+      const config = readBrainConfig(join(tmpHome, 'nonexistent'))
+      expect(config.gitSync).toBe(false)
+      expect(config.extras).toEqual([])
+      expect(config.obsidianDir).toBeNull()
+      expect(config.id).toBeNull()
+    })
+
+    it('should read existing brain config', async () => {
+      const { readBrainConfig } = await import('../src/config.js')
+      const brainPath = join(tmpHome, 'brain')
+      mkdirSync(brainPath, { recursive: true })
+      writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify({
+        gitSync: true,
+        extras: ['office'],
+        obsidianDir: '/obsidian'
+      }))
+      const config = readBrainConfig(brainPath)
+      expect(config.gitSync).toBe(true)
+      expect(config.extras).toEqual(['office'])
+      expect(config.obsidianDir).toBe('/obsidian')
     })
   })
 })

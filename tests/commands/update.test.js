@@ -14,7 +14,8 @@ vi.mock('chalk', () => ({
 vi.mock('ora', () => ({
   default: () => ({
     start: vi.fn().mockReturnThis(),
-    succeed: vi.fn().mockReturnThis()
+    succeed: vi.fn().mockReturnThis(),
+    warn: vi.fn().mockReturnThis()
   })
 }))
 
@@ -71,5 +72,34 @@ describe('commands/update', () => {
 
     const { run } = await import('../../src/commands/update.js')
     await expect(run(['nonexistent'], {})).rejects.toThrow('BRAIN_NOT_RESOLVED')
+  })
+
+  it('should throw when no brain configured', async () => {
+    resolveBrainSpy.mockReturnValue({ id: null, path: null, isLocal: false })
+
+    const { run } = await import('../../src/commands/update.js')
+    await expect(run(['work'], {})).rejects.toThrow('NO_BRAIN_CONFIGURED')
+  })
+
+  it('should skip git sync when gitSync is false', async () => {
+    resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
+    readBrainConfigSpy.mockReturnValue({ gitSync: false })
+
+    const { run } = await import('../../src/commands/update.js')
+    await run(['work'], {})
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Brain updated'))
+  })
+
+  it('should warn when gitSync enabled but no git repo', async () => {
+    resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
+    readBrainConfigSpy.mockReturnValue({ gitSync: true })
+
+    const { run } = await import('../../src/commands/update.js')
+    await run(['work'], {})
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('git repository found')
+    )
   })
 })
