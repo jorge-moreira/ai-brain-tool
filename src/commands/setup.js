@@ -1,15 +1,14 @@
 import { input, select, checkbox, confirm } from '@inquirer/prompts'
 import chalk from 'chalk'
 import ora from 'ora'
-import { join, resolve } from 'path'
+import { join, resolve, basename } from 'path'
 import { existsSync, readFileSync } from 'fs'
 
-import { createBrainFolder, writeBrainConfig, writeBrainPackageJson } from '../scaffold.js'
+import { createBrainFolder, writeBrainConfig } from '../scaffold.js'
 import { createVenv, venvExists } from '../graphify.js'
 import { detectAll, configureSelected } from '../platforms/index.js'
 import { initRepo, writeGitignore } from '../git.js'
-import { writeConfig } from '../config.js'
-import { execa } from 'execa'
+import { readConfig, writeConfig, addBrain, ensureConfigDir, configPath, isBrainIdAvailable } from '../config.js'
 
 const BRAIN_MARKER = ['raw', '.graphifyignore', '.brain-config.json']
 
@@ -25,7 +24,25 @@ function item(label, value) {
   console.log(`  ${chalk.dim(label.padEnd(14))} ${value}`)
 }
 
+async function askBrainId(defaultId) {
+  while (true) {
+    const brainId = await input({
+      message: 'Brain identifier (short name, e.g., work, personal):',
+      default: defaultId,
+    })
+    if (isBrainIdAvailable(brainId)) {
+      return brainId
+    }
+    console.log(chalk.yellow(`  Brain identifier "${brainId}" is already taken. Please choose a different one.`))
+  }
+}
+
 export async function run() {
+  ensureConfigDir()
+  if (!existsSync(configPath())) {
+    writeConfig({ brains: {} })
+  }
+
   console.log(chalk.bold.cyan('\n  ai-brain') + chalk.bold(' setup wizard'))
   console.log(chalk.dim('  Your personal AI memory, connected to all your AI tools.\n'))
 
@@ -111,12 +128,7 @@ async function freshSetup() {
   const spinnerScaffold = ora('Creating brain folder...').start()
   await createBrainFolder({ brainPath, includeObsidian: false })
   writeBrainConfig({ brainPath, gitSync, extras, obsidianDir })
-  writeBrainPackageJson({ brainPath })
   spinnerScaffold.succeed(`Created ${brainPath}`)
-
-  const spinnerNpm = ora('Installing tool locally (enables npx ai-brain commands)...').start()
-  await execa('npm', ['install', '--prefer-offline'], { cwd: brainPath })
-  spinnerNpm.succeed('Tool installed locally')
 
   if (gitMode === 'git') {
     const spinnerGit = ora('Initializing git repo...').start()
@@ -173,15 +185,15 @@ async function freshSetup() {
 
   writeBrainConfig({ brainPath, gitSync, extras, obsidianDir })
 
+  const brainId = await askBrainId(name)
+
+  addBrain(brainId, brainPath)
+
   printSummary({ brainPath, gitMode, remoteUrl, gitSync, extras, selected, obsidianChoice })
 }
 
 async function newMachineSetup(brainPath) {
   console.log(chalk.yellow('\n  Existing brain detected — running new-machine setup.\n'))
-
-  const spinnerNpm = ora('Installing tool locally...').start()
-  await execa('npm', ['install', '--prefer-offline'], { cwd: brainPath })
-  spinnerNpm.succeed('Tool installed locally')
 
   // Read extras from existing config so the same extras are reinstalled
   let extras = []
@@ -212,7 +224,9 @@ async function newMachineSetup(brainPath) {
   await configureSelected({ selected, brainPath })
   spinnerPlatforms.succeed(`Configured ${selected.length} AI tool(s)`)
 
-  writeConfig({ brainPath })
+  const brainId = await askBrainId(basename(brainPath))
+
+  addBrain(brainId, brainPath)
 
   console.log(chalk.green('\n  Setup complete!'))
   item('Brain', brainPath)

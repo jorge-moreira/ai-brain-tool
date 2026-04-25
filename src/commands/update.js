@@ -1,9 +1,8 @@
 import chalk from 'chalk'
 import ora from 'ora'
 import { execa } from 'execa'
-import { readConfig } from '../config.js'
+import { resolveBrain, readBrainConfig } from '../config.js'
 import { runGraphify } from '../graphify.js'
-import { readBrainConfig } from '../scaffold.js'
 import { existsSync } from 'fs'
 import { join } from 'path'
 
@@ -21,15 +20,25 @@ async function getCommitMessage(brainPath) {
   return `brain: update ${changes.join(', ')}`
 }
 
-export async function run() {
-  const config = readConfig()
-  if (!config) {
-    console.error(chalk.red('  No brain configured. Run: ai-brain setup'))
-    process.exit(1)
-  }
-  const { brainPath } = config
+export async function run(args, options = {}) {
+  let brainId = options.brainId || args.find(a => !a.startsWith('-'))
+  let resolved
 
-  const spinner = ora('Rebuilding knowledge graph...').start()
+  try {
+    resolved = resolveBrain(brainId)
+  } catch (e) {
+    console.error(chalk.red(`  ${e.message}`))
+    throw new Error('BRAIN_NOT_RESOLVED')
+  }
+
+  const { id: resolvedBrainId, path: brainPath } = resolved
+
+  if (!brainPath) {
+    console.error(chalk.red('  No brain configured. Run: ai-brain setup'))
+    throw new Error('NO_BRAIN_CONFIGURED')
+  }
+
+  const spinner = ora(`Rebuilding knowledge graph...`).start()
   await runGraphify(brainPath)
   spinner.succeed('Knowledge graph rebuilt')
 
@@ -50,5 +59,5 @@ export async function run() {
     console.log(chalk.yellow('  Git sync enabled but no git repository found'))
   }
 
-  console.log(chalk.green('\n  ✔ Brain updated\n'))
+  console.log(chalk.green(`\n  ✔ Brain updated${resolvedBrainId ? ` (${resolvedBrainId})` : ''}\n`))
 }

@@ -35,18 +35,6 @@ export function readBrainConfig(brainPath) {
   return JSON.parse(readFileSync(configPath, 'utf8'))
 }
 
-export function writeBrainPackageJson({ brainPath }) {
-  const toolPkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'))
-  const brainPkg = {
-    private: true,
-    description: 'AI brain — do not publish',
-    dependencies: {
-      [toolPkg.name]: `^${toolPkg.version}`,
-    },
-  }
-  writeFileSync(join(brainPath, 'package.json'), JSON.stringify(brainPkg, null, 2) + '\n', 'utf8')
-}
-
 export async function createBrainFolder({ brainPath, includeObsidian }) {
   // Create all directories
   for (const dir of dirs) {

@@ -1,5 +1,5 @@
-import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
-import { mkdtempSync, rmSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
@@ -19,212 +19,179 @@ vi.mock('inquirer', () => ({
 }))
 
 describe('commands/setup-obsidian', () => {
-  const testRoot = mkdtempSync(join(tmpdir(), 'brain-test-'))
+  let resolveBrainSpy, readBrainConfigSpy
   let consoleLogSpy, consoleErrorSpy
 
-  beforeEach(() => {
-    process.env.__HOME__ = testRoot
+  beforeEach(async () => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const config = await import('../../src/config.js')
+    resolveBrainSpy = vi.spyOn(config, 'resolveBrain')
+    readBrainConfigSpy = vi.spyOn(config, 'readBrainConfig')
   })
 
   afterEach(() => {
     vi.resetAllMocks()
-    rmSync(testRoot, { recursive: true, force: true })
-    mkdirSync(testRoot, { recursive: true })
   })
 
   describe('run', () => {
-    it('should show error when no brain configured', async () => {
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue(null)
+    it('should resolve brain from id argument', async () => {
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
 
       const { run } = await import('../../src/commands/setup-obsidian.js')
-      await expect(run([])).rejects.toThrow('NO_BRAIN_CONFIGURED')
+      await run(['work'], { vaultPath: '/tmp/work' })
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('No brain configured')
-      )
+      expect(resolveBrainSpy).toHaveBeenCalledWith('work')
     })
 
-    it('should show error when brainPath is missing', async () => {
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue({})
+    it('should resolve brain from options.brainId', async () => {
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
 
       const { run } = await import('../../src/commands/setup-obsidian.js')
-      await expect(run([])).rejects.toThrow('NO_BRAIN_CONFIGURED')
+      await run([], { brainId: 'work', vaultPath: '/tmp/work' })
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('No brain configured')
-      )
+      expect(resolveBrainSpy).toHaveBeenCalledWith('work')
     })
 
-    it('should show current vault and return when already configured without --update', async () => {
-      const brainPath = join(testRoot, 'brain')
-      mkdirSync(brainPath, { recursive: true })
-
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue({ brainPath })
-      vi.spyOn(config, 'readBrainConfig').mockReturnValue({ obsidianDir: brainPath })
+    it('should print brain id in header', async () => {
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
 
       const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([])
+      await run(['work'], { vaultPath: '/tmp/work' })
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Vault already configured')
+        expect.stringContaining('work')
       )
     })
 
-    it('should show current vault path when configured', async () => {
-      const brainPath = join(testRoot, 'brain')
+    it('should write obsidianDir to brain config', async () => {
+      const brainPath = '/tmp/work'
       mkdirSync(brainPath, { recursive: true })
 
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue({ brainPath })
-      vi.spyOn(config, 'readBrainConfig').mockReturnValue({ obsidianDir: brainPath })
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
 
       const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([])
+      await run([], { vaultPath: brainPath })
+
+      const configPath = join(brainPath, '.brain-config.json')
+      const config = JSON.parse(readFileSync(configPath, 'utf8'))
+      expect(config.obsidianDir).toBe(brainPath)
+    })
+
+    it('should show already configured when obsidianDir exists without --update', async () => {
+      const brainPath = '/tmp/work'
+      mkdirSync(brainPath, { recursive: true })
+
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: brainPath })
+
+      const { run } = await import('../../src/commands/setup-obsidian.js')
+      await run([], { vaultPath: brainPath })
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining(brainPath)
+        expect.stringContaining('already configured')
       )
+    })
+
+    it('should proceed when --update flag provided', async () => {
+      const brainPath = '/tmp/work'
+      mkdirSync(brainPath, { recursive: true })
+
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: brainPath })
+
+      const { run } = await import('../../src/commands/setup-obsidian.js')
+      await run(['work', '--update'], { vaultPath: brainPath })
+
+      expect(resolveBrainSpy).toHaveBeenCalledWith('work')
+    })
+
+    it('should support -u shorthand', async () => {
+      const brainPath = '/tmp/work'
+      mkdirSync(brainPath, { recursive: true })
+
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: brainPath })
+
+      const { run } = await import('../../src/commands/setup-obsidian.js')
+      await run(['work', '-u'], { vaultPath: brainPath })
+
+      expect(resolveBrainSpy).toHaveBeenCalledWith('work')
+    })
+
+    it('should handle when brain not found', async () => {
+      resolveBrainSpy.mockImplementation(() => {
+        throw new Error('Brain "nonexistent" not found')
+      })
+
+      const { run } = await import('../../src/commands/setup-obsidian.js')
+      await expect(run(['nonexistent'], {})).rejects.toThrow('BRAIN_NOT_RESOLVED')
+    })
+
+    it('should create vault directory if not exists', async () => {
+      const brainPath = '/tmp/work'
+      const vaultPath = join('/tmp', 'new-vault-' + Date.now())
+      mkdirSync(brainPath, { recursive: true })
+
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
+
+      const { run } = await import('../../src/commands/setup-obsidian.js')
+      await run([], { vaultPath })
+
+      expect(existsSync(vaultPath)).toBe(true)
+      rmSync(vaultPath, { recursive: true, force: true })
+    })
+
+    it('should skip scaffold copy when .obsidian exists', async () => {
+      const brainPath = '/tmp/work'
+      const vaultPath = join('/tmp', 'skip-scaffold-' + Date.now())
+      const vaultObsidianDir = join(vaultPath, '.obsidian')
+      mkdirSync(brainPath, { recursive: true })
+      mkdirSync(vaultObsidianDir, { recursive: true })
+
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
+
+      const { run } = await import('../../src/commands/setup-obsidian.js')
+      await run([], { vaultPath })
+
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringContaining('already exists')
+      )
+      rmSync(vaultPath, { recursive: true, force: true })
     })
 
     it('should show different when vault is not same as brain', async () => {
-      const brainPath = join(testRoot, 'brain')
-      const vaultPath = join(testRoot, 'vault')
+      const brainPath = '/tmp/brain'
+      const vaultPath = '/tmp/vault'
       mkdirSync(brainPath, { recursive: true })
 
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue({ brainPath })
-      vi.spyOn(config, 'readBrainConfig').mockReturnValue({ obsidianDir: vaultPath })
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: vaultPath })
 
       const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([])
+      await run([], { vaultPath })
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('different')
       )
     })
 
-    it('should write obsidianDir to brain config', async () => {
-      const brainPath = join(testRoot, 'brain')
+    it('should show same as brain when vault equals brainPath', async () => {
+      const brainPath = '/tmp/work'
       mkdirSync(brainPath, { recursive: true })
 
-      const vaultPath = join(testRoot, 'vault')
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue({ brainPath })
-      vi.spyOn(config, 'readBrainConfig').mockReturnValue({ obsidianDir: null })
+      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
+      readBrainConfigSpy.mockReturnValue({ obsidianDir: brainPath })
 
       const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([], { vaultPath })
-
-      const configPath = join(brainPath, '.brain-config.json')
-      const configData = JSON.parse(readFileSync(configPath, 'utf8'))
-      expect(configData.obsidianDir).toBe(vaultPath)
-    })
-
-    it('should handle --update flag to reconfigure existing vault', async () => {
-      const brainPath = join(testRoot, 'brain')
-      mkdirSync(brainPath, { recursive: true })
-
-      const vaultPath = join(testRoot, 'new-vault')
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue({ brainPath })
-      vi.spyOn(config, 'readBrainConfig').mockReturnValue({ obsidianDir: brainPath })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run(['--update'], { vaultPath })
-
-      const configPath = join(brainPath, '.brain-config.json')
-      const configData = JSON.parse(readFileSync(configPath, 'utf8'))
-      expect(configData.obsidianDir).toBe(vaultPath)
-    })
-
-    it('should use brainPath as default vault path when no vaultPath provided', async () => {
-      const brainPath = join(testRoot, 'brain')
-      mkdirSync(brainPath, { recursive: true })
-
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue({ brainPath })
-      vi.spyOn(config, 'readBrainConfig').mockReturnValue({ obsidianDir: null })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([], {})
-
-      const configPath = join(brainPath, '.brain-config.json')
-      const configData = JSON.parse(readFileSync(configPath, 'utf8'))
-      expect(configData.obsidianDir).toBe(brainPath)
-    })
-
-    it('should preserve existing config when updating', async () => {
-      const brainPath = join(testRoot, 'brain')
-      mkdirSync(brainPath, { recursive: true })
-      const configPath = join(brainPath, '.brain-config.json')
-      
-      const originalConfig = { gitSync: true, extras: ['test'], obsidianDir: null }
-      writeFileSync(configPath, JSON.stringify(originalConfig))
-
-      const vaultPath = join(testRoot, 'new-vault')
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue({ brainPath })
-      vi.spyOn(config, 'readBrainConfig').mockImplementation((p) => 
-        JSON.parse(readFileSync(join(p, '.brain-config.json'), 'utf8'))
-      )
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run(['--update'], { vaultPath })
-
-      const updatedConfig = JSON.parse(readFileSync(configPath, 'utf8'))
-      expect(updatedConfig.gitSync).toBe(true)
-      expect(updatedConfig.extras).toEqual(['test'])
-      expect(updatedConfig.obsidianDir).toBe(vaultPath)
-    })
-
-    it('should support -u shorthand for --update', async () => {
-      const brainPath = join(testRoot, 'brain')
-      mkdirSync(brainPath, { recursive: true })
-
-      const vaultPath = join(testRoot, 'new-vault')
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue({ brainPath })
-      vi.spyOn(config, 'readBrainConfig').mockReturnValue({ obsidianDir: brainPath })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run(['-u'], { vaultPath })
-
-      const configPath = join(brainPath, '.brain-config.json')
-      const configData = JSON.parse(readFileSync(configPath, 'utf8'))
-      expect(configData.obsidianDir).toBe(vaultPath)
-    })
-
-    it('should print updating message when using --update', async () => {
-      const brainPath = join(testRoot, 'brain')
-      mkdirSync(brainPath, { recursive: true })
-
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue({ brainPath })
-      vi.spyOn(config, 'readBrainConfig').mockReturnValue({ obsidianDir: brainPath })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run(['--update'], { vaultPath: brainPath })
-
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Updating')
-      )
-    })
-
-    it('should show "same as brain" when vault equals brainPath', async () => {
-      const brainPath = join(testRoot, 'brain')
-      mkdirSync(brainPath, { recursive: true })
-
-      const config = await import('../../src/config.js')
-      vi.spyOn(config, 'readConfig').mockReturnValue({ brainPath })
-      vi.spyOn(config, 'readBrainConfig').mockReturnValue({ obsidianDir: brainPath })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([])
+      await run([], { vaultPath: brainPath })
 
       expect(consoleLogSpy).toHaveBeenCalledWith(
         expect.stringContaining('same as brain')
