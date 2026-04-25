@@ -47,4 +47,6 @@ jobs:
 
       - name: Trigger update-bug-report-templates
         if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run update-bug-report-templates.yml
