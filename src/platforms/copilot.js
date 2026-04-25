@@ -1,11 +1,7 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { join, dirname } from 'path'
+import { join } from 'path'
 import { homedir } from 'os'
-import { fileURLToPath } from 'url'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-
-const BRAIN_SKILL_MD = readFileSync(join(__dirname, 'brain-skills.md'), 'utf8')
+import { existsSync } from 'fs'
+import { BRAIN_SKILL_MD, installSkillFile } from './shared.js'
 
 export function detect(homeDir = homedir()) {
   return existsSync(join(homeDir, '.config', 'gh'))
@@ -17,8 +13,11 @@ export async function patch({ brainPath, homeDir = homedir() }) {
 
 export async function installSkill({ homeDir = homedir() } = {}) {
   const skillDir = join(homeDir, '.copilot', 'skills', 'brain')
-  mkdirSync(skillDir, { recursive: true })
-  writeFileSync(join(skillDir, 'SKILL.md'), BRAIN_SKILL_MD, 'utf8')
+  installSkillFile({
+    dir: skillDir,
+    filename: 'SKILL.md',
+    content: BRAIN_SKILL_MD,
+  })
 }
 
 export async function installAlwaysOn() {
