@@ -1,7 +1,7 @@
 import { join } from 'path'
 import { homedir } from 'os'
 import { existsSync } from 'fs'
-import { patchJsonConfig, pythonBin, graphJson, installSkillFile } from './shared.js'
+import { patchJsonConfig, pythonBin, graphJson, BRAIN_SKILL_MD, installSkillFile } from './shared.js'
 
 const BRAIN_SKILL_MARKER = `---
 description: ai-brain skill
