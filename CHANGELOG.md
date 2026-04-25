@@ -1,3 +1,16 @@
+## [2.0.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.5.0...v2.0.0) (2026-04-25)
+
+### ⚠ BREAKING CHANGES
+
+* tool configuration changed
+
+Suggesting to cleanup all the AI agents related files (AGENTS.md, CLAUDE.md, GEMINI.md, .copilot folder) package.json and package-lock.json from the folder.
+After that run the setup again and everything should work smothly.
+
+### 🚀 Features
+
+* add support for multiple brains ([#31](https://github.com/jorge-moreira/ai-brain-tool/issues/31)) ([baf7d63](https://github.com/jorge-moreira/ai-brain-tool/commit/baf7d6388c77ecac8c29e846fb029ae00036c811))
+
 ## [1.5.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.4.1...v1.5.0) (2026-04-24)
 
 ### 🚀 Features
