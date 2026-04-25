@@ -3,19 +3,22 @@ import ora from 'ora'
 import { cpSync, readFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { readConfig } from '../config.js'
+import { resolveBrain } from '../config.js'
 import { upgradeVenv } from '../graphify.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TEMPLATES_DIR = join(__dirname, '..', 'templates')
 
-export async function run() {
-  const config = readConfig()
-  if (!config) {
-    console.error(chalk.red('  No brain configured. Run: ai-brain setup'))
+export async function run(args, options = {}) {
+  options ??= {}
+  let resolved
+try {
+    resolved = resolveBrain(options.brainId || args.find(a => !a.startsWith('-')))
+  } catch (e) {
+    console.error(chalk.red(`  ${e.message}`))
     process.exit(1)
   }
-  const { brainPath } = config
+  const { path: brainPath } = resolved
 
   // Read extras from brain config so upgrade preserves the installed extras
   let extras = []

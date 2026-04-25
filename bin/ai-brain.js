@@ -20,12 +20,14 @@ program
 program
   .command('update')
   .description('Rebuild the knowledge graph and sync via git')
-  .action(async () => { const { run } = await import('../src/commands/update.js'); await run() })
+  .option('--brain-id <id>', 'Brain identifier to use')
+  .action(async (options) => { const { run } = await import('../src/commands/update.js'); await run([], options) })
 
 program
   .command('status')
   .description('Show brain health: version, graph stats, MCP connection')
-  .action(async () => { const { run } = await import('../src/commands/status.js'); await run() })
+  .option('--brain-id <id>', 'Brain identifier to use')
+  .action(async (options) => { const { run } = await import('../src/commands/status.js'); await run([], options) })
 
 const templates = program
   .command('templates')
@@ -40,7 +42,8 @@ templates
 program
   .command('upgrade')
   .description('Update graphify and refresh bundled templates')
-  .action(async () => { const { run } = await import('../src/commands/upgrade.js'); await run() })
+  .option('--brain-id <id>', 'Brain identifier to use')
+  .action(async (options) => { const { run } = await import('../src/commands/upgrade.js'); await run([], options || {}) })
 
 program
   .command('list')

@@ -127,7 +127,7 @@ Show brain health: tool version, graphify version, graph node/edge count, brain 
 
 ```bash
 ai-brain status         # Used if already on the brain folder
-ai-brain status work    # specify brain by identifier
+ai-brain status work    # Specify brain by identifier
 ```
 
 Equivalent inside any AI tool: `status`
@@ -159,7 +159,8 @@ ai-brain templates add
 Upgrade graphify in `.venv/` and refresh all bundled templates in `_bundled/`. Your custom templates in `_custom/` are never touched.
 
 ```bash
-ai-brain upgrade
+ai-brain upgrade        # Used if already on the brain folder
+ai-brain upgrade work   # Specify brain by identifier
 ```
 
 ---
