@@ -38,6 +38,8 @@ jobs:
           json-summary-path: coverage/coverage-summary.json
           json-final-path: coverage/coverage-final.json
           file-coverage-mode: all
+          thresholds: '{ "0": 60, "80": 90, "95": 100 }'
+          threshold-icons: '{ "0": "🔴", "80": "🟡", "95": "🟢" }'
 
   smoke:
     name: Smoke Tests

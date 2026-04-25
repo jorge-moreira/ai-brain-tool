@@ -9,7 +9,7 @@ export default defineConfig({
   },
   coverage: {
     provider: 'v8',
-    reporter: ['text', 'html', 'lcov', 'json-summary'],
+    reporter: ['text', 'lcov', 'json', 'json-summary'],
     reportsDirectory: 'coverage',
     exclude: [
       'bin/**',
