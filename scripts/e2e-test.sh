@@ -17,6 +17,9 @@ echo "Step 2: Creating brain with ai-brain setup..."
 # - Create brain folder structure
 # - Detect Python (available on Ubuntu runner)
 # - Create venv and install graphify
+
+# Create brain directory first, then cd into it for "current" location option
+mkdir -p "$BRAIN_PATH"
 cd "$BRAIN_PATH"
 node "$GITHUB_WORKSPACE/bin/ai-brain.js" setup <<EOF
 test
