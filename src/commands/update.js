@@ -21,6 +21,8 @@ async function getCommitMessage(brainPath) {
 }
 
 export async function run(args, options = {}) {
+  options ??= {}
+  args ??= []
   let brainId = options.brainId || args.find(a => !a.startsWith('-'))
   let resolved
 

@@ -84,8 +84,19 @@ export async function upgradeVenv(brainPath, extras = []) {
 
 // Run graphify to rebuild the graph from raw/
 export async function runGraphify(brainPath) {
-  await execa(venvPythonPath(brainPath), ['-m', 'graphify', join(brainPath, 'raw'), '--update'], {
-    stdio: 'inherit',
-    cwd: brainPath,
-  })
+  try {
+    await execa(venvPythonPath(brainPath), ['-m', 'graphify', 'update', 'raw'], {
+      stdio: 'inherit',
+      cwd: brainPath,
+    })
+  } catch (e) {
+    if (e.message.includes('No code files found') || 
+        e.message.includes('Nothing to update') ||
+        e.message.includes('No files found')) {
+      console.log(chalk.yellow('\n  No code files found.'))
+      console.log(chalk.dim('  For docs/articles, use the AI tool: /brain update\n'))
+      return
+    }
+    throw e
+  }
 }
