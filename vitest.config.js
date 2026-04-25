@@ -7,4 +7,17 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./tests/setup.js'],
   },
+  coverage: {
+    provider: 'v8',
+    reporter: ['text', 'html', 'lcov'],
+    reportsDirectory: 'coverage',
+    exclude: [
+      'bin/**',
+      'tests/**',
+      '**/*.test.js',
+      '**/*.spec.js',
+      '**/setup.js',
+      '**/mcp/**',
+    ],
+  },
 })
