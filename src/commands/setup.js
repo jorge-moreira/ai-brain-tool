@@ -27,13 +27,13 @@ function item(label, value) {
 async function askBrainId(defaultId) {
   while (true) {
     const brainId = await input({
-      message: 'Brain ID (short name, e.g., work, personal):',
+      message: 'Brain identifier (short name, e.g., work, personal):',
       default: defaultId,
     })
     if (isBrainIdAvailable(brainId)) {
       return brainId
     }
-    console.log(chalk.yellow(`  Brain ID "${brainId}" is already taken. Please choose a different one.`))
+    console.log(chalk.yellow(`  Brain identifier "${brainId}" is already taken. Please choose a different one.`))
   }
 }
 

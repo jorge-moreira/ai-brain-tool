@@ -70,7 +70,7 @@ export function resolveBrain(brainId) {
     throw new Error('No brains configured. Run: ai-brain setup')
   }
 
-  throw new Error('Not in a brain folder. Specify brain ID: ai-brain update <brain-id>')
+  throw new Error('Not in a brain folder. Specify brain identifier: ai-brain update <brain-id>')
 }
 
 export function listBrains() {
