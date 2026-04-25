@@ -27,7 +27,7 @@
 To install the tool globally:
 
 ```bash
-npm install -g @jorge-moreiva.dev/ai-brain-tool
+npm install -g @jorge-moreira.dev/ai-brain-tool
 ```
 
 Then use anywhere:
@@ -39,7 +39,7 @@ ai-brain <command>
 > [!NOTE]
 > You can also opt to use the tool portable using:
 > ```bash
-> npx @jorge-moreiva.dev/ai-brain-tool <command>
+> npx @jorge-moreira.dev/ai-brain-tool <command>
 > ```
 
 ---
