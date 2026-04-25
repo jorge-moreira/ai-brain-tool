@@ -22,7 +22,7 @@ jobs:
         run: bun install
 
       - name: Run tests with coverage
-        run: bun run test:coverage:ci
+        run: bun run test:coverage
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
@@ -31,18 +31,10 @@ jobs:
           path: coverage/
 
       - name: Post coverage comment
-        uses: thollander/actions-comment-pull-request@v2
+        uses: davelosert/vitest-coverage-report-action@v2
         if: github.event_name == 'pull_request'
         with:
-          message: |
-            ## Test Coverage Report
-
-            Coverage report has been generated. Download the artifact to view the full HTML report.
-
-            **Artifacts:** [Download coverage report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
-            Run `bun run test:coverage` locally to view the report.
-          comment_tag: coverage
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   smoke:
     name: Smoke Tests
