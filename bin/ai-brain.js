@@ -43,6 +43,11 @@ program
   .action(async () => { const { run } = await import('../src/commands/upgrade.js'); await run() })
 
 program
+  .command('list')
+  .description('List all configured brains')
+  .action(async () => { const { run } = await import('../src/commands/list.js'); await run() })
+
+program
   .command('setup-obsidian')
   .description('Configure or update the Obsidian vault path')
   .option('-u, --update', 'update existing vault configuration')
