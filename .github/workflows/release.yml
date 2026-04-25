@@ -9,6 +9,7 @@ permissions:
   issues: write
   pull-requests: write
   id-token: write
+  actions: write
 
 jobs:
   release:
@@ -43,3 +44,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
+
+      - name: Trigger update-bug-report-templates
+        if: success()
+        run: gh workflow run update-bug-report-templates.yml
