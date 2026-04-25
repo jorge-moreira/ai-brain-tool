@@ -82,11 +82,24 @@ export function listBrains() {
 }
 
 export function addBrain(brainId, path) {
-  let config = readConfig()
-  if (!config) config = { brains: {} }
+  let config
+  try {
+    config = readConfig()
+  } catch {
+    config = { brains: {} }
+  }
   if (!config.brains) config.brains = {}
   config.brains[brainId] = path.replace(/^~/, _home())
   writeConfig(config)
+}
+
+export function isBrainIdAvailable(brainId) {
+  try {
+    const config = readConfig()
+    return !config.brains || !config.brains[brainId]
+  } catch {
+    return true
+  }
 }
 
 export function removeBrain(brainId) {
