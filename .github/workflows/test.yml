@@ -11,7 +11,7 @@ jobs:
     name: Unit Tests + Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: unit
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -46,14 +46,14 @@ jobs:
         run: bun install
 
       - name: Run smoke tests
-        run: bun test tests/commands/*.test.js
+        run: bun run test tests/commands/*.test.js
 
   integration:
     name: Integration Tests
     runs-on: ubuntu-latest
     needs: smoke
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -64,7 +64,7 @@ jobs:
         run: bun install
 
       - name: Run platform integration tests
-        run: bun test tests/platforms/*.test.js
+        run: bun run test tests/platforms/*.test.js
 
   e2e:
     name: End-to-End Tests
@@ -72,17 +72,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: integration
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
 
       - name: Install dependencies
         run: bun install

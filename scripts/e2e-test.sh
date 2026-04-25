@@ -1,66 +1,69 @@
 #!/bin/bash
 set -e
 
-echo "Setting up temporary brain for e2e test..."
+echo "=== E2E Test: ai-brain setup and update ==="
 TEMP=$(mktemp -d)
 trap "rm -rf $TEMP" EXIT
 
-# Clone current state to temp dir
-cp -r . "$TEMP/repo"
-cd "$TEMP/repo"
+BRAIN_PATH="$TEMP/brain"
 
-# Install dependencies
+echo "Step 1: Installing tool dependencies..."
+cd "$GITHUB_WORKSPACE"
 bun install
 
-# Capture graphify version before changing directories
-GRAPHIFY_VERSION=$(grep graphifyy requirements.txt | cut -d'=' -f3)
-
-# Find Python 3.10+ (try python3.13, python3.12, python3.11, python3.10, then python3)
-PYTHON_CMD=""
-for py in python3.13 python3.12 python3.11 python3.10 python3; do
-  if command -v $py &> /dev/null; then
-    version=$($py --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
-    major=$(echo $version | cut -d'.' -f1)
-    minor=$(echo $version | cut -d'.' -f2)
-    if [ "$major" -gt 3 ] || ([ "$major" -eq 3 ] && [ "$minor" -ge 10 ]); then
-      PYTHON_CMD=$py
-      break
-    fi
-  fi
-done
-
-if [ -z "$PYTHON_CMD" ]; then
-  echo "ERROR: Python 3.10+ not found"
-  exit 1
-fi
-
-echo "Using Python: $PYTHON_CMD ($($PYTHON_CMD --version))"
-
-# Create a test brain
-BRAIN_PATH="$TEMP/test-brain"
-mkdir -p "$BRAIN_PATH/raw/notes"
-echo "# Test Note" > "$BRAIN_PATH/raw/notes/test.md"
-
-# Run setup non-interactively by creating config manually
-mkdir -p ~/.ai-brain-tool
-echo '{"brains":{"test":"'"$BRAIN_PATH"'"}}' > ~/.ai-brain-tool/config.json
-echo '{"gitSync":false,"extras":[],"obsidianDir":null}' > "$BRAIN_PATH/.brain-config.json"
-
-# Create venv and install graphify
+echo "Step 2: Creating brain with ai-brain setup..."
+# Run setup with simulated input
+# The setup wizard will:
+# - Create brain folder structure
+# - Detect Python (available on Ubuntu runner)
+# - Create venv and install graphify
 cd "$BRAIN_PATH"
-$PYTHON_CMD -m venv .venv
-.venv/bin/pip install --upgrade pip -q
-.venv/bin/pip install -q "graphifyy[mcp]==${GRAPHIFY_VERSION}" --index-url https://pypi.org/simple
+node "$GITHUB_WORKSPACE/bin/ai-brain.js" setup <<EOF
+test
+current
+local
+n
 
-# Run update command
-cd "$TEMP/repo"
+
+n
+EOF
+
+echo "Step 3: Adding test content..."
+mkdir -p "$BRAIN_PATH/raw/notes"
+cat > "$BRAIN_PATH/raw/notes/test.md" << 'NOTE'
+# Test Note
+
+This is a test note for E2E validation.
+
+## Concepts
+- Testing
+- Automation
+- CI/CD
+NOTE
+
+echo "Step 4: Running ai-brain update..."
+cd "$GITHUB_WORKSPACE"
 node bin/ai-brain.js update test
 
-# Verify graph.json was produced
+echo "Step 5: Verifying results..."
 if [ -f "$BRAIN_PATH/graphify-out/graph.json" ]; then
-  echo "E2E PASSED: graph.json created successfully"
-  exit 0
+  NODE_COUNT=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$BRAIN_PATH/graphify-out/graph.json')).nodes?.length || 0)")
+  EDGE_COUNT=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$BRAIN_PATH/graphify-out/graph.json')).edges?.length || 0)")
+  
+  if [ "$NODE_COUNT" -gt 0 ]; then
+    echo "✅ E2E PASSED: graph.json created with $NODE_COUNT nodes, $EDGE_COUNT edges"
+    exit 0
+  else
+    echo "⚠️  E2E WARNING: graph.json exists but has no nodes"
+    exit 1
+  fi
 else
-  echo "E2E FAILED: graph.json not found"
+  echo "❌ E2E FAILED: graph.json not found"
+  echo ""
+  echo "Debug info:"
+  echo "- Brain path: $BRAIN_PATH"
+  echo "- Venv exists: $([ -f "$BRAIN_PATH/.venv/bin/python3" ] && echo 'yes' || echo 'no')"
+  echo "- Brain folder contents:"
+  ls -la "$BRAIN_PATH/" 2>&1 || true
   exit 1
 fi
