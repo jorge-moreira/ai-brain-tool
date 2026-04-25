@@ -1,3 +1,9 @@
+## [2.0.1](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.0.0...v2.0.1) (2026-04-25)
+
+### 🐞 Bug Fixes
+
+* graphify 0.5.0 integration ([#32](https://github.com/jorge-moreira/ai-brain-tool/issues/32)) ([a5ea1fd](https://github.com/jorge-moreira/ai-brain-tool/commit/a5ea1fde822efa77c3121dda9f3cb81a138b46f1))
+
 ## [2.0.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v1.5.0...v2.0.0) (2026-04-25)
 
 ### ⚠ BREAKING CHANGES
