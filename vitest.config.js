@@ -2,22 +2,23 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    include: ['tests/**/*.test.js'],
     environment: 'node',
-    globals: true,
-    setupFiles: ['./tests/setup.js'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'json-summary', 'html'],
+      include: ['src/**/*.js', 'bin/*.js'],
+      exclude: [
+        '**/node_modules/**',
+        '**/tests/**',
+        '**/__tests__/**',
+        '**/*.test.js',
+      ],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80,
+      },
+    },
   },
-  coverage: {
-    provider: 'v8',
-    reporter: ['text', 'lcov', 'json', 'json-summary'],
-    reportsDirectory: 'coverage',
-    exclude: [
-      'bin/**',
-      'tests/**',
-      '**/*.test.js',
-      '**/*.spec.js',
-      '**/setup.js',
-      '**/mcp/**',
-    ],
-  },
-})
+});

@@ -12,10 +12,12 @@
   },
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest",
     "test:bun": "bun test",
+    "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:coverage:bun": "bun test:coverage",
     "test:coverage:ci": "vitest run --coverage --reporter=github-actions",
+    "test:coverage:ci:bun": "bun test:coverage:ci",
     "start": "node bin/ai-brain.js",
     "start:bun": "bun run bin/ai-brain.js",
     "prepare": "husky"
