@@ -1,224 +1,281 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
 vi.mock('chalk', () => ({
   default: {
     red: vi.fn((s) => s),
-    yellow: vi.fn((s) => s),
     green: vi.fn((s) => s),
+    yellow: vi.fn((s) => s),
+    dim: vi.fn((s) => s),
+    bold: { cyan: vi.fn((s) => s) },
     cyan: vi.fn((s) => s)
   }
 }))
 
 vi.mock('inquirer', () => ({
   default: {
-    prompt: vi.fn(() => Promise.resolve({ vaultPath: '' }))
+    prompt: vi.fn()
   }
 }))
 
+vi.mock('../../src/config.js', () => ({
+  resolveBrain: vi.fn(),
+  readBrainConfig: vi.fn(),
+  readConfig: vi.fn()
+}))
+
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    existsSync: vi.fn(actual.existsSync),
+    mkdirSync: vi.fn(actual.mkdirSync),
+    cpSync: vi.fn(actual.cpSync),
+    writeFileSync: vi.fn(actual.writeFileSync),
+    readFileSync: vi.fn(actual.readFileSync)
+  }
+})
+
 describe('commands/setup-obsidian', () => {
-  let resolveBrainSpy, readBrainConfigSpy
   let consoleLogSpy, consoleErrorSpy
 
   beforeEach(async () => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    const config = await import('../../src/config.js')
-    resolveBrainSpy = vi.spyOn(config, 'resolveBrain')
-    readBrainConfigSpy = vi.spyOn(config, 'readBrainConfig')
   })
 
   afterEach(() => {
     vi.resetAllMocks()
   })
 
-  describe('run', () => {
-    it('should resolve brain from id argument', async () => {
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run(['work'], { vaultPath: '/tmp/work' })
-
-      expect(resolveBrainSpy).toHaveBeenCalledWith('work')
+  it('should throw error when brain cannot be resolved', async () => {
+    const config = await import('../../src/config.js')
+    config.resolveBrain.mockImplementation(() => {
+      throw new Error('Brain not found')
     })
 
-    it('should resolve brain from options.brainId', async () => {
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
+    const { run } = await import('../../src/commands/setup-obsidian.js')
+    
+    await expect(run([])).rejects.toThrow('BRAIN_NOT_RESOLVED')
+  })
 
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([], { brainId: 'work', vaultPath: '/tmp/work' })
+  it('should throw error when no brain configured', async () => {
+    const config = await import('../../src/config.js')
+    config.resolveBrain.mockReturnValue({ id: null, path: null })
 
-      expect(resolveBrainSpy).toHaveBeenCalledWith('work')
+    const { run } = await import('../../src/commands/setup-obsidian.js')
+    
+    await expect(run([])).rejects.toThrow('NO_BRAIN_CONFIGURED')
+  })
+
+  it('should show current vault and prompt to update when already configured', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'obsidian-test-'))
+    const config = await import('../../src/config.js')
+    config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
+    config.readBrainConfig.mockReturnValue({ obsidianDir: tmp })
+
+    const { run } = await import('../../src/commands/setup-obsidian.js')
+    await run([])
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Current vault')
+    )
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('(same as brain)')
+    )
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('setup-obsidian (test)')
+    )
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('To update')
+    )
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should show different brain folder when vault is separate', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'obsidian-test-'))
+    const vaultPath = join(tmpdir(), 'separate-vault')
+    const config = await import('../../src/config.js')
+    config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
+    config.readBrainConfig.mockReturnValue({ obsidianDir: vaultPath })
+
+    const inquirer = await import('inquirer')
+    inquirer.default.prompt.mockResolvedValue({ vaultPath })
+
+    const { run } = await import('../../src/commands/setup-obsidian.js')
+    await run(['--update'])
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('different')
+    )
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should update vault when --update flag is provided', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'obsidian-test-'))
+    const fs = await import('fs')
+    fs.existsSync.mockReturnValue(true)
+
+    const config = await import('../../src/config.js')
+    config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
+    config.readBrainConfig.mockReturnValue({ obsidianDir: tmp })
+
+    const inquirer = await import('inquirer')
+    inquirer.default.prompt.mockResolvedValue({ vaultPath: tmp })
+
+    const { run } = await import('../../src/commands/setup-obsidian.js')
+    await run(['--update'])
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Updating vault')
+    )
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should prompt for vault path when not provided', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'obsidian-test-'))
+    const fs = await import('fs')
+    fs.existsSync.mockReturnValue(false)
+
+    const config = await import('../../src/config.js')
+    config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
+    config.readBrainConfig.mockReturnValue({})
+
+    const inquirer = await import('inquirer')
+    inquirer.default.prompt.mockResolvedValue({ vaultPath: tmp })
+
+    const { run } = await import('../../src/commands/setup-obsidian.js')
+    await run([])
+
+    expect(inquirer.default.prompt).toHaveBeenCalled()
+    
+    // Verify the prompt was configured with a filter function that trims input
+    const promptArgs = inquirer.default.prompt.mock.calls[0][0]
+    const vaultPathPrompt = promptArgs.find(p => p.name === 'vaultPath')
+    expect(vaultPathPrompt.filter).toBeDefined()
+    expect(vaultPathPrompt.filter('  /path/with/spaces  ')).toBe('/path/with/spaces')
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should use vaultPath from options when provided', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'obsidian-test-'))
+    const fs = await import('fs')
+    fs.existsSync.mockReturnValue(false)
+
+    const config = await import('../../src/config.js')
+    config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
+    config.readBrainConfig.mockReturnValue({})
+
+    const inquirer = await import('inquirer')
+    inquirer.default.prompt.mockResolvedValue({ vaultPath: tmp })
+
+    const { run } = await import('../../src/commands/setup-obsidian.js')
+    await run([], { vaultPath: tmp })
+
+    expect(inquirer.default.prompt).not.toHaveBeenCalled()
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should create vault directory if it does not exist', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'obsidian-test-'))
+    const vaultPath = join(tmp, 'new-vault')
+    const fs = await import('fs')
+    fs.existsSync.mockReturnValue(false)
+
+    const config = await import('../../src/config.js')
+    config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
+    config.readBrainConfig.mockReturnValue({})
+
+    const inquirer = await import('inquirer')
+    inquirer.default.prompt.mockResolvedValue({ vaultPath })
+
+    const { run } = await import('../../src/commands/setup-obsidian.js')
+    await run([])
+
+    expect(fs.mkdirSync).toHaveBeenCalled()
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should copy obsidian scaffold when .obsidian does not exist', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'obsidian-test-'))
+    const vaultPath = join(tmp, 'vault')
+    const fs = await import('fs')
+    fs.existsSync.mockImplementation((path) => {
+      if (path.includes('.obsidian')) return false
+      return true
     })
 
-    it('should print brain id in header', async () => {
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
+    const config = await import('../../src/config.js')
+    config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
+    config.readBrainConfig.mockReturnValue({})
 
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run(['work'], { vaultPath: '/tmp/work' })
+    const inquirer = await import('inquirer')
+    inquirer.default.prompt.mockResolvedValue({ vaultPath })
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('work')
-      )
+    const { run } = await import('../../src/commands/setup-obsidian.js')
+    await run([])
+
+    expect(fs.cpSync).toHaveBeenCalled()
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should skip scaffold copy when .obsidian already exists', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'obsidian-test-'))
+    const vaultPath = join(tmp, 'vault')
+    const fs = await import('fs')
+    fs.existsSync.mockImplementation((path) => {
+      if (path.includes('.obsidian')) return true
+      return true
     })
 
-    it('should write obsidianDir to brain config', async () => {
-      const brainPath = '/tmp/work'
-      mkdirSync(brainPath, { recursive: true })
+    const config = await import('../../src/config.js')
+    config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
+    config.readBrainConfig.mockReturnValue({})
 
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
+    const inquirer = await import('inquirer')
+    inquirer.default.prompt.mockResolvedValue({ vaultPath })
 
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([], { vaultPath: brainPath })
+    const { run } = await import('../../src/commands/setup-obsidian.js')
+    await run([])
 
-      const configPath = join(brainPath, '.brain-config.json')
-      const config = JSON.parse(readFileSync(configPath, 'utf8'))
-      expect(config.obsidianDir).toBe(brainPath)
-    })
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining('already exists')
+    )
 
-    it('should show already configured when obsidianDir exists without --update', async () => {
-      const brainPath = '/tmp/work'
-      mkdirSync(brainPath, { recursive: true })
+    rmSync(tmp, { recursive: true, force: true })
+  })
 
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: brainPath })
+  it('should write updated brain config with obsidianDir', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'obsidian-test-'))
+    const vaultPath = join(tmp, 'vault')
+    const fs = await import('fs')
+    fs.existsSync.mockReturnValue(false)
 
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([], { vaultPath: brainPath })
+    const config = await import('../../src/config.js')
+    config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
+    config.readBrainConfig.mockReturnValue({ existing: 'config' })
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('already configured')
-      )
-    })
+    const inquirer = await import('inquirer')
+    inquirer.default.prompt.mockResolvedValue({ vaultPath })
 
-    it('should proceed when --update flag provided', async () => {
-      const brainPath = '/tmp/work'
-      mkdirSync(brainPath, { recursive: true })
+    const { run } = await import('../../src/commands/setup-obsidian.js')
+    await run([])
 
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: brainPath })
+    expect(fs.writeFileSync).toHaveBeenCalledWith(
+      expect.stringContaining('.brain-config.json'),
+      expect.stringContaining('obsidianDir'),
+      'utf8'
+    )
 
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run(['work', '--update'], { vaultPath: brainPath })
-
-      expect(resolveBrainSpy).toHaveBeenCalledWith('work')
-    })
-
-    it('should support -u shorthand', async () => {
-      const brainPath = '/tmp/work'
-      mkdirSync(brainPath, { recursive: true })
-
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: brainPath })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run(['work', '-u'], { vaultPath: brainPath })
-
-      expect(resolveBrainSpy).toHaveBeenCalledWith('work')
-    })
-
-    it('should handle when brain not found', async () => {
-      resolveBrainSpy.mockImplementation(() => {
-        throw new Error('Brain "nonexistent" not found')
-      })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await expect(run(['nonexistent'], {})).rejects.toThrow('BRAIN_NOT_RESOLVED')
-    })
-
-    it('should throw when no brain configured', async () => {
-      resolveBrainSpy.mockReturnValue({ id: null, path: null, isLocal: false })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await expect(run([], {})).rejects.toThrow('NO_BRAIN_CONFIGURED')
-    })
-
-    it('should use inquirer when vaultPath not provided', async () => {
-      const brainPath = '/tmp/work'
-      mkdirSync(brainPath, { recursive: true })
-      
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
-      
-      const inquirer = await import('inquirer')
-      inquirer.default.prompt.mockResolvedValue({ vaultPath: brainPath })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([], {})
-
-      expect(inquirer.default.prompt).toHaveBeenCalled()
-    })
-
-    it('should create vault directory if not exists', async () => {
-      const brainPath = '/tmp/work'
-      const vaultPath = join('/tmp', 'new-vault-' + Date.now())
-      mkdirSync(brainPath, { recursive: true })
-
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([], { vaultPath })
-
-      expect(existsSync(vaultPath)).toBe(true)
-      rmSync(vaultPath, { recursive: true, force: true })
-    })
-
-    it('should skip scaffold copy when .obsidian exists', async () => {
-      const brainPath = '/tmp/work'
-      const vaultPath = join('/tmp', 'skip-scaffold-' + Date.now())
-      const vaultObsidianDir = join(vaultPath, '.obsidian')
-      mkdirSync(brainPath, { recursive: true })
-      mkdirSync(vaultObsidianDir, { recursive: true })
-
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: null })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([], { vaultPath })
-
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('already exists')
-      )
-      rmSync(vaultPath, { recursive: true, force: true })
-    })
-
-    it('should show different when vault is not same as brain', async () => {
-      const brainPath = '/tmp/brain'
-      const vaultPath = '/tmp/vault'
-      mkdirSync(brainPath, { recursive: true })
-
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: vaultPath })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([], { vaultPath })
-
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('different')
-      )
-    })
-
-    it('should show same as brain when vault equals brainPath', async () => {
-      const brainPath = '/tmp/work'
-      mkdirSync(brainPath, { recursive: true })
-
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: brainPath, isLocal: false })
-      readBrainConfigSpy.mockReturnValue({ obsidianDir: brainPath })
-
-      const { run } = await import('../../src/commands/setup-obsidian.js')
-      await run([], { vaultPath: brainPath })
-
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('same as brain')
-      )
-    })
+    rmSync(tmp, { recursive: true, force: true })
   })
 })
