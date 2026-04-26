@@ -12,6 +12,7 @@ on:
 jobs:
   unit-integration:
     name: Unit + Integration Tests
+    if: github.event_name != 'pull_request_target' || github.event.label.name == 'e2e'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -36,10 +37,18 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: coverage/coverage-final.json,coverage/junit.xml
+          files: coverage/coverage-final.json
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
           verbose: true
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report-type: test_results
+          file: coverage/junit.xml
 
   e2e:
     name: End-to-End Tests
