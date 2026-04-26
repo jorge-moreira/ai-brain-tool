@@ -14,7 +14,7 @@
     "test": "vitest run tests/unit tests/integration",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
-    "test:e2e": "vitest run tests/e2e",
+    "test:e2e": "vitest run tests/e2e --no-coverage",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage tests/unit tests/integration",
     "test:coverage:bun": "bun test:coverage",
