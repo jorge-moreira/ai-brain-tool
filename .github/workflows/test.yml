@@ -30,15 +30,13 @@ jobs:
           name: coverage
           path: coverage/
 
-      - name: Coverage Report
-        if: always() 
-        uses: davelosert/vitest-coverage-report-action@v2
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          json-summary-path: coverage/coverage-summary.json
-          json-final-path: coverage/coverage-final.json
-          file-coverage-mode: all
-          threshold-icons: '{ "0": "🔴", "70": "🟠", "80": "🟡", "90": "🟢" }'
+          files: coverage/coverage-final.json,coverage/junit.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+          verbose: true
 
   e2e:
     name: End-to-End Tests
