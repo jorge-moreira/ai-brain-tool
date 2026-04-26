@@ -4,6 +4,8 @@ import { existsSync, readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { platform } from 'process'
 import { fileURLToPath } from 'url'
+import { homedir } from 'os'
+import ora from 'ora'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -19,6 +21,7 @@ function buildPkg(extras = []) {
 
 // Returns path to the venv Python executable
 export function venvPythonPath(brainPath) {
+  /* c8 ignore next 3 */
   if (platform === 'win32') {
     return join(brainPath, '.venv', 'Scripts', 'python.exe')
   }
@@ -57,45 +60,100 @@ export async function detectPackageManager() {
   }
 }
 
-// Create .venv and install graphifyy with requested extras (always includes mcp)
-export async function createVenv(brainPath, extras = []) {
-  const pkg = buildPkg(extras)
-  const pm = await detectPackageManager()
-  if (pm === 'uv') {
-    // Check for available Python 3.10+, let uv install if needed
-    const python = await detectPython()
-    if (python) {
-      // Use existing Python 3.10+
-      await execa('uv', ['venv', '--python', python, join(brainPath, '.venv')], { stdio: 'inherit' })
-    } else {
-      // No Python 3.10+ found - uv will download and install latest available
-      await execa('uv', ['venv', '--python', '3.10', join(brainPath, '.venv')], { stdio: 'inherit' })
+// Ensure uv is installed, install if missing
+export async function ensureUv() {
+  try {
+    await execa('uv', ['--version'])
+    console.log(chalk.green('  ✓ uv already installed'))
+    return
+  } catch {
+    // uv not found, proceed to install
+  }
+
+  const spinner = ora('Installing uv...').start()
+
+  try {
+    /* c8 ignore start */
+    const isWindows = platform === 'win32'
+    const installCmd = isWindows
+      ? {
+          cmd: 'powershell',
+          args: ['-c', 'irm https://astral.sh/uv/install.ps1 | iex']
+        }
+      : {
+          cmd: 'sh',
+          args: ['-c', 'curl -LsSf https://astral.sh/uv/install.sh | sh']
+        }
+
+    await execa(installCmd.cmd, installCmd.args, { stdio: 'pipe' })
+
+    // Add uv to PATH for current process (uv installs to ~/.local/bin)
+    const uvBinDir = join(homedir(), '.local', 'bin')
+    const currentPath = process.env.PATH || ''
+    if (!currentPath.includes(uvBinDir)) {
+      const sep = platform === 'win32' ? ';' : ':'
+      process.env.PATH = `${uvBinDir}${sep}${currentPath}`
     }
-    await execa('uv', ['pip', 'install', pkg, '--python', venvPythonPath(brainPath)], { stdio: 'inherit' })
-  } else {
-    const python = await detectPython()
-    if (!python) {
+    /* c8 ignore end */
+
+    // Verify installation
+    try {
+      await execa('uv', ['--version'])
+      spinner.succeed('uv installed')
+    } catch {
+      spinner.fail('uv installed but not found in PATH')
       throw new Error(
-        'Python 3.10+ is required but not found.\n' +
-        'Install with one of these options:\n' +
-        '  1. uv (recommended): brew install uv && uv python install 3.10\n' +
-        '  2. Python.org: https://www.python.org/downloads/'
+        'uv was installed but is not available in PATH.\n' +
+        `Try adding ${uvBinDir} to your PATH, or restart your terminal.\n` +
+        'Manual install: curl -LsSf https://astral.sh/uv/install.sh | sh'
       )
     }
-    await execa(python, ['-m', 'venv', join(brainPath, '.venv')], { stdio: 'inherit' })
-    await execa(venvPythonPath(brainPath), ['-m', 'pip', 'install', pkg], { stdio: 'inherit' })
+  } catch (error) {
+    spinner.fail('Failed to install uv')
+
+    if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNRESET')) {
+      throw new Error(
+        'Cannot download uv. Check your internet connection.\n' +
+        'Manual install: curl -LsSf https://astral.sh/uv/install.sh | sh'
+      )
+    }
+
+    if (error.message.includes('EACCES') || error.message.includes('permission denied')) {
+      throw new Error(
+        'Permission denied installing uv.\n' +
+        'Check system permissions or install manually:\n' +
+        '  curl -LsSf https://astral.sh/uv/install.sh | sh'
+      )
+    }
+
+    throw new Error(
+      `Failed to install uv: ${error.message}\n` +
+      'Manual install: curl -LsSf https://astral.sh/uv/install.sh | sh'
+    )
   }
+}
+
+// Create .venv and install graphifyy with requested extras (always includes mcp)
+export async function createVenv(brainPath, extras = []) {
+  await ensureUv()
+  
+  const pkg = buildPkg(extras)
+  // Check for available Python 3.10+, let uv install if needed
+  const python = await detectPython()
+  if (python) {
+    await execa('uv', ['venv', '--python', python, join(brainPath, '.venv')], { stdio: 'inherit' })
+  } else {
+    await execa('uv', ['venv', '--python', '3.10', join(brainPath, '.venv')], { stdio: 'inherit' })
+  }
+  await execa('uv', ['pip', 'install', pkg, '--python', venvPythonPath(brainPath)], { stdio: 'inherit' })
 }
 
 // Upgrade graphifyy in existing .venv, preserving the configured extras
 export async function upgradeVenv(brainPath, extras = []) {
+  await ensureUv()
+  
   const pkg = buildPkg(extras)
-  const pm = await detectPackageManager()
-  if (pm === 'uv') {
-    await execa('uv', ['pip', 'install', '--upgrade', pkg, '--python', venvPythonPath(brainPath)], { stdio: 'inherit' })
-  } else {
-    await execa(venvPythonPath(brainPath), ['-m', 'pip', 'install', '--upgrade', pkg], { stdio: 'inherit' })
-  }
+  await execa('uv', ['pip', 'install', '--upgrade', pkg, '--python', venvPythonPath(brainPath)], { stdio: 'inherit' })
 }
 
 // Run graphify to rebuild the graph from raw/
