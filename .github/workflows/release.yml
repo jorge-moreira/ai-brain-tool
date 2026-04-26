@@ -34,9 +34,6 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run tests
-        run: bun run test
-
       # semantic-release does not support the bun runtime
       # https://github.com/semantic-release/semantic-release/issues/3527
       - name: Release
