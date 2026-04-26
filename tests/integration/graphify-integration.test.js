@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync, existsSync } from 'fs'
 import { execSync } from 'child_process'
 import { tmpdir } from 'os'
@@ -7,12 +7,6 @@ import { vi } from 'vitest'
 
 describe('graphify integration', () => {
   let tmpHome
-  let hasUv
-
-  beforeAll(async () => {
-    const { detectPackageManager } = await import('../../src/graphify.js')
-    hasUv = (await detectPackageManager()) === 'uv'
-  })
 
   beforeEach(() => {
     tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-graphify-test-'))
@@ -87,10 +81,14 @@ describe('graphify integration', () => {
   describe('createVenv integration (when uv available)', () => {
     // These tests require uv for Python management (uv will download Python 3.10+ if needed)
     // Skip if uv is not installed - install with: brew install uv
-    const runTest = hasUv ? it : it.skip
-    
-    runTest('should create venv with graphify installation', async () => {
-      const { venvExists, createVenv } = await import('../../../src/graphify.js')
+    it('should create venv with graphify installation', async () => {
+      const { detectPackageManager, venvExists, createVenv } = await import('../../../src/graphify.js')
+      const pm = await detectPackageManager()
+      
+      if (pm !== 'uv') {
+        console.log('Skipping: uv not found in PATH. Install with: brew install uv')
+        return
+      }
       
       const brainPath = join(tmpHome, 'brain')
       mkdirSync(brainPath, { recursive: true })
@@ -101,8 +99,14 @@ describe('graphify integration', () => {
       expect(existsSync(join(brainPath, '.venv', 'bin', 'python3'))).toBe(true)
     }, 120000)
 
-    runTest('should create venv with extras', async () => {
-      const { venvExists, createVenv } = await import('../../../src/graphify.js')
+    it('should create venv with extras', async () => {
+      const { detectPackageManager, venvExists, createVenv } = await import('../../../src/graphify.js')
+      const pm = await detectPackageManager()
+      
+      if (pm !== 'uv') {
+        console.log('Skipping: uv not found in PATH. Install with: brew install uv')
+        return
+      }
       
       const brainPath = join(tmpHome, 'brain')
       mkdirSync(brainPath, { recursive: true })
