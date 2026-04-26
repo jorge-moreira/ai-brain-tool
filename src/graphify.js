@@ -92,7 +92,8 @@ export async function ensureUv() {
     const currentPath = process.env.PATH || ''
     if (!currentPath.includes(uvBinDir)) {
       /* c8 ignore next */
-      process.env.PATH = `${uvBinDir}${platform === 'win32' ? ';' : ':'}${currentPath}`
+      const sep = platform === 'win32' ? ';' : ':'
+      process.env.PATH = `${uvBinDir}${sep}${currentPath}`
     }
 
     // Verify installation
