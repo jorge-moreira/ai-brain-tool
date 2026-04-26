@@ -77,6 +77,14 @@ describe('graphify', () => {
     expect(result).toBe('python3')
   })
 
+  it('should use stderr when stdout is empty', async () => {
+    const { execa } = await import('execa')
+    execa.mockResolvedValue({ stdout: '', stderr: 'Python 3.12.0' })
+    const { detectPython } = await import('../../src/graphify.js')
+    const result = await detectPython()
+    expect(result).toBe('python3')
+  })
+
   it('should fall back to python when python3 not available', async () => {
     const { execa } = await import('execa')
     execa.mockRejectedValueOnce(new Error('not found')).mockResolvedValue({ stdout: 'Python 3.10.0', stderr: '' })
