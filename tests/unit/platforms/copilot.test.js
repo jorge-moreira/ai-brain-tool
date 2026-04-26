@@ -9,7 +9,7 @@ describe('platforms/copilot', () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'copilot-test-'))
       mkdirSync(join(fakeHome, '.config', 'gh'), { recursive: true })
 
-      const { detect } = await import('../../src/platforms/copilot.js')
+      const { detect } = await import('../../../src/platforms/copilot.js')
       expect(detect(fakeHome)).toBe(true)
 
       rmSync(fakeHome, { recursive: true, force: true })
@@ -18,7 +18,7 @@ describe('platforms/copilot', () => {
     it('should return false when .config/gh dir does not exist', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'copilot-test-'))
 
-      const { detect } = await import('../../src/platforms/copilot.js')
+      const { detect } = await import('../../../src/platforms/copilot.js')
       expect(detect(fakeHome)).toBe(false)
 
       rmSync(fakeHome, { recursive: true, force: true })
@@ -29,7 +29,7 @@ describe('platforms/copilot', () => {
     it('should be a no-op (copilot CLI does not use JSON config)', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'copilot-test-'))
 
-      const { patch } = await import('../../src/platforms/copilot.js')
+      const { patch } = await import('../../../src/platforms/copilot.js')
       await expect(patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome }))
         .resolves.toBeUndefined()
 
@@ -41,7 +41,7 @@ describe('platforms/copilot', () => {
     it('should write SKILL.md to skills/brain directory', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'copilot-test-'))
 
-      const { installSkill } = await import('../../src/platforms/copilot.js')
+      const { installSkill } = await import('../../../src/platforms/copilot.js')
       await installSkill({ homeDir: fakeHome })
 
       const skillPath = join(fakeHome, '.copilot', 'skills', 'brain', 'SKILL.md')

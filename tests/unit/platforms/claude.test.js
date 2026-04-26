@@ -9,7 +9,7 @@ describe('platforms/claude', () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'claude-test-'))
       mkdirSync(join(fakeHome, '.claude'), { recursive: true })
       
-      const { detect } = await import('../../src/platforms/claude.js')
+      const { detect } = await import('../../../src/platforms/claude.js')
       expect(detect(fakeHome)).toBe(true)
       
       rmSync(fakeHome, { recursive: true, force: true })
@@ -18,7 +18,7 @@ describe('platforms/claude', () => {
     it('should return false when .claude dir does not exist', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'claude-test-'))
       
-      const { detect } = await import('../../src/platforms/claude.js')
+      const { detect } = await import('../../../src/platforms/claude.js')
       expect(detect(fakeHome)).toBe(false)
       
       rmSync(fakeHome, { recursive: true, force: true })
@@ -31,7 +31,7 @@ describe('platforms/claude', () => {
       const claudeDir = join(fakeHome, '.claude')
       mkdirSync(claudeDir, { recursive: true })
 
-      const { patch } = await import('../../src/platforms/claude.js')
+      const { patch } = await import('../../../src/platforms/claude.js')
       await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
 
       const mcpPath = join(claudeDir, 'mcp.json')
@@ -51,7 +51,7 @@ describe('platforms/claude', () => {
         mcpServers: { 'other-server': { type: 'stdio', command: 'other' } }
       }), 'utf8')
 
-      const { patch } = await import('../../src/platforms/claude.js')
+      const { patch } = await import('../../../src/platforms/claude.js')
       await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
 
       const mcp = JSON.parse(readFileSync(join(claudeDir, 'mcp.json'), 'utf8'))
@@ -67,7 +67,7 @@ describe('platforms/claude', () => {
       mkdirSync(claudeDir, { recursive: true })
       writeFileSync(join(claudeDir, 'mcp.json'), 'invalid json{', 'utf8')
 
-      const { patch } = await import('../../src/platforms/claude.js')
+      const { patch } = await import('../../../src/platforms/claude.js')
       await expect(patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome }))
         .rejects.toThrow('Could not parse')
       
@@ -79,7 +79,7 @@ describe('platforms/claude', () => {
     it('should write brain.md to commands directory', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'claude-test-'))
 
-      const { installSkill } = await import('../../src/platforms/claude.js')
+      const { installSkill } = await import('../../../src/platforms/claude.js')
       await installSkill({ homeDir: fakeHome })
 
       const skillPath = join(fakeHome, '.claude', 'commands', 'brain.md')
@@ -91,7 +91,7 @@ describe('platforms/claude', () => {
 
   describe('installAlwaysOn', () => {
     it('should be a no-op that resolves', async () => {
-      const { installAlwaysOn } = await import('../../src/platforms/claude.js')
+      const { installAlwaysOn } = await import('../../../src/platforms/claude.js')
       await expect(installAlwaysOn()).resolves.toBeUndefined()
     })
   })

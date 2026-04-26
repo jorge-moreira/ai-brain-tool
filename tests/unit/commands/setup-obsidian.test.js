@@ -20,7 +20,7 @@ vi.mock('inquirer', () => ({
   }
 }))
 
-vi.mock("../../src/config.js", () => ({
+vi.mock("../../../src/config.js", () => ({
   getBrainPath: vi.fn(),
   resolveBrain: vi.fn(),
   readBrainConfig: vi.fn(),
@@ -52,32 +52,32 @@ describe('commands/setup-obsidian', () => {
   })
 
   it('should throw error when brain cannot be resolved', async () => {
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.resolveBrain.mockImplementation(() => {
       throw new Error('Brain not found')
     })
 
-    const { run } = await import('../../src/commands/setup-obsidian.js')
+    const { run } = await import('../../../src/commands/setup-obsidian.js')
     
     await expect(run([])).rejects.toThrow('BRAIN_NOT_RESOLVED')
   })
 
   it('should throw error when no brain configured', async () => {
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.resolveBrain.mockReturnValue({ id: null, path: null })
 
-    const { run } = await import('../../src/commands/setup-obsidian.js')
+    const { run } = await import('../../../src/commands/setup-obsidian.js')
     
     await expect(run([])).rejects.toThrow('NO_BRAIN_CONFIGURED')
   })
 
   it('should show current vault and prompt to update when already configured', async () => {
     const tmp = mkdtempSync(join(tmpdir(), 'obsidian-test-'))
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
     config.readBrainConfig.mockReturnValue({ obsidianDir: tmp })
 
-    const { run } = await import('../../src/commands/setup-obsidian.js')
+    const { run } = await import('../../../src/commands/setup-obsidian.js')
     await run([])
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -99,14 +99,14 @@ describe('commands/setup-obsidian', () => {
   it('should show different brain folder when vault is separate', async () => {
     const tmp = mkdtempSync(join(tmpdir(), 'obsidian-test-'))
     const vaultPath = join(tmpdir(), 'separate-vault')
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
     config.readBrainConfig.mockReturnValue({ obsidianDir: vaultPath })
 
     const inquirer = await import('inquirer')
     inquirer.default.prompt.mockResolvedValue({ vaultPath })
 
-    const { run } = await import('../../src/commands/setup-obsidian.js')
+    const { run } = await import('../../../src/commands/setup-obsidian.js')
     await run(['--update'])
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -121,14 +121,14 @@ describe('commands/setup-obsidian', () => {
     const fs = await import('fs')
     fs.existsSync.mockReturnValue(true)
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
     config.readBrainConfig.mockReturnValue({ obsidianDir: tmp })
 
     const inquirer = await import('inquirer')
     inquirer.default.prompt.mockResolvedValue({ vaultPath: tmp })
 
-    const { run } = await import('../../src/commands/setup-obsidian.js')
+    const { run } = await import('../../../src/commands/setup-obsidian.js')
     await run(['--update'])
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -143,14 +143,14 @@ describe('commands/setup-obsidian', () => {
     const fs = await import('fs')
     fs.existsSync.mockReturnValue(false)
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
     config.readBrainConfig.mockReturnValue({})
 
     const inquirer = await import('inquirer')
     inquirer.default.prompt.mockResolvedValue({ vaultPath: tmp })
 
-    const { run } = await import('../../src/commands/setup-obsidian.js')
+    const { run } = await import('../../../src/commands/setup-obsidian.js')
     await run([])
 
     expect(inquirer.default.prompt).toHaveBeenCalled()
@@ -169,14 +169,14 @@ describe('commands/setup-obsidian', () => {
     const fs = await import('fs')
     fs.existsSync.mockReturnValue(false)
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
     config.readBrainConfig.mockReturnValue({})
 
     const inquirer = await import('inquirer')
     inquirer.default.prompt.mockResolvedValue({ vaultPath: tmp })
 
-    const { run } = await import('../../src/commands/setup-obsidian.js')
+    const { run } = await import('../../../src/commands/setup-obsidian.js')
     await run([], { vaultPath: tmp })
 
     expect(inquirer.default.prompt).not.toHaveBeenCalled()
@@ -190,14 +190,14 @@ describe('commands/setup-obsidian', () => {
     const fs = await import('fs')
     fs.existsSync.mockReturnValue(false)
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
     config.readBrainConfig.mockReturnValue({})
 
     const inquirer = await import('inquirer')
     inquirer.default.prompt.mockResolvedValue({ vaultPath })
 
-    const { run } = await import('../../src/commands/setup-obsidian.js')
+    const { run } = await import('../../../src/commands/setup-obsidian.js')
     await run([])
 
     expect(fs.mkdirSync).toHaveBeenCalled()
@@ -214,14 +214,14 @@ describe('commands/setup-obsidian', () => {
       return true
     })
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
     config.readBrainConfig.mockReturnValue({})
 
     const inquirer = await import('inquirer')
     inquirer.default.prompt.mockResolvedValue({ vaultPath })
 
-    const { run } = await import('../../src/commands/setup-obsidian.js')
+    const { run } = await import('../../../src/commands/setup-obsidian.js')
     await run([])
 
     expect(fs.cpSync).toHaveBeenCalled()
@@ -238,14 +238,14 @@ describe('commands/setup-obsidian', () => {
       return true
     })
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
     config.readBrainConfig.mockReturnValue({})
 
     const inquirer = await import('inquirer')
     inquirer.default.prompt.mockResolvedValue({ vaultPath })
 
-    const { run } = await import('../../src/commands/setup-obsidian.js')
+    const { run } = await import('../../../src/commands/setup-obsidian.js')
     await run([])
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -261,14 +261,14 @@ describe('commands/setup-obsidian', () => {
     const fs = await import('fs')
     fs.existsSync.mockReturnValue(false)
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.resolveBrain.mockReturnValue({ id: 'test', path: tmp })
     config.readBrainConfig.mockReturnValue({ existing: 'config' })
 
     const inquirer = await import('inquirer')
     inquirer.default.prompt.mockResolvedValue({ vaultPath })
 
-    const { run } = await import('../../src/commands/setup-obsidian.js')
+    const { run } = await import('../../../src/commands/setup-obsidian.js')
     await run([])
 
     expect(fs.writeFileSync).toHaveBeenCalledWith(

@@ -32,27 +32,27 @@ vi.mock('@inquirer/prompts', () => ({
   confirm: vi.fn()
 }))
 
-vi.mock('../../src/scaffold.js', () => ({
+vi.mock('../../../src/scaffold.js', () => ({
   createBrainFolder: vi.fn(),
   writeBrainConfig: vi.fn()
 }))
 
-vi.mock('../../src/graphify.js', () => ({
+vi.mock('../../../src/graphify.js', () => ({
   createVenv: vi.fn(),
   venvExists: vi.fn()
 }))
 
-vi.mock('../../src/platforms/index.js', () => ({
+vi.mock('../../../src/platforms/index.js', () => ({
   detectAll: vi.fn(),
   configureSelected: vi.fn()
 }))
 
-vi.mock('../../src/git.js', () => ({
+vi.mock('../../../src/git.js', () => ({
   initRepo: vi.fn(),
   writeGitignore: vi.fn()
 }))
 
-vi.mock('../../src/config.js', () => ({
+vi.mock('../../../src/config.js', () => ({
   readConfig: vi.fn(),
   writeConfig: vi.fn(),
   addBrain: vi.fn(),
@@ -98,23 +98,23 @@ describe('commands/setup', () => {
     prompts.select.mockResolvedValue('brain') // Obsidian choice
     prompts.checkbox.mockResolvedValue([]) // Selected platforms
 
-    const platforms = await import('../../src/platforms/index.js')
+    const platforms = await import('../../../src/platforms/index.js')
     platforms.detectAll.mockResolvedValue([
       { name: 'Claude', detected: true, configHint: '~/.claude' }
     ])
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.configPath.mockReturnValue('/fake/config/path')
     config.ensureConfigDir.mockImplementation(() => {})
     config.isBrainIdAvailable.mockReturnValue(true)
 
-    const graphify = await import('../../src/graphify.js')
+    const graphify = await import('../../../src/graphify.js')
     graphify.createVenv.mockResolvedValue()
 
-    const scaffold = await import('../../src/scaffold.js')
+    const scaffold = await import('../../../src/scaffold.js')
     scaffold.createBrainFolder.mockResolvedValue()
 
-    const { run } = await import('../../src/commands/setup.js')
+    const { run } = await import('../../../src/commands/setup.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -137,21 +137,21 @@ describe('commands/setup', () => {
     prompts.checkbox.mockResolvedValueOnce([]) // Selected platforms
     prompts.select.mockResolvedValueOnce('skip') // Obsidian choice
 
-    const platforms = await import('../../src/platforms/index.js')
+    const platforms = await import('../../../src/platforms/index.js')
     platforms.detectAll.mockResolvedValue([])
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.configPath.mockReturnValue('/fake/config/path')
     config.ensureConfigDir.mockImplementation(() => {})
     config.isBrainIdAvailable.mockReturnValue(true)
 
-    const graphify = await import('../../src/graphify.js')
+    const graphify = await import('../../../src/graphify.js')
     graphify.createVenv.mockResolvedValue()
 
-    const scaffold = await import('../../src/scaffold.js')
+    const scaffold = await import('../../../src/scaffold.js')
     scaffold.createBrainFolder.mockResolvedValue()
 
-    const { run } = await import('../../src/commands/setup.js')
+    const { run } = await import('../../../src/commands/setup.js')
     await run()
 
     expect(prompts.input).toHaveBeenCalled()
@@ -173,21 +173,21 @@ describe('commands/setup', () => {
     prompts.checkbox.mockResolvedValueOnce([]) // Selected platforms
     prompts.select.mockResolvedValueOnce('skip') // Obsidian choice
 
-    const platforms = await import('../../src/platforms/index.js')
+    const platforms = await import('../../../src/platforms/index.js')
     platforms.detectAll.mockResolvedValue([])
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.configPath.mockReturnValue('/fake/config/path')
     config.ensureConfigDir.mockImplementation(() => {})
     config.isBrainIdAvailable.mockReturnValue(true)
 
-    const graphify = await import('../../src/graphify.js')
+    const graphify = await import('../../../src/graphify.js')
     graphify.createVenv.mockResolvedValue()
 
-    const scaffold = await import('../../src/scaffold.js')
+    const scaffold = await import('../../../src/scaffold.js')
     scaffold.createBrainFolder.mockResolvedValue()
 
-    const { run } = await import('../../src/commands/setup.js')
+    const { run } = await import('../../../src/commands/setup.js')
     await run()
 
     expect(prompts.input).toHaveBeenCalledTimes(3) // name + custom path + brain id
@@ -211,25 +211,25 @@ describe('commands/setup', () => {
     prompts.checkbox.mockResolvedValueOnce([]) // Selected platforms
     prompts.select.mockResolvedValueOnce('skip') // Obsidian choice
 
-    const platforms = await import('../../src/platforms/index.js')
+    const platforms = await import('../../../src/platforms/index.js')
     platforms.detectAll.mockResolvedValue([])
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.configPath.mockReturnValue('/fake/config/path')
     config.ensureConfigDir.mockImplementation(() => {})
     config.isBrainIdAvailable.mockReturnValue(true)
 
-    const git = await import('../../src/git.js')
+    const git = await import('../../../src/git.js')
     git.initRepo.mockResolvedValue()
     git.writeGitignore.mockResolvedValue()
 
-    const graphify = await import('../../src/graphify.js')
+    const graphify = await import('../../../src/graphify.js')
     graphify.createVenv.mockResolvedValue()
 
-    const scaffold = await import('../../src/scaffold.js')
+    const scaffold = await import('../../../src/scaffold.js')
     scaffold.createBrainFolder.mockResolvedValue()
 
-    const { run } = await import('../../src/commands/setup.js')
+    const { run } = await import('../../../src/commands/setup.js')
     await run()
 
     expect(git.initRepo).toHaveBeenCalled()
@@ -249,21 +249,21 @@ describe('commands/setup', () => {
     prompts.checkbox.mockResolvedValueOnce([])
     prompts.select.mockResolvedValueOnce('skip')
 
-    const platforms = await import('../../src/platforms/index.js')
+    const platforms = await import('../../../src/platforms/index.js')
     platforms.detectAll.mockResolvedValue([])
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.configPath.mockReturnValue('/fake/config/path')
     config.ensureConfigDir.mockImplementation(() => {})
     config.isBrainIdAvailable.mockReturnValue(true)
 
-    const graphify = await import('../../src/graphify.js')
+    const graphify = await import('../../../src/graphify.js')
     graphify.createVenv.mockResolvedValue()
 
-    const scaffold = await import('../../src/scaffold.js')
+    const scaffold = await import('../../../src/scaffold.js')
     scaffold.createBrainFolder.mockResolvedValue()
 
-    const { run } = await import('../../src/commands/setup.js')
+    const { run } = await import('../../../src/commands/setup.js')
     await run()
 
     expect(prompts.checkbox).toHaveBeenCalledWith(
@@ -286,21 +286,21 @@ describe('commands/setup', () => {
     prompts.checkbox.mockResolvedValueOnce([])
     prompts.select.mockResolvedValueOnce('brain') // Use brain as vault
 
-    const platforms = await import('../../src/platforms/index.js')
+    const platforms = await import('../../../src/platforms/index.js')
     platforms.detectAll.mockResolvedValue([])
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.configPath.mockReturnValue('/fake/config/path')
     config.ensureConfigDir.mockImplementation(() => {})
     config.isBrainIdAvailable.mockReturnValue(true)
 
-    const graphify = await import('../../src/graphify.js')
+    const graphify = await import('../../../src/graphify.js')
     graphify.createVenv.mockResolvedValue()
 
-    const scaffold = await import('../../src/scaffold.js')
+    const scaffold = await import('../../../src/scaffold.js')
     scaffold.createBrainFolder.mockResolvedValue()
 
-    const { run } = await import('../../src/commands/setup.js')
+    const { run } = await import('../../../src/commands/setup.js')
     await run()
 
     expect(scaffold.createBrainFolder).toHaveBeenCalledWith(
@@ -322,21 +322,21 @@ describe('commands/setup', () => {
     prompts.select.mockResolvedValueOnce('separate') // Separate vault
     prompts.input.mockResolvedValueOnce('/vault/path') // Vault path
 
-    const platforms = await import('../../src/platforms/index.js')
+    const platforms = await import('../../../src/platforms/index.js')
     platforms.detectAll.mockResolvedValue([])
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.configPath.mockReturnValue('/fake/config/path')
     config.ensureConfigDir.mockImplementation(() => {})
     config.isBrainIdAvailable.mockReturnValue(true)
 
-    const graphify = await import('../../src/graphify.js')
+    const graphify = await import('../../../src/graphify.js')
     graphify.createVenv.mockResolvedValue()
 
-    const scaffold = await import('../../src/scaffold.js')
+    const scaffold = await import('../../../src/scaffold.js')
     scaffold.createBrainFolder.mockResolvedValue()
 
-    const { run } = await import('../../src/commands/setup.js')
+    const { run } = await import('../../../src/commands/setup.js')
     await run()
 
     expect(prompts.input).toHaveBeenCalledTimes(3) // name + vault path + brain id
@@ -358,23 +358,23 @@ describe('commands/setup', () => {
       .mockResolvedValueOnce('duplicate') // First attempt - duplicate
       .mockResolvedValueOnce('unique') // Second attempt - unique
 
-    const platforms = await import('../../src/platforms/index.js')
+    const platforms = await import('../../../src/platforms/index.js')
     platforms.detectAll.mockResolvedValue([])
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.configPath.mockReturnValue('/fake/config/path')
     config.ensureConfigDir.mockImplementation(() => {})
     config.isBrainIdAvailable
       .mockReturnValueOnce(false) // First check - not available
       .mockReturnValueOnce(true) // Second check - available
 
-    const graphify = await import('../../src/graphify.js')
+    const graphify = await import('../../../src/graphify.js')
     graphify.createVenv.mockResolvedValue()
 
-    const scaffold = await import('../../src/scaffold.js')
+    const scaffold = await import('../../../src/scaffold.js')
     scaffold.createBrainFolder.mockResolvedValue()
 
-    const { run } = await import('../../src/commands/setup.js')
+    const { run } = await import('../../../src/commands/setup.js')
     await run()
 
     expect(config.isBrainIdAvailable).toHaveBeenCalledTimes(2)
@@ -393,21 +393,21 @@ describe('commands/setup', () => {
     prompts.checkbox.mockResolvedValueOnce([])
     prompts.select.mockResolvedValueOnce('skip')
 
-    const platforms = await import('../../src/platforms/index.js')
+    const platforms = await import('../../../src/platforms/index.js')
     platforms.detectAll.mockResolvedValue([])
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.configPath.mockReturnValue('/fake/config/path')
     config.ensureConfigDir.mockImplementation(() => {})
     config.isBrainIdAvailable.mockReturnValue(true)
 
-    const graphify = await import('../../src/graphify.js')
+    const graphify = await import('../../../src/graphify.js')
     graphify.createVenv.mockResolvedValue()
 
-    const scaffold = await import('../../src/scaffold.js')
+    const scaffold = await import('../../../src/scaffold.js')
     scaffold.createBrainFolder.mockResolvedValue()
 
-    const { run } = await import('../../src/commands/setup.js')
+    const { run } = await import('../../../src/commands/setup.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(

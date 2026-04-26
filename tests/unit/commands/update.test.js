@@ -23,7 +23,7 @@ vi.mock('execa', () => ({
   execa: vi.fn()
 }))
 
-vi.mock('../../src/graphify.js', () => ({
+vi.mock('../../../src/graphify.js', () => ({
   runGraphify: vi.fn().mockResolvedValue(undefined)
 }))
 
@@ -32,7 +32,7 @@ describe('commands/update', () => {
 
   beforeEach(async () => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     getBrainPathSpy = vi.spyOn(config, 'getBrainPath')
     readBrainConfigSpy = vi.spyOn(config, 'readBrainConfig')
     execaMock = (await import('execa')).execa
@@ -45,7 +45,7 @@ describe('commands/update', () => {
     getBrainPathSpy.mockReturnValue('/tmp/work')
     readBrainConfigSpy.mockReturnValue({ gitSync: false })
 
-    const { run } = await import('../../src/commands/update.js')
+    const { run } = await import('../../../src/commands/update.js')
     await run(['work'], {})
 
     expect(getBrainPathSpy).toHaveBeenCalledWith(['work'], {})
@@ -55,7 +55,7 @@ describe('commands/update', () => {
     getBrainPathSpy.mockReturnValue('/tmp/work')
     readBrainConfigSpy.mockReturnValue({ gitSync: false })
 
-    const { run } = await import('../../src/commands/update.js')
+    const { run } = await import('../../../src/commands/update.js')
     await run([], { brainId: 'work' })
 
     expect(getBrainPathSpy).toHaveBeenCalledWith([], { brainId: 'work' })
@@ -65,7 +65,7 @@ describe('commands/update', () => {
     getBrainPathSpy.mockReturnValue('/tmp/work')
     readBrainConfigSpy.mockReturnValue({ gitSync: false })
 
-    const { run } = await import('../../src/commands/update.js')
+    const { run } = await import('../../../src/commands/update.js')
     await run(['work'], {})
 
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('work'))
@@ -76,14 +76,14 @@ describe('commands/update', () => {
       throw new Error('Brain "nonexistent" not found')
     })
 
-    const { run } = await import('../../src/commands/update.js')
+    const { run } = await import('../../../src/commands/update.js')
     await expect(run(['nonexistent'], {})).rejects.toThrow()
   })
 
   it('should throw when no brain configured', async () => {
     getBrainPathSpy.mockImplementation(() => { throw new Error('No brain configured') })
 
-    const { run } = await import('../../src/commands/update.js')
+    const { run } = await import('../../../src/commands/update.js')
     await expect(run(['work'], {})).rejects.toThrow('No brain configured')
   })
 
@@ -91,7 +91,7 @@ describe('commands/update', () => {
     getBrainPathSpy.mockReturnValue('/tmp/work')
     readBrainConfigSpy.mockReturnValue({ gitSync: false })
 
-    const { run } = await import('../../src/commands/update.js')
+    const { run } = await import('../../../src/commands/update.js')
     await run(['work'], {})
 
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Brain updated'))
@@ -101,7 +101,7 @@ describe('commands/update', () => {
     getBrainPathSpy.mockReturnValue('/tmp/work')
     readBrainConfigSpy.mockReturnValue({ gitSync: true })
 
-    const { run } = await import('../../src/commands/update.js')
+    const { run } = await import('../../../src/commands/update.js')
     await run(['work'], {})
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -117,7 +117,7 @@ describe('commands/update', () => {
     readBrainConfigSpy.mockReturnValue({ gitSync: true })
     execaMock.mockResolvedValue({ stdout: '', stderr: '' })
 
-    const { run } = await import('../../src/commands/update.js')
+    const { run } = await import('../../../src/commands/update.js')
     await run(['work'], {})
 
     expect(execaMock).toHaveBeenCalledWith('git', ['add', '.'], { cwd: tmp })
@@ -138,7 +138,7 @@ describe('commands/update', () => {
       .mockRejectedValueOnce(new Error('commit failed'))
       .mockResolvedValue({ stdout: '', stderr: '' })
 
-    const { run } = await import('../../src/commands/update.js')
+    const { run } = await import('../../../src/commands/update.js')
     await run(['work'], {})
 
     // Test passes if no error is thrown and function completes (commit error is caught)
@@ -152,7 +152,7 @@ describe('commands/update', () => {
       execaMock.mockResolvedValue({ stdout: '', stderr: '' })
       const tmp = mkdtempSync(join(tmpdir(), 'commit-msg-'))
       
-      const { run } = await import('../../src/commands/update.js')
+      const { run } = await import('../../../src/commands/update.js')
       getBrainPathSpy.mockReturnValue(tmp)
       readBrainConfigSpy.mockReturnValue({ gitSync: true })
       mkdirSync(join(tmp, '.git'), { recursive: true })
@@ -174,7 +174,7 @@ describe('commands/update', () => {
       readBrainConfigSpy.mockReturnValue({ gitSync: true })
       execaMock.mockResolvedValue({ stdout: ' raw/file1.js | 5 +-\n raw/file2.md | 3 +-\n', stderr: '' })
 
-      const { run } = await import('../../src/commands/update.js')
+      const { run } = await import('../../../src/commands/update.js')
       await run(['work'], {})
 
       const commitCall = execaMock.mock.calls.find(c => c[0] === 'git' && c[1]?.[0] === 'commit')
@@ -192,7 +192,7 @@ describe('commands/update', () => {
       readBrainConfigSpy.mockReturnValue({ gitSync: true })
       execaMock.mockResolvedValue({ stdout: ' raw/a.js |\n raw/b.js |\n raw/c.js |\n raw/d.js |\n raw/e.js |', stderr: '' })
 
-      const { run } = await import('../../src/commands/update.js')
+      const { run } = await import('../../../src/commands/update.js')
       await run(['work'], {})
 
       const commitCall = execaMock.mock.calls.find(c => c[0] === 'git' && c[1]?.[0] === 'commit')

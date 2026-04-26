@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  unit:
-    name: Unit Tests + Coverage
+  unit-integration:
+    name: Unit + Integration Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run tests with coverage
+      - name: Run unit and integration tests with coverage
         run: bun run test:coverage:ci
 
       - name: Upload coverage artifact
@@ -42,7 +42,7 @@ jobs:
     name: End-to-End Tests
     if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'e2e')
     runs-on: ubuntu-latest
-    needs: unit
+    needs: unit-integration
     steps:
       - uses: actions/checkout@v5
 
@@ -54,5 +54,5 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run e2e test
-        run: node scripts/e2e-test.js
+      - name: Run e2e tests
+        run: bun run test:e2e

@@ -13,7 +13,7 @@ vi.mock('chalk', () => ({
   }
 }))
 
-vi.mock("../../../src/config.js", () => ({
+vi.mock("../../../../src/config.js", () => ({
   getBrainPath: vi.fn(),
   readConfig: vi.fn(),
   
@@ -31,10 +31,10 @@ describe('commands/templates', () => {
   })
 
   it('should exit with error when no brain configured', async () => {
-    const config = await import('../../../src/config.js')
+    const config = await import('../../../../src/config.js')
     config.getBrainPath.mockImplementation(() => { throw new Error("No brain configured") })
 
-    const { run } = await import('../../../src/commands/templates/list.js')
+    const { run } = await import('../../../../../src/commands/templates/list.js')
     
     await expect(run()).rejects.toThrow()
   })
@@ -46,10 +46,10 @@ describe('commands/templates', () => {
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_bundled'), { recursive: true })
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
 
-    const config = await import('../../../src/config.js')
+    const config = await import('../../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
-    const { run } = await import('../../../src/commands/templates/list.js')
+    const { run } = await import('../../../../../src/commands/templates/list.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -66,10 +66,10 @@ describe('commands/templates', () => {
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_bundled'), { recursive: true })
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
 
-    const config = await import('../../../src/config.js')
+    const config = await import('../../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
-    const { run } = await import('../../../src/commands/templates/list.js')
+    const { run } = await import('../../../../../src/commands/templates/list.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -87,10 +87,10 @@ describe('commands/templates', () => {
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_bundled'), { recursive: true })
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
 
-    const config = await import('../../../src/config.js')
+    const config = await import('../../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
-    const { run } = await import('../../../src/commands/templates/list.js')
+    const { run } = await import('../../../../../src/commands/templates/list.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -108,10 +108,10 @@ describe('commands/templates', () => {
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom/web-template.html'), { recursive: true })
 
-    const config = await import('../../../src/config.js')
+    const config = await import('../../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
-    const { run } = await import('../../../src/commands/templates/list.js')
+    const { run } = await import('../../../../../src/commands/templates/list.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -128,10 +128,10 @@ describe('commands/templates', () => {
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_bundled'), { recursive: true })
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
 
-    const config = await import('../../../src/config.js')
+    const config = await import('../../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
-    const { run } = await import('../../../src/commands/templates/list.js')
+    const { run } = await import('../../../../../src/commands/templates/list.js')
     await run(['my-brain'])
 
     expect(config.getBrainPath).toHaveBeenCalledWith(['my-brain'], {})
@@ -146,10 +146,10 @@ describe('commands/templates', () => {
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_bundled'), { recursive: true })
     mkdirSync(join(tmp, 'raw/templates/web-clipper/_custom'), { recursive: true })
 
-    const config = await import('../../../src/config.js')
+    const config = await import('../../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
-    const { run } = await import('../../../src/commands/templates/list.js')
+    const { run } = await import('../../../../../src/commands/templates/list.js')
     await run([], { brainId: 'my-brain' })
 
     expect(config.getBrainPath).toHaveBeenCalledWith([], { brainId: 'my-brain' })
@@ -158,12 +158,12 @@ describe('commands/templates', () => {
   })
 
   it('should exit with error when brain-id not found', async () => {
-    const config = await import('../../../src/config.js')
+    const config = await import('../../../../src/config.js')
     config.getBrainPath.mockImplementation(() => {
       throw new Error('Brain not found')
     })
 
-    const { run } = await import('../../../src/commands/templates/list.js')
+    const { run } = await import('../../../../../src/commands/templates/list.js')
     
     await expect(run(['nonexistent'])).rejects.toThrow()
   })
@@ -179,7 +179,7 @@ describe('commands/templates', () => {
       writeFileSync(join(tmp, 'raw/templates/markdown/_bundled/book-template.md'), '# book', 'utf8')
       writeFileSync(join(tmp, 'raw/templates/markdown/_custom/my-template.md'), '# mine', 'utf8')
 
-      const { listTemplates } = await import('../../../src/commands/templates/list.js')
+      const { listTemplates } = await import('../../../../../src/commands/templates/list.js')
       const result = listTemplates(tmp)
       expect(result.markdown.bundled).toContain('book-template.md')
       expect(result.markdown.custom).toContain('my-template.md')

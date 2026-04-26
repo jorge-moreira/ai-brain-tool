@@ -9,7 +9,7 @@ describe('platforms/opencode', () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'opencode-test-'))
       mkdirSync(join(fakeHome, '.config', 'opencode'), { recursive: true })
 
-      const { detect } = await import('../../src/platforms/opencode.js')
+      const { detect } = await import('../../../src/platforms/opencode.js')
       expect(detect(fakeHome)).toBe(true)
 
       rmSync(fakeHome, { recursive: true, force: true })
@@ -18,7 +18,7 @@ describe('platforms/opencode', () => {
     it('should return false when .config/opencode dir does not exist', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'opencode-test-'))
 
-      const { detect } = await import('../../src/platforms/opencode.js')
+      const { detect } = await import('../../../src/platforms/opencode.js')
       expect(detect(fakeHome)).toBe(false)
 
       rmSync(fakeHome, { recursive: true, force: true })
@@ -29,7 +29,7 @@ describe('platforms/opencode', () => {
     it('should create opencode.json with ai-brain mcp entry', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'opencode-test-'))
 
-      const { patch } = await import('../../src/platforms/opencode.js')
+      const { patch } = await import('../../../src/platforms/opencode.js')
       await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
 
       const configPath = join(fakeHome, '.config', 'opencode', 'opencode.json')
@@ -46,7 +46,7 @@ describe('platforms/opencode', () => {
     it('should write SKILL.md to skills/brain directory', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'opencode-test-'))
 
-      const { installSkill } = await import('../../src/platforms/opencode.js')
+      const { installSkill } = await import('../../../src/platforms/opencode.js')
       await installSkill({ homeDir: fakeHome })
 
       const skillPath = join(fakeHome, '.config', 'opencode', 'skills', 'brain', 'SKILL.md')

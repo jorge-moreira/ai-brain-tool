@@ -24,5 +24,11 @@ export default defineConfig({
         statements: 90,
       },
     },
+    // E2E tests excluded from default run - run explicitly with test:e2e
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/tests/e2e/**',
+    ],
   },
 });

@@ -18,7 +18,7 @@ describe('git', () => {
 
   it('should create .gitignore with no cache line when commitCache is true', async () => {
     const tmp = mkdtempSync(join(tmpdir(), 'git-test-'))
-    const { writeGitignore } = await import('../src/git.js')
+    const { writeGitignore } = await import('../../src/git.js')
     await writeGitignore({ brainPath: tmp, commitCache: true })
     const content = readFileSync(join(tmp, '.gitignore'), 'utf8')
     expect(content.includes('.venv/')).toBe(true)
@@ -29,7 +29,7 @@ describe('git', () => {
 
   it('should add graphify-out/cache/ to .gitignore when commitCache is false', async () => {
     const tmp = mkdtempSync(join(tmpdir(), 'git-test-'))
-    const { writeGitignore } = await import('../src/git.js')
+    const { writeGitignore } = await import('../../src/git.js')
     await writeGitignore({ brainPath: tmp, commitCache: false })
     const content = readFileSync(join(tmp, '.gitignore'), 'utf8')
     expect(content.includes('graphify-out/cache/')).toBe(true)
@@ -41,7 +41,7 @@ describe('git', () => {
     const { execa } = await import('execa')
     execa.mockResolvedValue({ stdout: '', stderr: '' })
     
-    const { initRepo } = await import('../src/git.js')
+    const { initRepo } = await import('../../src/git.js')
     await initRepo({ brainPath: tmp, remoteUrl: 'https://github.com/user/repo.git' })
     
     expect(execa).toHaveBeenCalledWith('git', ['init'], { cwd: tmp })
@@ -54,7 +54,7 @@ describe('git', () => {
     const { execa } = await import('execa')
     execa.mockResolvedValue({ stdout: '', stderr: '' })
     
-    const { initRepo } = await import('../src/git.js')
+    const { initRepo } = await import('../../src/git.js')
     await initRepo({ brainPath: tmp, remoteUrl: undefined })
     
     expect(execa).toHaveBeenCalledWith('git', ['init'], { cwd: tmp })

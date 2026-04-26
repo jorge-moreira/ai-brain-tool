@@ -11,12 +11,14 @@
     "bun": ">=1.0"
   },
   "scripts": {
-    "test": "vitest run",
-    "test:bun": "bun test",
+    "test": "vitest run tests/unit tests/integration",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "vitest run tests/e2e",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage tests/unit tests/integration",
     "test:coverage:bun": "bun test:coverage",
-    "test:coverage:ci": "vitest run --coverage --reporter=github-actions",
+    "test:coverage:ci": "vitest run --coverage --reporter=github-actions tests/unit tests/integration",
     "test:coverage:ci:bun": "bun test:coverage:ci",
     "start": "node bin/ai-brain.js",
     "start:bun": "bun run bin/ai-brain.js",

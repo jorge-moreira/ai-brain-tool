@@ -10,7 +10,7 @@ describe('scaffold', () => {
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
       const brainPath = join(tmp, 'my-brain')
 
-      const { createBrainFolder } = await import('../src/scaffold.js')
+      const { createBrainFolder } = await import('../../src/scaffold.js')
       await createBrainFolder({ brainPath, includeObsidian: false })
 
       expect(existsSync(join(brainPath, 'raw', 'notes'))).toBe(true)
@@ -30,7 +30,7 @@ describe('scaffold', () => {
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
       const brainPath = join(tmp, 'my-brain')
 
-      const { createBrainFolder } = await import('../src/scaffold.js')
+      const { createBrainFolder } = await import('../../src/scaffold.js')
       await createBrainFolder({ brainPath, includeObsidian: false })
 
       const bundled = readdirSync(join(brainPath, 'raw', 'templates', 'markdown', '_bundled'))
@@ -43,7 +43,7 @@ describe('scaffold', () => {
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
       const brainPath = join(tmp, 'my-brain')
 
-      const { createBrainFolder } = await import('../src/scaffold.js')
+      const { createBrainFolder } = await import('../../src/scaffold.js')
       await createBrainFolder({ brainPath, includeObsidian: true })
 
       expect(existsSync(join(brainPath, '.obsidian', 'templates.json'))).toBe(true)
@@ -55,7 +55,7 @@ describe('scaffold', () => {
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
       const brainPath = join(tmp, 'my-brain')
 
-      const { createBrainFolder } = await import('../src/scaffold.js')
+      const { createBrainFolder } = await import('../../src/scaffold.js')
       await createBrainFolder({ brainPath, includeObsidian: false })
 
       expect(existsSync(join(brainPath, '.obsidian'))).toBe(false)
@@ -67,7 +67,7 @@ describe('scaffold', () => {
       const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
-      const { writeBrainConfig } = await import('../src/scaffold.js')
+      const { writeBrainConfig } = await import('../../src/scaffold.js')
       writeBrainConfig({ brainPath: tmp, gitSync: true })
 
       const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
@@ -78,7 +78,7 @@ describe('scaffold', () => {
       const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
-      const { writeBrainConfig } = await import('../src/scaffold.js')
+      const { writeBrainConfig } = await import('../../src/scaffold.js')
       writeBrainConfig({ brainPath: tmp, gitSync: false })
 
       const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
@@ -89,7 +89,7 @@ describe('scaffold', () => {
       const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
-      const { writeBrainConfig } = await import('../src/scaffold.js')
+      const { writeBrainConfig } = await import('../../src/scaffold.js')
       writeBrainConfig({ brainPath: tmp, gitSync: false, obsidianDir: '/path/to/vault' })
 
       const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
@@ -100,7 +100,7 @@ describe('scaffold', () => {
       const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
-      const { writeBrainConfig } = await import('../src/scaffold.js')
+      const { writeBrainConfig } = await import('../../src/scaffold.js')
       writeBrainConfig({ brainPath: tmp, gitSync: false, extras: ['office', 'pdf'] })
 
       const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
@@ -113,7 +113,7 @@ describe('scaffold', () => {
       const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
-      const { writeBrainConfig, readBrainConfig } = await import('../src/scaffold.js')
+      const { writeBrainConfig, readBrainConfig } = await import('../../src/scaffold.js')
       writeBrainConfig({ brainPath: tmp, gitSync: true, extras: ['mcp', 'pdf'] })
 
       const cfg = readBrainConfig(tmp)
@@ -125,7 +125,7 @@ describe('scaffold', () => {
       const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
-      const { readBrainConfig } = await import('../src/scaffold.js')
+      const { readBrainConfig } = await import('../../src/scaffold.js')
       const cfg = readBrainConfig(tmp)
       expect(cfg.gitSync).toBe(false)
       expect(cfg.extras).toEqual([])

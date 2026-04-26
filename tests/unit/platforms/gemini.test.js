@@ -9,7 +9,7 @@ describe('platforms/gemini', () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'gemini-test-'))
       mkdirSync(join(fakeHome, '.gemini'), { recursive: true })
 
-      const { detect } = await import('../../src/platforms/gemini.js')
+      const { detect } = await import('../../../src/platforms/gemini.js')
       expect(detect(fakeHome)).toBe(true)
 
       rmSync(fakeHome, { recursive: true, force: true })
@@ -18,7 +18,7 @@ describe('platforms/gemini', () => {
     it('should return false when .gemini dir does not exist', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'gemini-test-'))
 
-      const { detect } = await import('../../src/platforms/gemini.js')
+      const { detect } = await import('../../../src/platforms/gemini.js')
       expect(detect(fakeHome)).toBe(false)
 
       rmSync(fakeHome, { recursive: true, force: true })
@@ -29,7 +29,7 @@ describe('platforms/gemini', () => {
     it('should create settings.json with ai-brain mcp entry', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'gemini-test-'))
 
-      const { patch } = await import('../../src/platforms/gemini.js')
+      const { patch } = await import('../../../src/platforms/gemini.js')
       await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
 
       const settingsPath = join(fakeHome, '.gemini', 'settings.json')
@@ -45,7 +45,7 @@ describe('platforms/gemini', () => {
     it('should write SKILL.md to skills/brain directory', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'gemini-test-'))
 
-      const { installSkill } = await import('../../src/platforms/gemini.js')
+      const { installSkill } = await import('../../../src/platforms/gemini.js')
       await installSkill({ homeDir: fakeHome })
 
       const skillPath = join(fakeHome, '.gemini', 'skills', 'brain', 'SKILL.md')

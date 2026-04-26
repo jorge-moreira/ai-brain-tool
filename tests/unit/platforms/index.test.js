@@ -14,7 +14,7 @@ describe('platforms/index', () => {
 
   describe('detectAll', () => {
     it('should return an array of platform objects with name, key, and detected properties', async () => {
-      const { detectAll } = await import('../../src/platforms/index.js')
+      const { detectAll } = await import('../../../src/platforms/index.js')
       const results = await detectAll()
       
       expect(Array.isArray(results)).toBe(true)
@@ -29,7 +29,7 @@ describe('platforms/index', () => {
 
   describe('configureSelected', () => {
     it('should configure selected platforms', async () => {
-      const { configureSelected } = await import('../../src/platforms/index.js')
+      const { configureSelected } = await import('../../../src/platforms/index.js')
       const mockPlatform = {
         module: {
           patch: vi.fn().mockResolvedValue(),
@@ -50,7 +50,7 @@ describe('platforms/index', () => {
     })
 
     it('should configure multiple platforms', async () => {
-      const { configureSelected } = await import('../../src/platforms/index.js')
+      const { configureSelected } = await import('../../../src/platforms/index.js')
       const platform1 = {
         module: {
           patch: vi.fn().mockResolvedValue(),

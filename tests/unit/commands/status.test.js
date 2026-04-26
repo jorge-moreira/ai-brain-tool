@@ -15,12 +15,12 @@ vi.mock('chalk', () => ({
 
 vi.mock('execa')
 
-vi.mock("../../src/config.js", () => ({
+vi.mock("../../../src/config.js", () => ({
   getBrainPath: vi.fn(),
   readConfig: vi.fn()
 }))
 
-vi.mock('../../src/graphify.js', () => ({
+vi.mock('../../../src/graphify.js', () => ({
   venvPythonPath: vi.fn((brainPath) => join(brainPath, '.venv', 'bin', 'python3'))
 }))
 
@@ -36,10 +36,10 @@ describe('commands/status', () => {
   })
 
   it('should exit with error when no brain configured', async () => {
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.getBrainPath.mockImplementation(() => { throw new Error("No brain configured") })
 
-    const { run } = await import('../../src/commands/status.js')
+    const { run } = await import('../../../src/commands/status.js')
     
     await expect(run()).rejects.toThrow()
   })
@@ -48,12 +48,12 @@ describe('commands/status', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'status-test-'))
     mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('no graphify'))
 
-    const { run } = await import('../../src/commands/status.js')
+    const { run } = await import('../../../src/commands/status.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -66,10 +66,10 @@ describe('commands/status', () => {
   it('should show not installed message when .venv is missing', async () => {
     const tmp = mkdtempSync(join(tmpdir(), 'status-test-'))
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
-    const { run } = await import('../../src/commands/status.js')
+    const { run } = await import('../../../src/commands/status.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -85,12 +85,12 @@ describe('commands/status', () => {
     mkdirSync(dirname(pythonPath), { recursive: true })
     writeFileSync(pythonPath, '#!/usr/bin/env python3', 'utf8')
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockResolvedValue({ stdout: '1.0.0', stderr: '' })
 
-    const { run } = await import('../../src/commands/status.js')
+    const { run } = await import('../../../src/commands/status.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -109,12 +109,12 @@ describe('commands/status', () => {
     mkdirSync(dirname(pythonPath), { recursive: true })
     writeFileSync(pythonPath, '#!/usr/bin/env python3', 'utf8')
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('failed'))
 
-    const { run } = await import('../../src/commands/status.js')
+    const { run } = await import('../../../src/commands/status.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -128,12 +128,12 @@ describe('commands/status', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'status-test-'))
     mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('no graphify'))
 
-    const { run } = await import('../../src/commands/status.js')
+    const { run } = await import('../../../src/commands/status.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -149,12 +149,12 @@ describe('commands/status', () => {
     mkdirSync(join(tmp, 'graphify-out'), { recursive: true })
     writeFileSync(join(tmp, 'graphify-out/graph.json'), 'invalid json {{{', 'utf8')
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('no graphify'))
 
-    const { run } = await import('../../src/commands/status.js')
+    const { run } = await import('../../../src/commands/status.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -172,12 +172,12 @@ describe('commands/status', () => {
       edges: [{ id: 'e1' }]
     }), 'utf8')
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('no graphify'))
 
-    const { run } = await import('../../src/commands/status.js')
+    const { run } = await import('../../../src/commands/status.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -195,12 +195,12 @@ describe('commands/status', () => {
       edges: null
     }), 'utf8')
 
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('no graphify'))
 
-    const { run } = await import('../../src/commands/status.js')
+    const { run } = await import('../../../src/commands/status.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
