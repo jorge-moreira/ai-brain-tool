@@ -1,9 +1,24 @@
 import chalk from 'chalk'
-import { getBrainPath } from '../config.js'
+import { getBrainPath } from '../../config.js'
+import { readdirSync, existsSync } from 'fs'
+import { join } from 'path'
+
+export function listTemplates(brainPath) {
+  const read = (dir) => existsSync(dir) ? readdirSync(dir) : []
+  return {
+    markdown: {
+      bundled: read(join(brainPath, 'raw', 'templates', 'markdown', '_bundled')),
+      custom:  read(join(brainPath, 'raw', 'templates', 'markdown', '_custom')),
+    },
+    webClipper: {
+      bundled: read(join(brainPath, 'raw', 'templates', 'web-clipper', '_bundled')),
+      custom:  read(join(brainPath, 'raw', 'templates', 'web-clipper', '_custom')),
+    },
+  }
+}
 
 export async function run(args, options = {}) {
   const brainPath = getBrainPath(args, options)
-  const { listTemplates } = await import('../templates-lib.js')
   const tmpl = listTemplates(brainPath)
 
   console.log('\n  Markdown templates')

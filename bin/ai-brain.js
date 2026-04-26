@@ -40,14 +40,14 @@ templates
   .description('List all templates (bundled and custom)')
   .argument('[brain-id]', 'Brain identifier to use')
   .option('--brain-id <id>', 'Brain identifier to use')
-  .action(async (brainId, options) => { const { run } = await import('../src/commands/templates.js'); await run([brainId].filter(Boolean), options) })
+  .action(async (brainId, options) => { const { run } = await import('../src/commands/templates/list.js'); await run([brainId].filter(Boolean), options) })
 
 templates
   .command('add')
-  .description('Create a new custom template from a starter file')
+  .description('Create a new custom template from a starter files')
   .argument('[brain-id]', 'Brain identifier to use')
   .option('--brain-id <id>', 'Brain identifier to use')
-  .action(async (brainId, options) => { const { run } = await import('../src/commands/templates-add.js'); await run([brainId].filter(Boolean), options) })
+  .action(async (brainId, options) => { const { run } = await import('../src/commands/templates/add.js'); await run([brainId].filter(Boolean), options) })
 
 program
   .command('upgrade')

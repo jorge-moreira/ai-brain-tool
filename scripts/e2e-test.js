@@ -53,13 +53,13 @@ try {
   );
 
   // Copy bundled templates
-  const { cpSync } = await import('fs');
-  const templatesSrc = join(REPO_PATH, 'src', 'templates');
+  const { cpSync } = await import('fs')
+  const templatesSrc = join(REPO_PATH, 'src', 'templates')
   try {
-    cpSync(join(templatesSrc, 'markdown', '_bundled'), join(BRAIN_PATH, 'raw', 'templates', 'markdown', '_bundled'), { recursive: true });
-    cpSync(join(templatesSrc, 'web-clipper', '_bundled'), join(BRAIN_PATH, 'raw', 'templates', 'web-clipper', '_bundled'), { recursive: true });
+    cpSync(join(templatesSrc, 'markdown', '_bundled'), join(BRAIN_PATH, 'raw', 'templates', 'markdown', '_bundled'), { recursive: true, force: true })
+    cpSync(join(templatesSrc, 'web-clipper', '_bundled'), join(BRAIN_PATH, 'raw', 'templates', 'web-clipper', '_bundled'), { recursive: true, force: true })
   } catch (e) {
-    console.log('Warning: Could not copy templates, continuing without them');
+    console.log('Warning: Could not copy templates, continuing without them')
   }
 
   // Step 3: Install graphify using the tool's graphify module

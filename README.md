@@ -7,7 +7,7 @@
 [![CI](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
 [![npm downloads](https://img.shields.io/npm/dm/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
-[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/jorge-moreira/ai-brain-tool/actions)
+[![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen)](https://github.com/jorge-moreira/ai-brain-tool/actions)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/jorge-moreira)
 
 
@@ -135,12 +135,13 @@ Equivalent inside any AI tool: `status`
 
 ---
 
-### `ai-brain templates`
+### `ai-brain templates list`
 
 List all templates — both tool-managed (`_bundled/`) and yours (`_custom/`).
 
 ```bash
-ai-brain templates
+ai-brain templates list
+ai-brain templates list work    # Specify brain by identifier
 ```
 
 ---
@@ -151,6 +152,7 @@ Create a new custom template from a minimal starter file. Places the file in `ra
 
 ```bash
 ai-brain templates add
+ai-brain templates add work    # Specify brain by identifier
 ```
 
 ---

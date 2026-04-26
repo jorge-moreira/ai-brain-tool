@@ -293,4 +293,22 @@ describe('config', () => {
       expect(() => getBrainPath([], {})).toThrow('Not in a brain folder')
     })
   })
+
+  describe('listBrains', () => {
+    it('should return empty array when no brains configured', async () => {
+      const { writeConfig, listBrains } = await import('../src/config.js')
+      writeConfig({ brains: {} })
+      expect(listBrains()).toEqual([])
+    })
+  })
+
+  describe('addBrain', () => {
+    it('should create config if not exists and add brain', async () => {
+      rmSync(join(tmpHome, '.ai-brain-tool', 'config.json'), { force: true })
+      const { addBrain, readConfig } = await import('../src/config.js')
+      addBrain('newbrain', join(tmpHome, 'newbrain'))
+      const config = readConfig()
+      expect(config.brains.newbrain).toBeDefined()
+    })
+  })
 })

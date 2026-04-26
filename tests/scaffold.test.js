@@ -84,6 +84,28 @@ describe('scaffold', () => {
       const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
       expect(cfg.gitSync).toBe(false)
     })
+
+    it('should include obsidianDir when provided', async () => {
+      const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
+      afterEach(() => rmSync(tmp, { recursive: true, force: true }))
+
+      const { writeBrainConfig } = await import('../src/scaffold.js')
+      writeBrainConfig({ brainPath: tmp, gitSync: false, obsidianDir: '/path/to/vault' })
+
+      const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
+      expect(cfg.obsidianDir).toBe('/path/to/vault')
+    })
+
+    it('should include extras when provided', async () => {
+      const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
+      afterEach(() => rmSync(tmp, { recursive: true, force: true }))
+
+      const { writeBrainConfig } = await import('../src/scaffold.js')
+      writeBrainConfig({ brainPath: tmp, gitSync: false, extras: ['office', 'pdf'] })
+
+      const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
+      expect(cfg.extras).toEqual(['office', 'pdf'])
+    })
   })
 
   describe('readBrainConfig', () => {

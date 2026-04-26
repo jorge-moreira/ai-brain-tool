@@ -48,4 +48,17 @@ describe('git', () => {
     expect(execa).toHaveBeenCalledWith('git', ['remote', 'add', 'origin', 'https://github.com/user/repo.git'], { cwd: tmp })
     rmSync(tmp, { recursive: true, force: true })
   })
+
+  it('should init repo without remote when remoteUrl is not provided', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'git-test-'))
+    const { execa } = await import('execa')
+    execa.mockResolvedValue({ stdout: '', stderr: '' })
+    
+    const { initRepo } = await import('../src/git.js')
+    await initRepo({ brainPath: tmp, remoteUrl: undefined })
+    
+    expect(execa).toHaveBeenCalledWith('git', ['init'], { cwd: tmp })
+    expect(execa).not.toHaveBeenCalledWith('git', expect.arrayContaining(['remote']), expect.anything())
+    rmSync(tmp, { recursive: true, force: true })
+  })
 })
