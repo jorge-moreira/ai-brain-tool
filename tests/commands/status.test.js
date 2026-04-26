@@ -15,7 +15,8 @@ vi.mock('chalk', () => ({
 
 vi.mock('execa')
 
-vi.mock('../../src/config.js', () => ({
+vi.mock("../../src/config.js", () => ({
+  getBrainPath: vi.fn(),
   readConfig: vi.fn()
 }))
 
@@ -36,7 +37,7 @@ describe('commands/status', () => {
 
   it('should exit with error when no brain configured', async () => {
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue(null)
+    config.getBrainPath.mockImplementation(() => { throw new Error("No brain configured") })
 
     const { run } = await import('../../src/commands/status.js')
     
@@ -48,7 +49,7 @@ describe('commands/status', () => {
     mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
 
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue({ brainPath: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('no graphify'))
 
@@ -66,7 +67,7 @@ describe('commands/status', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'status-test-'))
 
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue({ brainPath: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     const { run } = await import('../../src/commands/status.js')
     await run()
@@ -85,7 +86,7 @@ describe('commands/status', () => {
     writeFileSync(pythonPath, '#!/usr/bin/env python3', 'utf8')
 
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue({ brainPath: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockResolvedValue({ stdout: '1.0.0', stderr: '' })
 
@@ -109,7 +110,7 @@ describe('commands/status', () => {
     writeFileSync(pythonPath, '#!/usr/bin/env python3', 'utf8')
 
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue({ brainPath: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('failed'))
 
@@ -128,7 +129,7 @@ describe('commands/status', () => {
     mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
 
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue({ brainPath: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('no graphify'))
 
@@ -149,7 +150,7 @@ describe('commands/status', () => {
     writeFileSync(join(tmp, 'graphify-out/graph.json'), 'invalid json {{{', 'utf8')
 
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue({ brainPath: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('no graphify'))
 
@@ -172,7 +173,7 @@ describe('commands/status', () => {
     }), 'utf8')
 
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue({ brainPath: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('no graphify'))
 
@@ -195,7 +196,7 @@ describe('commands/status', () => {
     }), 'utf8')
 
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue({ brainPath: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     execa.mockRejectedValue(new Error('no graphify'))
 

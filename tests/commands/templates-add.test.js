@@ -15,8 +15,10 @@ vi.mock('@inquirer/prompts', () => ({
   input: vi.fn()
 }))
 
-vi.mock('../../src/config.js', () => ({
-  readConfig: vi.fn()
+vi.mock("../../src/config.js", () => ({
+  getBrainPath: vi.fn(),
+  readConfig: vi.fn(),
+  
 }))
 
 vi.mock('../../src/templates-lib.js', () => ({
@@ -36,7 +38,7 @@ describe('commands/templates-add', () => {
 
   it('should exit with error when no brain configured', async () => {
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue(null)
+    config.getBrainPath.mockImplementation(() => { throw new Error("No brain configured") })
 
     const { run } = await import('../../src/commands/templates-add.js')
     
@@ -52,7 +54,7 @@ describe('commands/templates-add', () => {
     mkdirSync(join(tmp, 'raw/templates/markdown/_custom'), { recursive: true })
 
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue({ brainPath: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     const templatesLib = await import('../../src/templates-lib.js')
     templatesLib.addTemplate.mockResolvedValue(join(tmp, 'raw/templates/markdown/_custom/test-template.md'))
@@ -75,7 +77,7 @@ describe('commands/templates-add', () => {
     mkdirSync(join(tmp, 'raw/templates/markdown/_custom'), { recursive: true })
 
     const config = await import('../../src/config.js')
-    config.readConfig.mockReturnValue({ brainPath: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     const templatesLib = await import('../../src/templates-lib.js')
     const destPath = join(tmp, 'raw/templates/markdown/_custom/test-template.md')
@@ -89,5 +91,60 @@ describe('commands/templates-add', () => {
     )
 
     rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should accept brain-id as positional argument', async () => {
+    const prompts = await import('@inquirer/prompts')
+    prompts.select.mockResolvedValue('markdown')
+    prompts.input.mockResolvedValue('test-template')
+
+    const tmp = mkdtempSync(join(tmpdir(), 'tmpl-test-'))
+    mkdirSync(join(tmp, 'raw/templates/markdown/_custom'), { recursive: true })
+
+    const config = await import('../../src/config.js')
+    config.getBrainPath.mockReturnValue(tmp)
+
+    const templatesLib = await import('../../src/templates-lib.js')
+    templatesLib.addTemplate.mockResolvedValue(join(tmp, 'raw/templates/markdown/_custom/test-template.md'))
+
+    const { run } = await import('../../src/commands/templates-add.js')
+    await run(['my-brain'])
+
+    expect(config.getBrainPath).toHaveBeenCalledWith(['my-brain'], {})
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should accept brain-id via --brain-id option', async () => {
+    const prompts = await import('@inquirer/prompts')
+    prompts.select.mockResolvedValue('markdown')
+    prompts.input.mockResolvedValue('test-template')
+
+    const tmp = mkdtempSync(join(tmpdir(), 'tmpl-test-'))
+    mkdirSync(join(tmp, 'raw/templates/markdown/_custom'), { recursive: true })
+
+    const config = await import('../../src/config.js')
+    config.getBrainPath.mockReturnValue(tmp)
+
+    const templatesLib = await import('../../src/templates-lib.js')
+    templatesLib.addTemplate.mockResolvedValue(join(tmp, 'raw/templates/markdown/_custom/test-template.md'))
+
+    const { run } = await import('../../src/commands/templates-add.js')
+    await run([], { brainId: 'my-brain' })
+
+    expect(config.getBrainPath).toHaveBeenCalledWith([], { brainId: 'my-brain' })
+
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should exit with error when brain-id not found', async () => {
+    const config = await import('../../src/config.js')
+    config.getBrainPath.mockImplementation(() => {
+      throw new Error('Brain not found')
+    })
+
+    const { run } = await import('../../src/commands/templates-add.js')
+    
+    await expect(run(['nonexistent'])).rejects.toThrow()
   })
 })

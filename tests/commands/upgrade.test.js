@@ -28,7 +28,8 @@ vi.mock('fs', async (importOriginal) => {
 })
 
 vi.mock('../../src/config.js', () => ({
-  resolveBrain: vi.fn()
+  resolveBrain: vi.fn(),
+  getBrainPath: vi.fn()
 }))
 
 vi.mock('../../src/graphify.js', () => ({
@@ -50,21 +51,16 @@ describe('commands/upgrade', () => {
 
   it('should exit with error when brain cannot be resolved', async () => {
     const config = await import('../../src/config.js')
-    config.resolveBrain.mockImplementation(() => {
-      throw new Error('Brain not found')
-    })
-
-    // Make process.exit throw to stop execution
-    processExitSpy.mockImplementation(() => {
-      throw new Error('process.exit called')
+    config.getBrainPath.mockImplementation(() => {
+      throw new Error('No brain configured')
     })
 
     const { run } = await import('../../src/commands/upgrade.js')
     
-    await expect(run([])).rejects.toThrow('process.exit called')
+    await run([]).catch(() => {})
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Brain not found')
+      expect.stringContaining('No brain configured')
     )
     expect(processExitSpy).toHaveBeenCalledWith(1)
   })
@@ -77,7 +73,7 @@ describe('commands/upgrade', () => {
     })
 
     const config = await import('../../src/config.js')
-    config.resolveBrain.mockReturnValue({ path: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     const graphify = await import('../../src/graphify.js')
     graphify.upgradeVenv.mockResolvedValue()
@@ -99,7 +95,7 @@ describe('commands/upgrade', () => {
     fs.readFileSync.mockReturnValue(JSON.stringify({ extras: ['office', 'video'] }))
 
     const config = await import('../../src/config.js')
-    config.resolveBrain.mockReturnValue({ path: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     const graphify = await import('../../src/graphify.js')
     graphify.upgradeVenv.mockResolvedValue()
@@ -118,7 +114,7 @@ describe('commands/upgrade', () => {
     fs.readFileSync.mockReturnValue(JSON.stringify({ extras: [] }))
 
     const config = await import('../../src/config.js')
-    config.resolveBrain.mockReturnValue({ path: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     const graphify = await import('../../src/graphify.js')
     graphify.upgradeVenv.mockResolvedValue()
@@ -141,7 +137,7 @@ describe('commands/upgrade', () => {
     fs.readFileSync.mockReturnValue(JSON.stringify({ extras: [] }))
 
     const config = await import('../../src/config.js')
-    config.resolveBrain.mockReturnValue({ path: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     const graphify = await import('../../src/graphify.js')
     graphify.upgradeVenv.mockResolvedValue()
@@ -149,7 +145,7 @@ describe('commands/upgrade', () => {
     const { run } = await import('../../src/commands/upgrade.js')
     await run(['my-brain'])
 
-    expect(config.resolveBrain).toHaveBeenCalledWith('my-brain')
+    expect(config.getBrainPath).toHaveBeenCalledWith(['my-brain'], {})
 
     rmSync(tmp, { recursive: true, force: true })
   })
@@ -160,7 +156,7 @@ describe('commands/upgrade', () => {
     fs.readFileSync.mockReturnValue(JSON.stringify({ extras: [] }))
 
     const config = await import('../../src/config.js')
-    config.resolveBrain.mockReturnValue({ path: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     const graphify = await import('../../src/graphify.js')
     graphify.upgradeVenv.mockResolvedValue()
@@ -168,7 +164,7 @@ describe('commands/upgrade', () => {
     const { run } = await import('../../src/commands/upgrade.js')
     await run([], { brainId: 'option-brain' })
 
-    expect(config.resolveBrain).toHaveBeenCalledWith('option-brain')
+    expect(config.getBrainPath).toHaveBeenCalledWith([], { brainId: 'option-brain' })
 
     rmSync(tmp, { recursive: true, force: true })
   })
@@ -179,7 +175,7 @@ describe('commands/upgrade', () => {
     fs.readFileSync.mockReturnValue(JSON.stringify({}))
 
     const config = await import('../../src/config.js')
-    config.resolveBrain.mockReturnValue({ path: tmp })
+    config.getBrainPath.mockReturnValue(tmp)
 
     const graphify = await import('../../src/graphify.js')
     graphify.upgradeVenv.mockResolvedValue()

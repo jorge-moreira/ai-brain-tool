@@ -20,7 +20,8 @@ vi.mock('inquirer', () => ({
   }
 }))
 
-vi.mock('../../src/config.js', () => ({
+vi.mock("../../src/config.js", () => ({
+  getBrainPath: vi.fn(),
   resolveBrain: vi.fn(),
   readBrainConfig: vi.fn(),
   readConfig: vi.fn()

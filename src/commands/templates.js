@@ -1,14 +1,9 @@
 import chalk from 'chalk'
-import { readConfig } from '../config.js'
-import { listTemplates } from '../templates-lib.js'
+import { getBrainPath } from '../config.js'
 
-export async function run() {
-  const config = readConfig()
-  if (!config) {
-    console.error(chalk.red('  No brain configured. Run: ai-brain setup'))
-    process.exit(1)
-  }
-  const { brainPath } = config
+export async function run(args, options = {}) {
+  const brainPath = getBrainPath(args, options)
+  const { listTemplates } = await import('../templates-lib.js')
   const tmpl = listTemplates(brainPath)
 
   console.log('\n  Markdown templates')

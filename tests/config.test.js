@@ -205,4 +205,92 @@ describe('config', () => {
       expect(() => readConfig()).toThrow('CONFIG_PARSE_ERROR')
     })
   })
+
+  describe('getBrainPath', () => {
+    it('should resolve brain from options.brainId', async () => {
+      const { addBrain, getBrainPath } = await import('../src/config.js')
+      const brainPath = join(tmpHome, 'work')
+      mkdirSync(brainPath, { recursive: true })
+      addBrain('work', brainPath)
+      
+      const result = getBrainPath([], { brainId: 'work' })
+      expect(result).toBe(brainPath)
+    })
+
+    it('should resolve brain from positional args', async () => {
+      const { addBrain, getBrainPath } = await import('../src/config.js')
+      const brainPath = join(tmpHome, 'personal')
+      mkdirSync(brainPath, { recursive: true })
+      addBrain('personal', brainPath)
+      
+      const result = getBrainPath(['personal'], {})
+      expect(result).toBe(brainPath)
+    })
+
+    it('should detect brain from cwd', async () => {
+      const { addBrain, getBrainPath } = await import('../src/config.js')
+      const brainPath = join(tmpHome, 'work')
+      mkdirSync(brainPath, { recursive: true })
+      addBrain('work', brainPath)
+      
+      const originalCwd = process.cwd
+      process.cwd = () => brainPath
+      try {
+        const result = getBrainPath([], {})
+        expect(result).toBe(brainPath)
+      } finally {
+        process.cwd = originalCwd
+      }
+    })
+
+    it('should detect brain from cwd subdirectory', async () => {
+      const { addBrain, getBrainPath } = await import('../src/config.js')
+      const brainPath = join(tmpHome, 'work')
+      const subDir = join(brainPath, 'subfolder')
+      mkdirSync(subDir, { recursive: true })
+      addBrain('work', brainPath)
+      
+      const originalCwd = process.cwd
+      process.cwd = () => subDir
+      try {
+        const result = getBrainPath([], {})
+        expect(result).toBe(brainPath)
+      } finally {
+        process.cwd = originalCwd
+      }
+    })
+
+    it('should resolve from local .brain-config.json', async () => {
+      const { getBrainPath } = await import('../src/config.js')
+      const brainPath = join(tmpHome, 'brain')
+      mkdirSync(brainPath, { recursive: true })
+      writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify({ id: 'mybrain' }))
+      
+      const originalCwd = process.cwd
+      process.cwd = () => brainPath
+      try {
+        const result = getBrainPath([], {})
+        expect(result).toBe(brainPath)
+      } finally {
+        process.cwd = originalCwd
+        rmSync(join(brainPath, '.brain-config.json'))
+      }
+    })
+
+    it('should throw when no brains configured', async () => {
+      const { writeConfig, getBrainPath } = await import('../src/config.js')
+      writeConfig({ brains: {} })
+      
+      expect(() => getBrainPath([], {})).toThrow('No brain configured')
+    })
+
+    it('should throw with available brains when not in brain folder', async () => {
+      const { addBrain, getBrainPath } = await import('../src/config.js')
+      const brainPath = join(tmpHome, 'work')
+      mkdirSync(brainPath, { recursive: true })
+      addBrain('work', brainPath)
+      
+      expect(() => getBrainPath([], {})).toThrow('Not in a brain folder')
+    })
+  })
 })

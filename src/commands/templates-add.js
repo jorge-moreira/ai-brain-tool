@@ -1,15 +1,9 @@
 import { select, input } from '@inquirer/prompts'
 import chalk from 'chalk'
-import { readConfig } from '../config.js'
-import { addTemplate } from '../templates-lib.js'
+import { getBrainPath } from '../config.js'
 
-export async function run() {
-  const config = readConfig()
-  if (!config) {
-    console.error(chalk.red('  No brain configured. Run: ai-brain setup'))
-    process.exit(1)
-  }
-  const { brainPath } = config
+export async function run(args, options = {}) {
+  const brainPath = getBrainPath(args, options)
 
   const type = await select({
     message: 'Template type:',
@@ -24,6 +18,7 @@ export async function run() {
     default: 'my-template',
   })
 
+  const { addTemplate } = await import('../templates-lib.js')
   const destPath = await addTemplate({ brainPath, type, name })
 
   console.log(chalk.green(`\n  ✔ Created ${destPath}`))

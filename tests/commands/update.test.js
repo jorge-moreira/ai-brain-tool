@@ -28,12 +28,12 @@ vi.mock('../../src/graphify.js', () => ({
 }))
 
 describe('commands/update', () => {
-  let resolveBrainSpy, readBrainConfigSpy, consoleLogSpy, execaMock
+  let getBrainPathSpy, readBrainConfigSpy, consoleLogSpy, execaMock
 
   beforeEach(async () => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
     const config = await import('../../src/config.js')
-    resolveBrainSpy = vi.spyOn(config, 'resolveBrain')
+    getBrainPathSpy = vi.spyOn(config, 'getBrainPath')
     readBrainConfigSpy = vi.spyOn(config, 'readBrainConfig')
     execaMock = (await import('execa')).execa
     execaMock.mockReset()
@@ -42,27 +42,27 @@ describe('commands/update', () => {
   afterEach(() => vi.resetAllMocks())
 
   it('should resolve brain from id argument', async () => {
-    resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
+    getBrainPathSpy.mockReturnValue('/tmp/work')
     readBrainConfigSpy.mockReturnValue({ gitSync: false })
 
     const { run } = await import('../../src/commands/update.js')
     await run(['work'], {})
 
-    expect(resolveBrainSpy).toHaveBeenCalledWith('work')
+    expect(getBrainPathSpy).toHaveBeenCalledWith(['work'], {})
   })
 
   it('should resolve brain from options.brainId', async () => {
-    resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
+    getBrainPathSpy.mockReturnValue('/tmp/work')
     readBrainConfigSpy.mockReturnValue({ gitSync: false })
 
     const { run } = await import('../../src/commands/update.js')
     await run([], { brainId: 'work' })
 
-    expect(resolveBrainSpy).toHaveBeenCalledWith('work')
+    expect(getBrainPathSpy).toHaveBeenCalledWith([], { brainId: 'work' })
   })
 
   it('should print brain id in success message', async () => {
-    resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
+    getBrainPathSpy.mockReturnValue('/tmp/work')
     readBrainConfigSpy.mockReturnValue({ gitSync: false })
 
     const { run } = await import('../../src/commands/update.js')
@@ -72,23 +72,23 @@ describe('commands/update', () => {
   })
 
   it('should throw when brain not found', async () => {
-    resolveBrainSpy.mockImplementation(() => {
+    getBrainPathSpy.mockImplementation(() => {
       throw new Error('Brain "nonexistent" not found')
     })
 
     const { run } = await import('../../src/commands/update.js')
-    await expect(run(['nonexistent'], {})).rejects.toThrow('BRAIN_NOT_RESOLVED')
+    await expect(run(['nonexistent'], {})).rejects.toThrow()
   })
 
   it('should throw when no brain configured', async () => {
-    resolveBrainSpy.mockReturnValue({ id: null, path: null, isLocal: false })
+    getBrainPathSpy.mockImplementation(() => { throw new Error('No brain configured') })
 
     const { run } = await import('../../src/commands/update.js')
-    await expect(run(['work'], {})).rejects.toThrow('NO_BRAIN_CONFIGURED')
+    await expect(run(['work'], {})).rejects.toThrow('No brain configured')
   })
 
   it('should skip git sync when gitSync is false', async () => {
-    resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
+    getBrainPathSpy.mockReturnValue('/tmp/work')
     readBrainConfigSpy.mockReturnValue({ gitSync: false })
 
     const { run } = await import('../../src/commands/update.js')
@@ -98,7 +98,7 @@ describe('commands/update', () => {
   })
 
   it('should warn when gitSync enabled but no git repo', async () => {
-    resolveBrainSpy.mockReturnValue({ id: 'work', path: '/tmp/work', isLocal: false })
+    getBrainPathSpy.mockReturnValue('/tmp/work')
     readBrainConfigSpy.mockReturnValue({ gitSync: true })
 
     const { run } = await import('../../src/commands/update.js')
@@ -113,7 +113,7 @@ describe('commands/update', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'update-git-'))
     mkdirSync(join(tmp, '.git'), { recursive: true })
     
-    resolveBrainSpy.mockReturnValue({ id: 'work', path: tmp, isLocal: false })
+    getBrainPathSpy.mockReturnValue(tmp)
     readBrainConfigSpy.mockReturnValue({ gitSync: true })
     execaMock.mockResolvedValue({ stdout: '', stderr: '' })
 
@@ -131,7 +131,7 @@ describe('commands/update', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'update-git-fail-'))
     mkdirSync(join(tmp, '.git'), { recursive: true })
     
-    resolveBrainSpy.mockReturnValue({ id: 'work', path: tmp, isLocal: false })
+    getBrainPathSpy.mockReturnValue(tmp)
     readBrainConfigSpy.mockReturnValue({ gitSync: true })
     execaMock.mockResolvedValueOnce({ stdout: 'some diff', stderr: '' })
       .mockResolvedValueOnce({ stdout: '', stderr: '' })
@@ -153,7 +153,7 @@ describe('commands/update', () => {
       const tmp = mkdtempSync(join(tmpdir(), 'commit-msg-'))
       
       const { run } = await import('../../src/commands/update.js')
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: tmp, isLocal: false })
+      getBrainPathSpy.mockReturnValue(tmp)
       readBrainConfigSpy.mockReturnValue({ gitSync: true })
       mkdirSync(join(tmp, '.git'), { recursive: true })
       execaMock.mockResolvedValue({ stdout: '', stderr: '' })
@@ -170,7 +170,7 @@ describe('commands/update', () => {
       const tmp = mkdtempSync(join(tmpdir(), 'commit-diff-'))
       mkdirSync(join(tmp, '.git'), { recursive: true })
       
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: tmp, isLocal: false })
+      getBrainPathSpy.mockReturnValue(tmp)
       readBrainConfigSpy.mockReturnValue({ gitSync: true })
       execaMock.mockResolvedValue({ stdout: ' raw/file1.js | 5 +-\n raw/file2.md | 3 +-\n', stderr: '' })
 
@@ -188,7 +188,7 @@ describe('commands/update', () => {
       const tmp = mkdtempSync(join(tmpdir(), 'commit-limit-'))
       mkdirSync(join(tmp, '.git'), { recursive: true })
       
-      resolveBrainSpy.mockReturnValue({ id: 'work', path: tmp, isLocal: false })
+      getBrainPathSpy.mockReturnValue(tmp)
       readBrainConfigSpy.mockReturnValue({ gitSync: true })
       execaMock.mockResolvedValue({ stdout: ' raw/a.js |\n raw/b.js |\n raw/c.js |\n raw/d.js |\n raw/e.js |', stderr: '' })
 
