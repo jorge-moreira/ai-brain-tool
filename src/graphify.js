@@ -73,7 +73,7 @@ export async function ensureUv() {
   const spinner = ora('Installing uv...').start()
 
   try {
-    /* c8 ignore next 8 */
+    /* c8 ignore start */
     const isWindows = platform === 'win32'
     const installCmd = isWindows
       ? {
@@ -91,10 +91,10 @@ export async function ensureUv() {
     const uvBinDir = join(homedir(), '.local', 'bin')
     const currentPath = process.env.PATH || ''
     if (!currentPath.includes(uvBinDir)) {
-      /* c8 ignore next */
       const sep = platform === 'win32' ? ';' : ':'
       process.env.PATH = `${uvBinDir}${sep}${currentPath}`
     }
+    /* c8 ignore end */
 
     // Verify installation
     try {

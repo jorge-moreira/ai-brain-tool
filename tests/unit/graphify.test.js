@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest'
+import { describe, it, expect, afterEach, vi, beforeEach, beforeAll, afterAll } from 'vitest'
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
@@ -15,6 +15,16 @@ vi.mock('chalk', () => ({
 
 vi.mock('execa', () => ({
   execa: vi.fn()
+}))
+
+vi.mock('chalk', () => ({
+  default: {
+    yellow: vi.fn((s) => s),
+    dim: vi.fn((s) => s),
+    red: vi.fn((s) => s),
+    green: vi.fn((s) => s),
+    cyan: vi.fn((s) => s)
+  }
 }))
 
 describe('graphify', () => {
