@@ -1,3 +1,17 @@
+## [2.1.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.0.2...v2.1.0) (2026-04-26)
+
+### 🚀 Features
+
+* auto-install uv on all platforms ([#35](https://github.com/jorge-moreira/ai-brain-tool/issues/35)) ([85d812c](https://github.com/jorge-moreira/ai-brain-tool/commit/85d812c147b3b50d0c3f20cde3013da2e494c87b))
+
+### 🔧 Maintenance
+
+* update version list in bug report template ([0547123](https://github.com/jorge-moreira/ai-brain-tool/commit/054712338faf8a5c48c955fe6c3f2f8e4d86287a))
+
+### 🧪 Tests
+
+* add integration & e2e tests for critical features ([#34](https://github.com/jorge-moreira/ai-brain-tool/issues/34)) ([75943c9](https://github.com/jorge-moreira/ai-brain-tool/commit/75943c9fdbeee42dd86b94bfe57273f39094be46))
+
 ## [2.0.2](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.0.1...v2.0.2) (2026-04-26)
 
 ### 🐞 Bug Fixes
