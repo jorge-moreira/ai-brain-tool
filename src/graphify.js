@@ -62,11 +62,26 @@ export async function createVenv(brainPath, extras = []) {
   const pkg = buildPkg(extras)
   const pm = await detectPackageManager()
   if (pm === 'uv') {
-    await execa('uv', ['venv', join(brainPath, '.venv')], { stdio: 'inherit' })
+    // Check for available Python 3.10+, let uv install if needed
+    const python = await detectPython()
+    if (python) {
+      // Use existing Python 3.10+
+      await execa('uv', ['venv', '--python', python, join(brainPath, '.venv')], { stdio: 'inherit' })
+    } else {
+      // No Python 3.10+ found - uv will download and install latest available
+      await execa('uv', ['venv', '--python', '3.10', join(brainPath, '.venv')], { stdio: 'inherit' })
+    }
     await execa('uv', ['pip', 'install', pkg, '--python', venvPythonPath(brainPath)], { stdio: 'inherit' })
   } else {
     const python = await detectPython()
-    if (!python) throw new Error('Python 3.10+ is required. Download from https://www.python.org/downloads/')
+    if (!python) {
+      throw new Error(
+        'Python 3.10+ is required but not found.\n' +
+        'Install with one of these options:\n' +
+        '  1. uv (recommended): brew install uv && uv python install 3.10\n' +
+        '  2. Python.org: https://www.python.org/downloads/'
+      )
+    }
     await execa(python, ['-m', 'venv', join(brainPath, '.venv')], { stdio: 'inherit' })
     await execa(venvPythonPath(brainPath), ['-m', 'pip', 'install', pkg], { stdio: 'inherit' })
   }

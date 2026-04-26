@@ -104,6 +104,10 @@ describe('git integration', () => {
       await initRepo({ brainPath, remoteUrl: null })
       await writeGitignore({ brainPath, commitCache: true })
       
+      // Configure git user for CI environments
+      execSync('git config user.email "test@test.com"', { cwd: brainPath, stdio: 'ignore' })
+      execSync('git config user.name "Test User"', { cwd: brainPath, stdio: 'ignore' })
+      
       writeFileSync(join(brainPath, 'test.md'), '# Test', 'utf8')
       
       execSync('git add .', { cwd: brainPath, stdio: 'ignore' })
@@ -121,6 +125,10 @@ describe('git integration', () => {
       const { initRepo, writeGitignore } = await import('../../../src/git.js')
       await initRepo({ brainPath, remoteUrl: null })
       await writeGitignore({ brainPath, commitCache: true })
+      
+      // Configure git user for CI environments
+      execSync('git config user.email "test@test.com"', { cwd: brainPath, stdio: 'ignore' })
+      execSync('git config user.name "Test User"', { cwd: brainPath, stdio: 'ignore' })
       
       writeFileSync(join(brainPath, 'raw', 'notes', 'test.md'), '# Test Note', 'utf8')
       

@@ -95,13 +95,30 @@ describe('graphify', () => {
     expect(result).toBe('pip')
   })
 
-  it('should create venv with uv when uv is available', async () => {
+  it('should create venv with uv when uv is available and python exists', async () => {
     const { execa } = await import('execa')
-    execa.mockResolvedValue({ stdout: '', stderr: '' })
+    execa.mockResolvedValue({ stdout: 'Python 3.11.0', stderr: '' })
     const tmp = mkdtempSync(join(tmpdir(), 'venv-uv-'))
     const { createVenv } = await import('../../src/graphify.js')
     await createVenv(tmp)
-    expect(execa).toHaveBeenCalledWith('uv', expect.arrayContaining(['venv', join(tmp, '.venv')]), expect.anything())
+    expect(execa).toHaveBeenCalledWith('uv', expect.arrayContaining(['venv', '--python', 'python3', join(tmp, '.venv')]), expect.anything())
+    rmSync(tmp, { recursive: true, force: true })
+  })
+
+  it('should create venv with uv downloading python when not available', async () => {
+    const { execa } = await import('execa')
+    // First call: detectPackageManager (uv --version) succeeds
+    // Second call: detectPython (python3 --version) fails
+    // Third call: detectPython (python --version) fails
+    execa
+      .mockResolvedValueOnce({ stdout: 'uv 0.0.1', stderr: '' }) // uv exists
+      .mockRejectedValueOnce(new Error('not found')) // python3 not found
+      .mockRejectedValueOnce(new Error('not found')) // python not found
+      .mockResolvedValue({ stdout: '', stderr: '' }) // uv venv and pip install
+    const tmp = mkdtempSync(join(tmpdir(), 'venv-uv-'))
+    const { createVenv } = await import('../../src/graphify.js')
+    await createVenv(tmp)
+    expect(execa).toHaveBeenCalledWith('uv', expect.arrayContaining(['venv', '--python', '3.10', join(tmp, '.venv')]), expect.anything())
     rmSync(tmp, { recursive: true, force: true })
   })
 
@@ -121,6 +138,7 @@ describe('graphify', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'venv-no-py-'))
     const { createVenv } = await import('../../src/graphify.js')
     await expect(createVenv(tmp)).rejects.toThrow('Python 3.10+ is required')
+    await expect(createVenv(tmp)).rejects.toThrow('uv python install 3.10')
     rmSync(tmp, { recursive: true, force: true })
   })
 
