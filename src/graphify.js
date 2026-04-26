@@ -4,6 +4,8 @@ import { existsSync, readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { platform } from 'process'
 import { fileURLToPath } from 'url'
+import { homedir } from 'os'
+import ora from 'ora'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -57,8 +59,80 @@ export async function detectPackageManager() {
   }
 }
 
+// Ensure uv is installed, install if missing
+export async function ensureUv() {
+  try {
+    await execa('uv', ['--version'])
+    console.log(chalk.green('  ✓ uv already installed'))
+    return
+  } catch {
+    // uv not found, proceed to install
+  }
+
+  const spinner = ora('Installing uv...').start()
+
+  try {
+    const isWindows = platform === 'win32'
+    const installCmd = isWindows
+      ? {
+          cmd: 'powershell',
+          args: ['-c', 'irm https://astral.sh/uv/install.ps1 | iex']
+        }
+      : {
+          cmd: 'sh',
+          args: ['-c', 'curl -LsSf https://astral.sh/uv/install.sh | sh']
+        }
+
+    await execa(installCmd.cmd, installCmd.args, { stdio: 'pipe' })
+
+    // Add uv to PATH for current process (uv installs to ~/.local/bin)
+    const uvBinDir = join(homedir(), '.local', 'bin')
+    const currentPath = process.env.PATH || ''
+    if (!currentPath.includes(uvBinDir)) {
+      process.env.PATH = `${uvBinDir}${platform === 'win32' ? ';' : ':'}${currentPath}`
+    }
+
+    // Verify installation
+    try {
+      await execa('uv', ['--version'])
+      spinner.succeed('uv installed')
+    } catch {
+      spinner.fail('uv installed but not found in PATH')
+      throw new Error(
+        'uv was installed but is not available in PATH.\n' +
+        `Try adding ${uvBinDir} to your PATH, or restart your terminal.\n` +
+        'Manual install: curl -LsSf https://astral.sh/uv/install.sh | sh'
+      )
+    }
+  } catch (error) {
+    spinner.fail('Failed to install uv')
+
+    if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNRESET')) {
+      throw new Error(
+        'Cannot download uv. Check your internet connection.\n' +
+        'Manual install: curl -LsSf https://astral.sh/uv/install.sh | sh'
+      )
+    }
+
+    if (error.message.includes('EACCES') || error.message.includes('permission denied')) {
+      throw new Error(
+        'Permission denied installing uv.\n' +
+        'Check system permissions or install manually:\n' +
+        '  curl -LsSf https://astral.sh/uv/install.sh | sh'
+      )
+    }
+
+    throw new Error(
+      `Failed to install uv: ${error.message}\n` +
+      'Manual install: curl -LsSf https://astral.sh/uv/install.sh | sh'
+    )
+  }
+}
+
 // Create .venv and install graphifyy with requested extras (always includes mcp)
 export async function createVenv(brainPath, extras = []) {
+  await ensureUv()
+  
   const pkg = buildPkg(extras)
   const pm = await detectPackageManager()
   if (pm === 'uv') {
@@ -89,6 +163,8 @@ export async function createVenv(brainPath, extras = []) {
 
 // Upgrade graphifyy in existing .venv, preserving the configured extras
 export async function upgradeVenv(brainPath, extras = []) {
+  await ensureUv()
+  
   const pkg = buildPkg(extras)
   const pm = await detectPackageManager()
   if (pm === 'uv') {
