@@ -4,16 +4,17 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
-  pull_request_target:
-    types: [labeled]
+    types: [opened, synchronize, reopened, labeled]
     branches: [main]
 
 jobs:
   unit-integration:
     name: Unit + Integration Tests
-    if: github.event_name != 'pull_request_target' || github.event.label.name == 'e2e'
     runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'pull_request' || 
+      github.event.action != 'labeled' || 
+      github.event.label.name == 'e2e'
     steps:
       - uses: actions/checkout@v5
 
@@ -35,7 +36,7 @@ jobs:
           path: coverage/
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: coverage/coverage-final.json
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -44,20 +45,23 @@ jobs:
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v5
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           report-type: test_results
-          file: coverage/junit.xml
+          files: coverage/junit.xml
+          fail_ci_if_error: false
+          verbose: true
 
   e2e:
     name: End-to-End Tests
+    needs: unit-integration
+    # Only runs on main, OR when 'e2e' label is added, OR if 'e2e' label exists on push
     if: |
       github.ref == 'refs/heads/main' ||
-      (github.event_name == 'pull_request_target' && github.event.label.name == 'e2e') ||
+      github.event.label.name == 'e2e' ||
       contains(github.event.pull_request.labels.*.name, 'e2e')
     runs-on: ubuntu-latest
-    needs: unit-integration
     steps:
       - uses: actions/checkout@v5
 
