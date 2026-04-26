@@ -11,9 +11,15 @@
     "bun": ">=1.0"
   },
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run tests/unit tests/integration",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "vitest run tests/e2e --no-coverage",
     "test:watch": "vitest",
-    "test:bun": "bun test",
+    "test:coverage": "vitest run --coverage tests/unit tests/integration",
+    "test:coverage:bun": "bun test:coverage",
+    "test:coverage:ci": "vitest run --coverage --reporter=github-actions tests/unit tests/integration",
+    "test:coverage:ci:bun": "bun test:coverage:ci",
     "start": "node bin/ai-brain.js",
     "start:bun": "bun run bin/ai-brain.js",
     "prepare": "husky"
@@ -43,6 +49,7 @@
     "@semantic-release/github": "^12.0.6",
     "@semantic-release/npm": "^13.1.5",
     "@semantic-release/release-notes-generator": "^14.1.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "husky": "^9.1.7",
     "semantic-release": "^25.0.3",
     "vitest": "^4.1.5"

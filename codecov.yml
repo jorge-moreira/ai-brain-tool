@@ -1,0 +1,40 @@
+# Codecov Configuration
+# Docs: https://docs.codecov.com/docs/codecov-yml
+
+coverage:
+  # Status Checks Configuration
+  # https://docs.codecov.com/docs/commit-status
+  status:
+    # Project status: measures overall project coverage
+    project:
+      default:
+        target: 90%           # Minimum coverage required
+        threshold: 2%         # Allow 2% drop before failing
+        if_ci_failed: error   # Fail status if CI fails
+        informational: false  # Block PRs that don't meet threshold
+    # Patch status: measures only lines changed in PR
+    patch:
+      default:
+        target: 95%           # High standard for new code
+        threshold: 5%         # Effective minimum: 90%
+        if_ci_failed: error
+
+  # Default rules applied to all status checks
+  default_rules:
+    flag_coverage_not_uploaded_behavior: exclude
+
+# Pull Request Comment Configuration
+# https://docs.codecov.com/docs/pull-request-comments
+comment:
+  layout: "condensed_header, condensed_files, condensed_footer"
+  hide_project_coverage: true
+  behavior: default
+  require_changes: false
+  require_base: false
+  require_head: true
+
+# Test Analytics
+# https://docs.codecov.com/docs/test-analytics
+parsers:
+  junit:
+    enabled: true

@@ -1,14 +1,24 @@
 import chalk from 'chalk'
-import { readConfig } from '../config.js'
-import { listTemplates } from '../templates-lib.js'
+import { getBrainPath } from '../../config.js'
+import { readdirSync, existsSync } from 'fs'
+import { join } from 'path'
 
-export async function run() {
-  const config = readConfig()
-  if (!config) {
-    console.error(chalk.red('  No brain configured. Run: ai-brain setup'))
-    process.exit(1)
+export function listTemplates(brainPath) {
+  const read = (dir) => existsSync(dir) ? readdirSync(dir) : []
+  return {
+    markdown: {
+      bundled: read(join(brainPath, 'raw', 'templates', 'markdown', '_bundled')),
+      custom:  read(join(brainPath, 'raw', 'templates', 'markdown', '_custom')),
+    },
+    webClipper: {
+      bundled: read(join(brainPath, 'raw', 'templates', 'web-clipper', '_bundled')),
+      custom:  read(join(brainPath, 'raw', 'templates', 'web-clipper', '_custom')),
+    },
   }
-  const { brainPath } = config
+}
+
+export async function run(args, options = {}) {
+  const brainPath = getBrainPath(args, options)
   const tmpl = listTemplates(brainPath)
 
   console.log('\n  Markdown templates')

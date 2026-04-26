@@ -10,7 +10,7 @@ vi.mock('chalk', () => ({
   }
 }))
 
-vi.mock('../../src/config.js', () => ({
+vi.mock('../../../src/config.js', () => ({
   listBrains: vi.fn()
 }))
 
@@ -26,13 +26,13 @@ describe('commands/list', () => {
   })
 
   it('should list all configured brains', async () => {
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.listBrains.mockReturnValue([
       { id: 'work', path: '/tmp/work' },
       { id: 'personal', path: '/tmp/personal' }
     ])
 
-    const { run } = await import('../../src/commands/list.js')
+    const { run } = await import('../../../src/commands/list.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -44,10 +44,10 @@ describe('commands/list', () => {
   })
 
   it('should show message when no brains configured', async () => {
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.listBrains.mockReturnValue([])
 
-    const { run } = await import('../../src/commands/list.js')
+    const { run } = await import('../../../src/commands/list.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -56,12 +56,12 @@ describe('commands/list', () => {
   })
 
   it('should display brain identifier and path', async () => {
-    const config = await import('../../src/config.js')
+    const config = await import('../../../src/config.js')
     config.listBrains.mockReturnValue([
       { id: 'work', path: '/tmp/work' }
     ])
 
-    const { run } = await import('../../src/commands/list.js')
+    const { run } = await import('../../../src/commands/list.js')
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(

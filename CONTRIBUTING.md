@@ -45,18 +45,61 @@ bun test
 
 # With npm
 npm test
+
+# With coverage
+bun run test:coverage
 ```
+
+**Coverage requirements:** All PRs must maintain 85%+ code coverage.
+
+### Test Structure
+
+Tests are organized by category:
+
+| Category | Location | CI Job | Runs on |
+|----------|----------|--------|---------|
+| Unit | `tests/**/*.test.js` | `unit` | All PRs + main |
+| Smoke | `tests/commands/*.test.js` | `smoke` | All PRs + main |
+| Integration | `tests/platforms/*.test.js` | `integration` | All PRs + main |
+| E2E | `scripts/e2e-test.sh` | `e2e` | Main + PRs with `e2e` label |
+
+**To run e2e tests on a PR:** Add the `e2e` label and push a new commit (or manually re-run the workflow).
 
 ### Project structure
 
 ```
 src/
-├── commands/       # CLI commands (setup, update, status, etc.)
-├── config.js       # Configuration management
-├── scaffold.js     # Brain scaffolding
-└── templates.js    # Template handling
+├── commands/           # CLI commands (setup, update, status, templates, etc.)
+├── platforms/          # AI tool integrations (Claude, Cursor, Gemini, etc.)
+├ ├── shared.js         # Shared platform helpers
+├ ├── claude.js         # Claude Code integration
+├ ├── opencode.js       # OpenCode integration
+├ ├── cursor.js         # Cursor integration
+├ ├── gemini.js         # Gemini CLI integration
+├ ├── copilot.js        # GitHub Copilot CLI integration
+├ └── codex.js          # OpenAI Codex CLI integration
+├── config.js           # Configuration management
+├── scaffold.js         # Brain scaffolding
+├── templates-lib.js    # Template handling
+├── graphify.js         # Graphify Python venv management
+├── git.js              # Git operations
+└── mcp/
+    └── server.js       # MCP server documentation
 
-tests/              # Test files (Vitest)
+tests/
+├── commands/           # Command tests
+├── platforms/          # Per-platform integration tests
+├── mcp/                # MCP server tests
+└── *.test.js           # Core module tests
+
+scripts/
+└── e2e-test.sh         # End-to-end test script
+
+.github/workflows/
+├── ci.yml              # Main CI (legacy)
+├── test.yml            # Test workflow (unit, smoke, integration, e2e)
+├── release.yml         # Release automation
+└── commitlint.yml      # Commit message linting
 ```
 
 ## Pull Requests
@@ -95,6 +138,19 @@ chore: update graphify version
 - Keep pull requests small and focused
 - Explain the issue and why your change fixes it
 - Ensure all tests pass before submitting
+- Maintain 85%+ code coverage
+- Follow existing code style and patterns
+
+### CI Checks
+
+All PRs run the following checks automatically:
+
+1. **Unit tests** - All tests in `tests/` with coverage reporting
+2. **Smoke tests** - Command-level tests (`tests/commands/`)
+3. **Integration tests** - Platform integration tests (`tests/platforms/`)
+4. **E2E tests** - Full end-to-end test (only on `main` or PRs with `e2e` label)
+
+**Before pushing:** Run `bun run test:coverage` locally to verify tests pass and coverage is adequate.
 
 ## Issue Templates
 

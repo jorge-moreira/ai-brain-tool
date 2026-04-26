@@ -120,3 +120,57 @@ export function readBrainConfig(brainPath) {
     return { gitSync: false, extras: [], obsidianDir: null, id: null }
   }
 }
+/**
+ * Resolve brain path from args/options or detect from current folder.
+ * @param {string[]} args - Command arguments (may include brain-id as positional arg)
+ * @param {object} options - Command options (may include brainId)
+ * @returns {string} - The resolved brain path
+ */
+export function getBrainPath(args, options = {}) {
+  const brainId = options.brainId || (args && args.find(a => a && !a.startsWith('-')))
+  
+  // If brainId provided, resolve it directly
+  if (brainId) {
+    const resolved = resolveBrain(brainId)
+    return resolved.path
+  }
+  
+  // No brainId provided — try to detect from current folder or config
+  const config = readConfig()
+  const brains = config.brains || {}
+  const cwd = process.cwd()
+  
+  // Check if we're inside a configured brain folder
+  for (const [id, path] of Object.entries(brains)) {
+    const normalizedPath = path.replace(/^~/, _home())
+    if (cwd.startsWith(normalizedPath) || cwd === normalizedPath) {
+      return normalizedPath
+    }
+  }
+  
+  // Check for local .brain-config.json in cwd
+  const localPath = join(cwd, '.brain-config.json')
+  if (existsSync(localPath)) {
+    try {
+      const localConfig = JSON.parse(readFileSync(localPath, 'utf8'))
+      if (localConfig.id) {
+        return cwd
+      }
+    } catch {}
+  }
+  
+  // No brain detected — provide helpful error
+  if (Object.keys(brains).length === 0) {
+    throw new Error('No brain configured. Run: ai-brain setup')
+  }
+  
+  const availableBrains = Object.keys(brains).join(', ')
+  throw new Error(
+    `Not in a brain folder. ` +
+    `Specify brain with --brain-id flag or positional argument.\n` +
+    `  Available: ${availableBrains}\n` +
+    `  Examples:\n` +
+    `    ai-brain update ${availableBrains.split(',')[0].trim()}\n` +
+    `    ai-brain update --brain-id ${availableBrains.split(',')[0].trim()}`
+  )
+}

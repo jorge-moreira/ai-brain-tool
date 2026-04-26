@@ -1,3 +1,4 @@
+import chalk from 'chalk'
 import { execa } from 'execa'
 import { existsSync, readFileSync } from 'fs'
 import { join, dirname } from 'path'
@@ -92,7 +93,8 @@ export async function runGraphify(brainPath) {
   } catch (e) {
     if (e.message.includes('No code files found') || 
         e.message.includes('Nothing to update') ||
-        e.message.includes('No files found')) {
+        e.message.includes('No files found') ||
+        e.exitCode === 1 && e.shortMessage?.includes('graphify update')) {
       console.log(chalk.yellow('\n  No code files found.'))
       console.log(chalk.dim('  For docs/articles, use the AI tool: /brain update\n'))
       return

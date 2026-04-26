@@ -1,10 +1,7 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { join, dirname } from 'path'
+import { join } from 'path'
 import { homedir } from 'os'
-import { fileURLToPath } from 'url'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const BRAIN_SKILL_MD = readFileSync(join(__dirname, 'brain-skills.md'), 'utf8')
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
+import { pythonBin, graphJson, BRAIN_SKILL_MD, installSkillFile } from './shared.js'
 
 export function detect(homeDir = homedir()) {
   return existsSync(join(homeDir, '.codex'))
@@ -13,8 +10,6 @@ export function detect(homeDir = homedir()) {
 export async function patch({ brainPath, homeDir = homedir() }) {
   const codexDir = join(homeDir, '.codex')
   const configPath = join(codexDir, 'config.toml')
-  const python = join(brainPath, '.venv', 'bin', 'python3')
-  const graphPath = join(brainPath, 'graphify-out', 'graph.json')
 
   mkdirSync(codexDir, { recursive: true })
 
@@ -25,15 +20,18 @@ export async function patch({ brainPath, homeDir = homedir() }) {
 
   // Remove existing ai-brain block if present, then append fresh
   const cleaned = existing.replace(/\[mcp_servers\.ai-brain\][^\[]*/s, '').trim()
-  const entry = `\n\n[mcp_servers.ai-brain]\ncommand = "${python}"\nargs = ["-m", "graphify.serve", "${graphPath}"]\n`
+  const entry = `\n\n[mcp_servers.ai-brain]\ncommand = "${pythonBin(brainPath)}"\nargs = ["-m", "graphify.serve", "${graphJson(brainPath)}"]\n`
 
   writeFileSync(configPath, cleaned + entry, 'utf8')
 }
 
 export async function installSkill({ homeDir = homedir() } = {}) {
   const skillDir = join(homeDir, '.codex', 'skills', 'brain')
-  mkdirSync(skillDir, { recursive: true })
-  writeFileSync(join(skillDir, 'SKILL.md'), BRAIN_SKILL_MD, 'utf8')
+  installSkillFile({
+    dir: skillDir,
+    filename: 'SKILL.md',
+    content: BRAIN_SKILL_MD,
+  })
 }
 
 export async function installAlwaysOn() {

@@ -1,5 +1,5 @@
 import chalk from 'chalk'
-import { readConfig } from '../config.js'
+import { getBrainPath } from '../config.js'
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { execa } from 'execa'
@@ -11,13 +11,8 @@ import { dirname } from 'path'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkg = JSON.parse(rf(join(__dirname, '../../package.json'), 'utf8'))
 
-export async function run() {
-  const config = readConfig()
-  if (!config) {
-    console.error(chalk.red('  No brain configured. Run: ai-brain setup'))
-    process.exit(1)
-  }
-  const { brainPath } = config
+export async function run(args, options = {}) {
+  const brainPath = getBrainPath(args, options)
 
   console.log('\n  ai-brain status\n')
   console.log(`  Tool version:   ${pkg.version}`)

@@ -8,16 +8,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const TEMPLATES_DIR = join(__dirname, '..', 'templates')
 
 export async function run(args, options = {}) {
-  let brainId = options.brainId || args.find(a => !a.startsWith('-'))
+  const brainId = options.brainId || (args && args.find(a => a && !a.startsWith('-')))
   let resolved
-
   try {
     resolved = resolveBrain(brainId)
   } catch (e) {
     console.error(chalk.red(`  ${e.message}`))
     throw new Error('BRAIN_NOT_RESOLVED')
   }
-
   const resolvedId = resolved.id
   const brainPath = resolved.path
 
