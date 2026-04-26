@@ -1,3 +1,18 @@
+## [2.0.2](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.0.1...v2.0.2) (2026-04-26)
+
+### 🐞 Bug Fixes
+
+* **commands:** Add missing behaviors on commands ([#33](https://github.com/jorge-moreira/ai-brain-tool/issues/33)) ([f81cf65](https://github.com/jorge-moreira/ai-brain-tool/commit/f81cf6515ae45f680713746e93201ddcc8367787))
+
+### 🔧 Maintenance
+
+* update version list in bug report template ([7a58ef9](https://github.com/jorge-moreira/ai-brain-tool/commit/7a58ef910df8c22ff5d286cd1fdd9b978ce91f2b))
+
+### ⚙️ CI/CD
+
+* add missing env github token to release workflow ([f13e0b7](https://github.com/jorge-moreira/ai-brain-tool/commit/f13e0b73ef8d8fe92c67df3c16770f9df82382ff))
+* add update bug report template on release completed ([bc28426](https://github.com/jorge-moreira/ai-brain-tool/commit/bc284269b2c34da68e05cce2e0668d5a02d04ff6))
+
 ## [2.0.1](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.0.0...v2.0.1) (2026-04-25)
 
 ### 🐞 Bug Fixes
