@@ -18,7 +18,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage tests/unit tests/integration",
     "test:coverage:bun": "bun test:coverage",
-    "test:coverage:ci": "vitest run --coverage --reporter=github-actions tests/unit tests/integration",
+    "test:coverage:ci": "vitest run --coverage --reporter=github-actions --reporter=junit --outputFile=coverage/junit.xml tests/unit tests/integration",
     "test:coverage:ci:bun": "bun test:coverage:ci",
     "start": "node bin/ai-brain.js",
     "start:bun": "bun run bin/ai-brain.js",
