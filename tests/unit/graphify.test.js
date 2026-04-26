@@ -33,6 +33,18 @@ describe('graphify', () => {
     expect(venvPythonPath('/tmp/brain')).toBe('/tmp/brain/.venv/bin/python3')
   })
 
+  it('should throw when uv installed but not in PATH', async () => {
+    const { execa } = await import('execa')
+    const { ensureUv } = await import('../../src/graphify.js')
+    
+    execa
+      .mockRejectedValueOnce(new Error('not found'))
+      .mockResolvedValueOnce({ stdout: '', stderr: '' })
+      .mockRejectedValueOnce(new Error('not found'))
+    
+    await expect(ensureUv()).rejects.toThrow('uv was installed but is not available in PATH')
+  })
+
   it('should return false for venvExists with non-existent path', async () => {
     const { venvExists } = await import('../../src/graphify.js')
     expect(venvExists('/tmp/definitely-does-not-exist-brain')).toBe(false)
@@ -108,17 +120,16 @@ describe('graphify', () => {
   it('should create venv with uv downloading python when not available', async () => {
     const { execa } = await import('execa')
     // ensureUv: uv not found, install, verify
-    // detectPackageManager: uv found
     // detectPython: python3 not found, python not found
     // uv venv with python 3.10, uv pip install
     execa
       .mockRejectedValueOnce(new Error('not found')) // ensureUv: uv --version fails
       .mockResolvedValueOnce({ stdout: '', stderr: '' }) // ensureUv: install script
       .mockResolvedValueOnce({ stdout: 'uv 0.0.1', stderr: '' }) // ensureUv: verify
-      .mockResolvedValueOnce({ stdout: 'uv 0.0.1', stderr: '' }) // detectPackageManager
       .mockRejectedValueOnce(new Error('not found')) // detectPython: python3
       .mockRejectedValueOnce(new Error('not found')) // detectPython: python
-      .mockResolvedValue({ stdout: '', stderr: '' }) // uv venv and pip install
+      .mockResolvedValueOnce({ stdout: '', stderr: '' }) // uv venv
+      .mockResolvedValue({ stdout: '', stderr: '' }) // uv pip install
     const tmp = mkdtempSync(join(tmpdir(), 'venv-uv-'))
     const { createVenv } = await import('../../src/graphify.js')
     await createVenv(tmp)
@@ -126,21 +137,19 @@ describe('graphify', () => {
     rmSync(tmp, { recursive: true, force: true })
   })
 
-  it('should create venv with pip when uv not available', async () => {
+  it('should create venv after installing uv', async () => {
     const { execa } = await import('execa')
     // ensureUv checks: uv --version fails, then install succeeds, then verify succeeds
     execa
       .mockRejectedValueOnce(new Error('not found')) // uv not found initially
       .mockResolvedValueOnce({ stdout: '', stderr: '' }) // install script
       .mockResolvedValueOnce({ stdout: 'uv 0.0.1', stderr: '' }) // verify install
-      // detectPackageManager: uv now exists
-      .mockResolvedValueOnce({ stdout: 'uv 0.0.1', stderr: '' })
       // detectPython
       .mockResolvedValue({ stdout: 'Python 3.11.0', stderr: '' })
     const tmp = mkdtempSync(join(tmpdir(), 'venv-pip-'))
     const graphify = await import('../../src/graphify.js')
     await graphify.createVenv(tmp)
-    // After ensureUv, uv is always used
+    // uv is always used after ensureUv
     expect(execa).toHaveBeenCalledWith('uv', expect.arrayContaining(['venv', '--python', 'python3', join(tmp, '.venv')]), expect.anything())
     rmSync(tmp, { recursive: true, force: true })
   })
@@ -157,33 +166,70 @@ describe('graphify', () => {
     rmSync(tmp, { recursive: true, force: true })
   })
 
-  it('should upgrade venv with uv when uv is available', async () => {
+  it('should throw network error when ENOTFOUND', async () => {
     const { execa } = await import('execa')
-    execa.mockResolvedValue({ stdout: '', stderr: '' })
+    const { ensureUv } = await import('../../src/graphify.js')
+    
+    execa
+      .mockRejectedValueOnce(new Error('not found')) // uv not found
+      .mockRejectedValueOnce(new Error('ENOTFOUND')) // install fails with network error
+    
+    await expect(ensureUv()).rejects.toThrow('Cannot download uv')
+  })
+
+  it('should throw network error when ECONNRESET', async () => {
+    const { execa } = await import('execa')
+    const { ensureUv } = await import('../../src/graphify.js')
+    
+    execa
+      .mockRejectedValueOnce(new Error('not found')) // uv not found
+      .mockRejectedValueOnce(new Error('ECONNRESET')) // install fails with connection reset
+    
+    await expect(ensureUv()).rejects.toThrow('Cannot download uv')
+  })
+
+  it('should throw permission error when EACCES', async () => {
+    const { execa } = await import('execa')
+    const { ensureUv } = await import('../../src/graphify.js')
+    
+    execa
+      .mockRejectedValueOnce(new Error('not found')) // uv not found
+      .mockRejectedValueOnce(new Error('EACCES: permission denied')) // install fails with permission error
+    
+    await expect(ensureUv()).rejects.toThrow('Permission denied installing uv')
+  })
+
+  it('should throw permission error when permission denied', async () => {
+    const { execa } = await import('execa')
+    const { ensureUv } = await import('../../src/graphify.js')
+    
+    execa
+      .mockRejectedValueOnce(new Error('not found')) // uv not found
+      .mockRejectedValueOnce(new Error('permission denied')) // install fails with permission error
+    
+    await expect(ensureUv()).rejects.toThrow('Permission denied installing uv')
+  })
+
+  it('should throw generic error when install fails with other error', async () => {
+    const { execa } = await import('execa')
+    const { ensureUv } = await import('../../src/graphify.js')
+    
+    execa
+      .mockRejectedValueOnce(new Error('not found')) // uv not found
+      .mockRejectedValueOnce(new Error('some other error')) // install fails with generic error
+    
+    await expect(ensureUv()).rejects.toThrow('Failed to install uv')
+  })
+
+  it('should upgrade venv with uv', async () => {
+    const { execa } = await import('execa')
+    // ensureUv: uv found
+    execa.mockResolvedValue({ stdout: 'uv 0.0.1', stderr: '' })
     const tmp = mkdtempSync(join(tmpdir(), 'upgrade-uv-'))
     mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
     writeFileSync(join(tmp, '.venv', 'bin', 'python3'), '')
     const { upgradeVenv } = await import('../../src/graphify.js')
     await upgradeVenv(tmp)
-    expect(execa).toHaveBeenCalledWith('uv', expect.arrayContaining(['pip', 'install', '--upgrade']), expect.anything())
-    rmSync(tmp, { recursive: true, force: true })
-  })
-
-  it('should upgrade venv with pip when uv not available', async () => {
-    const { execa } = await import('execa')
-    // ensureUv checks in upgradeVenv: uv --version fails, then install succeeds, then verify succeeds
-    execa
-      .mockRejectedValueOnce(new Error('not found')) // uv not found initially
-      .mockResolvedValueOnce({ stdout: '', stderr: '' }) // install script
-      .mockResolvedValueOnce({ stdout: 'uv 0.0.1', stderr: '' }) // verify install
-      // detectPackageManager and upgradeVenv calls
-      .mockResolvedValue({ stdout: '', stderr: '' })
-    const tmp = mkdtempSync(join(tmpdir(), 'upgrade-pip-'))
-    mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
-    writeFileSync(join(tmp, '.venv', 'bin', 'python3'), '')
-    const { upgradeVenv } = await import('../../src/graphify.js')
-    await upgradeVenv(tmp)
-    // After ensureUv, uv is always used
     expect(execa).toHaveBeenCalledWith('uv', expect.arrayContaining(['pip', 'install', '--upgrade']), expect.anything())
     rmSync(tmp, { recursive: true, force: true })
   })

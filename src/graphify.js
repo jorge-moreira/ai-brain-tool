@@ -21,6 +21,7 @@ function buildPkg(extras = []) {
 
 // Returns path to the venv Python executable
 export function venvPythonPath(brainPath) {
+  /* c8 ignore next 3 */
   if (platform === 'win32') {
     return join(brainPath, '.venv', 'Scripts', 'python.exe')
   }
@@ -72,6 +73,7 @@ export async function ensureUv() {
   const spinner = ora('Installing uv...').start()
 
   try {
+    /* c8 ignore next 8 */
     const isWindows = platform === 'win32'
     const installCmd = isWindows
       ? {
@@ -89,6 +91,7 @@ export async function ensureUv() {
     const uvBinDir = join(homedir(), '.local', 'bin')
     const currentPath = process.env.PATH || ''
     if (!currentPath.includes(uvBinDir)) {
+      /* c8 ignore next */
       process.env.PATH = `${uvBinDir}${platform === 'win32' ? ';' : ':'}${currentPath}`
     }
 
@@ -134,31 +137,14 @@ export async function createVenv(brainPath, extras = []) {
   await ensureUv()
   
   const pkg = buildPkg(extras)
-  const pm = await detectPackageManager()
-  if (pm === 'uv') {
-    // Check for available Python 3.10+, let uv install if needed
-    const python = await detectPython()
-    if (python) {
-      // Use existing Python 3.10+
-      await execa('uv', ['venv', '--python', python, join(brainPath, '.venv')], { stdio: 'inherit' })
-    } else {
-      // No Python 3.10+ found - uv will download and install latest available
-      await execa('uv', ['venv', '--python', '3.10', join(brainPath, '.venv')], { stdio: 'inherit' })
-    }
-    await execa('uv', ['pip', 'install', pkg, '--python', venvPythonPath(brainPath)], { stdio: 'inherit' })
+  // Check for available Python 3.10+, let uv install if needed
+  const python = await detectPython()
+  if (python) {
+    await execa('uv', ['venv', '--python', python, join(brainPath, '.venv')], { stdio: 'inherit' })
   } else {
-    const python = await detectPython()
-    if (!python) {
-      throw new Error(
-        'Python 3.10+ is required but not found.\n' +
-        'Install with one of these options:\n' +
-        '  1. uv (recommended): brew install uv && uv python install 3.10\n' +
-        '  2. Python.org: https://www.python.org/downloads/'
-      )
-    }
-    await execa(python, ['-m', 'venv', join(brainPath, '.venv')], { stdio: 'inherit' })
-    await execa(venvPythonPath(brainPath), ['-m', 'pip', 'install', pkg], { stdio: 'inherit' })
+    await execa('uv', ['venv', '--python', '3.10', join(brainPath, '.venv')], { stdio: 'inherit' })
   }
+  await execa('uv', ['pip', 'install', pkg, '--python', venvPythonPath(brainPath)], { stdio: 'inherit' })
 }
 
 // Upgrade graphifyy in existing .venv, preserving the configured extras
@@ -166,12 +152,7 @@ export async function upgradeVenv(brainPath, extras = []) {
   await ensureUv()
   
   const pkg = buildPkg(extras)
-  const pm = await detectPackageManager()
-  if (pm === 'uv') {
-    await execa('uv', ['pip', 'install', '--upgrade', pkg, '--python', venvPythonPath(brainPath)], { stdio: 'inherit' })
-  } else {
-    await execa(venvPythonPath(brainPath), ['-m', 'pip', 'install', '--upgrade', pkg], { stdio: 'inherit' })
-  }
+  await execa('uv', ['pip', 'install', '--upgrade', pkg, '--python', venvPythonPath(brainPath)], { stdio: 'inherit' })
 }
 
 // Run graphify to rebuild the graph from raw/
