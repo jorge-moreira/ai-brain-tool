@@ -17,14 +17,12 @@ vi.mock('execa', () => ({
   execa: vi.fn()
 }))
 
-vi.mock('chalk', () => ({
-  default: {
-    yellow: vi.fn((s) => s),
-    dim: vi.fn((s) => s),
-    red: vi.fn((s) => s),
-    green: vi.fn((s) => s),
-    cyan: vi.fn((s) => s)
-  }
+vi.mock('ora', () => ({
+  default: () => ({
+    start: vi.fn().mockReturnThis(),
+    succeed: vi.fn(),
+    fail: vi.fn()
+  })
 }))
 
 describe('graphify', () => {
