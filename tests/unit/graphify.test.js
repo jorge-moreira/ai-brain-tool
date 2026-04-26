@@ -237,18 +237,4 @@ describe('graphify', () => {
     rmSync(tmp, { recursive: true, force: true })
   })
 
-  // TODO: migrate to integration tests - requires network access for venv creation
-  it.skip('should return true after venv creation', async () => {
-    const { detectPython, venvExists, createVenv } = await import('../../src/graphify.js')
-    const python = await detectPython()
-    if (!python) {
-      return
-    }
-
-    const tmp = mkdtempSync(join(tmpdir(), 'venv-test-'))
-    afterEach(() => rmSync(tmp, { recursive: true, force: true }))
-
-    await createVenv(tmp)
-    expect(venvExists(tmp)).toBe(true)
-  }, 30000)
 })
