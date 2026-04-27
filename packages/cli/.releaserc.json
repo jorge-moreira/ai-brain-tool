@@ -26,7 +26,11 @@
       "npmPublish": true
     }],
     ["@semantic-release/github", {
-      "assets": [],
+      "assets": [
+        {"path": "../electron/dist-electron/*.dmg", "label": "macOS (Apple Silicon)"},
+        {"path": "../electron/dist-electron/*.exe", "label": "Windows"},
+        {"path": "../electron/dist-electron/*.AppImage", "label": "Linux"}
+      ],
       "addReleases": "top"
     }],
     ["@semantic-release/git", {
