@@ -13,6 +13,14 @@
     "./git": "./src/git.ts",
     "./scaffold": "./src/scaffold.ts"
   },
+  "scripts": {
+    "test": "vitest run tests/unit tests/integration",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:coverage": "vitest run --coverage tests/unit tests/integration",
+    "test:coverage:ci": "vitest run --coverage --reporter=github-actions --reporter=junit --outputFile=coverage/junit.xml tests/unit tests/integration",
+    "test:watch": "vitest"
+  },
   "dependencies": {
     "@inquirer/prompts": "^8.4.2",
     "chalk": "^5.0.0",
@@ -24,9 +32,5 @@
     "typescript": "^5.0.0",
     "vitest": "^4.1.5",
     "@vitest/coverage-v8": "^4.1.5"
-  },
-  "scripts": {
-    "test": "bunx vitest run",
-    "test:coverage": "bunx vitest run --coverage"
   }
 }

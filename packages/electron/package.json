@@ -11,8 +11,8 @@
     "preview": "vite preview",
     "electron:dev": "concurrently \"bun run dev\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "vite build && electron-builder",
-    "test": "bunx vitest run",
-    "test:coverage": "bunx vitest run --coverage"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@ai-brain/core": "workspace:*",

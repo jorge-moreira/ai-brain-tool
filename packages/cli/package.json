@@ -13,10 +13,14 @@
   "scripts": {
     "start": "node bin/ai-brain.js",
     "start:bun": "bun run bin/ai-brain.js",
-    "prepare": "husky",
-    "test": "bunx vitest run",
-    "test:coverage": "bunx vitest run --coverage",
-    "test:e2e": "bunx vitest run tests/e2e"
+    "test": "vitest run tests/unit tests/integration",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "vitest run tests/e2e --no-coverage",
+    "test:e2e:ci": "vitest run tests/e2e --no-coverage --reporter=github-actions",
+    "test:coverage": "vitest run --coverage tests/unit tests/integration",
+    "test:coverage:ci": "vitest run --coverage --reporter=github-actions --reporter=junit --outputFile=coverage/junit.xml tests/unit tests/integration",
+    "test:watch": "vitest"
   },
   "files": [
     "bin/",
@@ -36,17 +40,7 @@
     "ora": "^9.4.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.5.0",
-    "@commitlint/config-conventional": "^20.5.0",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/commit-analyzer": "^13.0.1",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^12.0.6",
-    "@semantic-release/npm": "^13.1.5",
-    "@semantic-release/release-notes-generator": "^14.1.0",
     "@vitest/coverage-v8": "^4.1.5",
-    "husky": "^9.1.7",
-    "semantic-release": "^25.0.3",
     "vitest": "^4.1.5"
   }
 }

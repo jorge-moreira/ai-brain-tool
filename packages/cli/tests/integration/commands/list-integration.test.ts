@@ -30,7 +30,7 @@ describe('list command integration', () => {
 
   it('should show empty list when no brains configured', () => {
     const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain'.ts')} list`,
+      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} list`,
       { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
     )
     
@@ -55,7 +55,7 @@ describe('list command integration', () => {
     )
     
     const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain'.ts')} list`,
+      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} list`,
       { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
     )
     
@@ -85,7 +85,7 @@ describe('list command integration', () => {
     )
     
     const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain'.ts')} list`,
+      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} list`,
       { encoding: 'utf8', cwd: brainPath, env: { ...process.env, __HOME__: tmpHome } }
     )
     

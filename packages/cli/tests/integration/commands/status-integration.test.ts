@@ -25,7 +25,7 @@ describe('status command integration', () => {
 
   it('should show error when no brain configured', () => {
     const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain'.ts')} status 2>&1 || true`,
+      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} status 2>&1 || true`,
       { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
     )
     
@@ -57,7 +57,7 @@ describe('status command integration', () => {
     )
     
     const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain'.ts')} status test`,
+      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`,
       { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
     )
     
@@ -94,7 +94,7 @@ describe('status command integration', () => {
     )
     
     const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain'.ts')} status test`,
+      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`,
       { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
     )
     
@@ -128,7 +128,7 @@ describe('status command integration', () => {
     )
     
     const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain'.ts')} status test`,
+      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`,
       { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
     )
     
