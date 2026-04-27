@@ -19,7 +19,7 @@ jobs:
         run: bun install
 
       - name: Run CLI tests with coverage
-        run: cd packages/cli && bun run test:coverage
+        run: bun run test:cli
 
       - name: Upload CLI coverage to Codecov
         uses: codecov/codecov-action@v5

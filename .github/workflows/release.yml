@@ -44,7 +44,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          cd packages/cli
           output=$(npx semantic-release --dry-run 2>&1)
           echo "$output"
           NEW_VERSION=$(echo "$output" | grep -oP 'next release version: \K[\d.]+' || echo "")
@@ -88,11 +87,10 @@ jobs:
       - name: Sync Electron version
         run: |
           VERSION=${{ needs.prepare-release.outputs.new_version }}
-          cd packages/electron
-          node -e "const pkg=require('./package.json'); pkg.version='$VERSION'; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2))"
+          node -e "const pkg=require('./packages/electron/package.json'); pkg.version='$VERSION'; require('fs').writeFileSync('packages/electron/package.json', JSON.stringify(pkg, null, 2))"
 
       - name: Build Electron app
-        run: bun run --cwd packages/electron electron:build
+        run: bun run build:electron
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -170,8 +168,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          cd packages/cli
-          node -e "const pkg=require('./package.json'); pkg.version='${{ steps.version.outputs.version }}'; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2))"
+          node -e "const pkg=require('./packages/cli/package.json'); pkg.version='${{ steps.version.outputs.version }}'; require('fs').writeFileSync('packages/cli/package.json', JSON.stringify(pkg, null, 2))"
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           
           if npm view @jorge-moreira.dev/ai-brain-tool@${{ steps.version.outputs.version }} >/dev/null 2>&1; then
@@ -187,7 +184,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd packages/cli
           npx semantic-release --no-ci
 
       - name: Trigger update-bug-report-templates

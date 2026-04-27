@@ -19,7 +19,7 @@ jobs:
         run: bun install
 
       - name: Run Electron tests with coverage
-        run: cd packages/electron && bun run test:coverage
+        run: bun run test:electron
 
       - name: Upload Electron coverage to Codecov
         uses: codecov/codecov-action@v5
