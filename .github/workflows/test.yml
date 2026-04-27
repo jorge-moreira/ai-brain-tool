@@ -2,10 +2,10 @@ name: Test
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/app]
   pull_request:
     types: [opened, synchronize, reopened, labeled]
-    branches: [main]
+    branches: [main, feature/app]
 
 jobs:
   unit-integration:
@@ -57,9 +57,9 @@ jobs:
   e2e:
     name: End-to-End Tests
     needs: unit-integration
-    # Only runs on main, OR when 'e2e' label is added, OR if 'e2e' label exists on push
     if: |
       github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/feature/app' ||
       github.event.label.name == 'e2e' ||
       contains(github.event.pull_request.labels.*.name, 'e2e')
     runs-on: ubuntu-latest
