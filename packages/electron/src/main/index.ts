@@ -17,6 +17,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
     },
   })
 
@@ -38,6 +39,19 @@ app.whenReady().then(() => {
   autoUpdater.autoInstallOnAppQuit = true
   autoUpdater.checkForUpdatesAndNotify()
 
+  // Auto-updater event listeners
+  autoUpdater.on('update-available', () => {
+    mainWindow?.webContents.send('update-available')
+  })
+
+  autoUpdater.on('update-downloaded', () => {
+    mainWindow?.webContents.send('update-downloaded')
+  })
+
+  autoUpdater.on('error', (err) => {
+    mainWindow?.webContents.send('update-error', err)
+  })
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
@@ -52,27 +66,60 @@ app.on('window-all-closed', () => {
 })
 
 ipcMain.handle('brain:status', async (_event, brainId?: string) => {
-  return brainStatus.status(brainId)
+  try {
+    const result = await brainStatus.status(brainId)
+    return { success: true, data: result }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
 })
 
 ipcMain.handle('brain:update', async (_event, brainId?: string) => {
-  return brainUpdate.update(brainId)
+  try {
+    await brainUpdate.update(brainId)
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
 })
 
 ipcMain.handle('brain:setup', async () => {
-  return brainSetup.setup()
+  try {
+    const result = await brainSetup.setup()
+    return { success: true, data: result }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
 })
 
 ipcMain.handle('brain:list', async () => {
-  return brainList.list()
+  try {
+    const result = await brainList.list()
+    return { success: true, data: result }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
 })
 
 ipcMain.handle('config:get', async () => {
-  return getConfig()
+  try {
+    const result = await getConfig()
+    return { success: true, data: result }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
 })
 
 ipcMain.handle('config:set', async (_event, config: any) => {
-  return setConfig(config)
+  try {
+    if (!config || typeof config !== 'object') {
+      return { success: false, error: 'Invalid config object' }
+    }
+    await setConfig(config)
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
 })
 
 ipcMain.handle('app:quit', () => {
