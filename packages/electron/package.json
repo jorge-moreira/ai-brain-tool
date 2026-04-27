@@ -6,7 +6,7 @@
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && electron-builder",
+    "build": "vite build && electron-builder",
     "build:dir": "vite build && electron-builder --dir",
     "preview": "vite preview",
     "electron:dev": "concurrently \"bun run dev\" \"wait-on http://localhost:5173 && electron .\"",
