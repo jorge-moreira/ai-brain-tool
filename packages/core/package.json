@@ -29,8 +29,8 @@
     "ora": "^9.4.0"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "vitest": "^4.1.5",
-    "@vitest/coverage-v8": "^4.1.5"
+    "typescript": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "vitest": "catalog:"
   }
 }

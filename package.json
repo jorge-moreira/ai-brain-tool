@@ -1,13 +1,23 @@
 {
   "name": "ai-brain-tool-monorepo",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": {
+    "packages": ["packages/*"],
+    "catalog": {
+      "vitest": "^4.1.5",
+      "@vitest/coverage-v8": "^4.1.5",
+      "typescript": "^5.0.0"
+    }
+  },
   "scripts": {
-    "cli:start": "bun run --cwd packages/cli start",
-    "cli:test": "bun run --cwd packages/cli test",
-    "electron:dev": "bun run --cwd packages/electron dev",
-    "electron:build": "bun run --cwd packages/electron build",
-    "ui:build": "bun run --cwd packages/ui build"
+    "test": "bun run --filter \"*\" test",
+    "test:core": "bun run --filter @ai-brain/core test",
+    "test:cli": "bun run --filter @jorge-moreira.dev/ai-brain-tool test",
+    "test:electron": "bun run --filter @ai-brain/electron test",
+    "build": "bun run --filter @ai-brain/electron build",
+    "build:electron": "bun run --filter @ai-brain/electron build",
+    "dev:electron": "bun run --filter @ai-brain/electron dev",
+    "cli:start": "bun run --filter @jorge-moreira.dev/ai-brain-tool start"
   },
   "dependencies": {
     "@commitlint/cli": "^20.5.2",
