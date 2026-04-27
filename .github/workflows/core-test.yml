@@ -8,7 +8,7 @@ jobs:
     name: Core Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -26,4 +26,7 @@ jobs:
         with:
           files: packages/core/coverage/coverage-final.json
           token: ${{ secrets.CODECOV_TOKEN }}
+          report_type: coverage
+          fail_ci_if_error: false
+          verbose: true
           flags: core
