@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [main, feature/app]
+    branches: [main]
 
 permissions:
   contents: write
@@ -15,8 +15,6 @@ jobs:
   release-npm:
     name: Release npm Package
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.release.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,11 +30,14 @@ jobs:
         run: bun install
 
       - name: Release CLI to npm
-        id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: cd packages/cli && npx semantic-release
+
+      - name: Get version from package.json
+        id: version
+        run: echo "version=$(node -p "require('./packages/cli/package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Trigger update-bug-report-templates
         if: success()
@@ -87,6 +88,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get version from package.json
+        id: version
+        run: echo "version=$(node -p "require('./packages/cli/package.json').version")" >> $GITHUB_OUTPUT
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -97,4 +102,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Upload all binaries to GitHub Release
-          gh release upload v${{ needs.release-npm.outputs.version }} artifacts/**/* --clobber
+          gh release upload v${{ steps.version.outputs.version }} artifacts/**/* --clobber
