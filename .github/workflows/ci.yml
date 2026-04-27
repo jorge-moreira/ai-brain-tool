@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, feature/app]
+  push:
+    branches: [main, feature/app]
+
+jobs:
+  core-test:
+    uses: ./.github/workflows/core-test.yml
+
+  cli-test:
+    uses: ./.github/workflows/cli-test.yml
+    needs: core-test
+
+  electron-test:
+    uses: ./.github/workflows/electron-test.yml
+    needs: core-test

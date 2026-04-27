@@ -4,26 +4,19 @@
   "description": "Your personal AI memory, connected to all your AI tools",
   "type": "module",
   "bin": {
-    "ai-brain": "bin/ai-brain.ts"
+    "ai-brain": "bin/ai-brain.js"
   },
   "engines": {
     "node": ">=18",
     "bun": ">=1.0"
   },
   "scripts": {
-    "start": "node bin/ai-brain.ts",
-    "start:bun": "bun run bin/ai-brain.ts",
+    "start": "node bin/ai-brain.js",
+    "start:bun": "bun run bin/ai-brain.js",
     "prepare": "husky",
-    "test": "vitest run tests/unit tests/integration",
-    "test:unit": "vitest run tests/unit",
-    "test:integration": "vitest run tests/integration",
-    "test:e2e": "vitest run tests/e2e --no-coverage",
-    "test:e2e:ci": "bun test:e2e --reporter=github-actions",
-    "test:coverage": "vitest run --coverage tests/unit tests/integration",
-    "test:coverage:bun": "bun test:coverage",
-    "test:coverage:ci": "vitest run --coverage --reporter=github-actions --reporter=junit --outputFile=coverage/junit.xml tests/unit tests/integration",
-    "test:coverage:ci:bun": "bun test:coverage:ci",
-    "test:watch": "vitest"
+    "test": "bunx vitest run",
+    "test:coverage": "bunx vitest run --coverage",
+    "test:e2e": "bunx vitest run tests/e2e"
   },
   "files": [
     "bin/",

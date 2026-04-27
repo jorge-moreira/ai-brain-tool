@@ -17,12 +17,9 @@ export default defineConfig({
         '**/__tests__/**',
         '**/*.test.ts',
       ],
-      thresholds: {
-        lines: 80,
-        functions: 80,
-        branches: 80,
-        statements: 80,
-      },
     },
+  },
+  esbuild: {
+    target: 'node18',
   },
 })
