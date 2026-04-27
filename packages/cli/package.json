@@ -35,6 +35,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@ai-brain/core": "workspace:*",
     "@inquirer/prompts": "^8.4.2",
     "chalk": "^5.0.0",
     "commander": "^14.0.3",
