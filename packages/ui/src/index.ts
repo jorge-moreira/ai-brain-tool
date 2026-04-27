@@ -15,11 +15,24 @@ export { Input } from "./components/input"
 export { Label } from "./components/label"
 export {
   Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
   DialogContent,
   DialogHeader,
+  DialogFooter,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-  DialogTrigger,
 } from "./components/dialog"
-export { Toast, ToastProvider, ToastViewport } from "./components/toast"
+export {
+  type ToastProps,
+  type ToastActionElement,
+  ToastProvider,
+  ToastViewport,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  ToastClose,
+  ToastAction,
+} from "./components/toast"
