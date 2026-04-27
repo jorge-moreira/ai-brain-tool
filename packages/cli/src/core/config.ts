@@ -163,7 +163,7 @@ export function getBrainPath(args?: string[], options: GetBrainPathOptions = {})
   const cwd = process.cwd()
   
   // Check if we're inside a configured brain folder
-  for (const [id, path] of Object.entries(brains)) {
+  for (const [_, path] of Object.entries(brains)) {
     const normalizedPath = path.replace(/^~/, _home())
     if (cwd.startsWith(normalizedPath) || cwd === normalizedPath) {
       return normalizedPath

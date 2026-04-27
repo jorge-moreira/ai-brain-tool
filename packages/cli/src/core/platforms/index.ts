@@ -24,6 +24,8 @@ interface DetectedPlatform extends Platform {
   detected: boolean
 }
 
+export type { DetectedPlatform }
+
 const PLATFORMS: Platform[] = [
   { name: 'Claude Code',         key: 'claude',   module: claude,   configHint: '~/.claude/' },
   { name: 'OpenCode',            key: 'opencode', module: opencode, configHint: '~/.config/opencode/' },

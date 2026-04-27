@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "0.1.0",
+  "name": "AI Brain YouTube",
+  "behavior": "create",
+  "noteContentFormat": "## Description\n\n{{schema:@VideoObject:description}}\n\n## Notes\n\n",
+  "properties": [
+    {
+      "name": "title",
+      "value": "{{schema:@VideoObject:name}}",
+      "type": "text"
+    },
+    {
+      "name": "source",
+      "value": "{{url}}",
+      "type": "text"
+    },
+    {
+      "name": "channel",
+      "value": "{{schema:@VideoObject:author}}",
+      "type": "text"
+    },
+    {
+      "name": "published",
+      "value": "{{schema:@VideoObject:uploadDate|date:\"YYYY-MM-DD\"}}",
+      "type": "date"
+    },
+    {
+      "name": "created",
+      "value": "{{date|date:\"YYYY-MM-DD\"}}",
+      "type": "date"
+    },
+    {
+      "name": "duration",
+      "value": "{{schema:@VideoObject:duration}}",
+      "type": "text"
+    },
+    {
+      "name": "tags",
+      "value": "video/youtube",
+      "type": "multitext"
+    }
+  ],
+  "triggers": [
+    "https://www.youtube.com/watch"
+  ],
+  "noteNameFormat": "{{schema:@VideoObject:uploadDate|date:\"YYYY-MM-DD\"}} {{schema:@VideoObject:name|safe_name}}",
+  "path": "raw/media/videos"
+}

@@ -1,10 +1,10 @@
-import { join, resolve, basename } from 'path'
+import { join, basename } from 'path'
 import { existsSync, readFileSync } from 'fs'
 import { createBrainFolder, writeBrainConfig } from '../scaffold.js'
-import { createVenv, venvExists } from '../graphify.js'
+import { createVenv } from '../graphify.js'
 import { detectAll, configureSelected, type DetectedPlatform } from '../platforms/index.js'
 import { initRepo, writeGitignore } from '../git.js'
-import { readConfig, writeConfig, addBrain, ensureConfigDir, configPath, isBrainIdAvailable, type BrainConfig } from '../config.js'
+import { writeConfig, addBrain, ensureConfigDir, configPath, isBrainIdAvailable } from '../config.js'
 
 const BRAIN_MARKER = ['raw', '.graphifyignore', '.brain-config.json']
 
