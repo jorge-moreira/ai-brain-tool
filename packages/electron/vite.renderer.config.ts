@@ -13,7 +13,7 @@ export default defineConfig({
   base: './',
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src/renderer/src'),
+      '@renderer': path.resolve(__dirname, './src/renderer'),
       '@ai-brain/ui': path.resolve(__dirname, '../ui/src'),
     },
   },
