@@ -1,6 +1,25 @@
 // Export utilities
 export { cn } from "./lib/utils"
 
-// Export components (added incrementally in Task 4)
-// export { Button } from "./components/button"
-// export { Card } from "./components/card"
+// Components
+export { Button, buttonVariants } from "./components/button"
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "./components/card"
+export { Input } from "./components/input"
+export { Label } from "./components/label"
+export {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from "./components/dialog"
+export { Toast, ToastProvider, ToastViewport } from "./components/toast"
