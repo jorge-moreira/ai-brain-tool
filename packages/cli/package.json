@@ -4,15 +4,15 @@
   "description": "Your personal AI memory, connected to all your AI tools",
   "type": "module",
   "bin": {
-    "ai-brain": "bin/ai-brain.js"
+    "ai-brain": "bin/ai-brain.ts"
   },
   "engines": {
     "node": ">=18",
     "bun": ">=1.0"
   },
   "scripts": {
-    "start": "node bin/ai-brain.js",
-    "start:bun": "bun run bin/ai-brain.js",
+    "start": "node bin/ai-brain.ts",
+    "start:bun": "bun run bin/ai-brain.ts",
     "prepare": "husky",
     "test": "vitest run tests/unit tests/integration",
     "test:unit": "vitest run tests/unit",
