@@ -16,16 +16,16 @@ permissions:
   actions: write
 
 jobs:
-  # ==================== DETERMINE VERSION ====================
-  get-version:
-    name: Determine Next Version
+  # ==================== 1. SEMANTIC RELEASE (TAGGING) ====================
+  prepare-release:
+    name: Semantic Release
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
-      version: ${{ steps.semantic.outputs.new_release_version }}
-      should-release: ${{ steps.semantic.outputs.new_release_published }}
+      new_version: ${{ steps.semantic.outputs.new_release_version }}
+      published: ${{ steps.semantic.outputs.new_release_published }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -38,10 +38,11 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run semantic-release (dry-run)
+      - name: Run Semantic Release
         id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd packages/cli
           output=$(npx semantic-release --dry-run 2>&1)
@@ -54,14 +55,25 @@ jobs:
             echo "new_release_published=false" >> $GITHUB_OUTPUT
           fi
 
-  # ==================== ELECTRON BUILDS (PARALLEL) ====================
-  build-electron-ubuntu:
-    name: Build Electron (Ubuntu)
-    runs-on: ubuntu-latest
-    needs: get-version
-    if: ${{ needs.get-version.outputs.should-release == 'true' }}
+  # ==================== 2. ELECTRON BUILDS (PARALLEL MATRIX) ====================
+  build-electron:
+    name: Build Electron (${{ matrix.os-name }})
+    runs-on: ${{ matrix.os }}
+    needs: prepare-release
+    if: ${{ needs.prepare-release.outputs.published == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            os-name: ubuntu
+          - os: macos-latest
+            os-name: macos
+          - os: windows-latest
+            os-name: windows
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -75,43 +87,7 @@ jobs:
 
       - name: Sync Electron version
         run: |
-          VERSION=${{ needs.get-version.outputs.version }}
-          cd packages/electron
-          node -e "const pkg=require('./package.json'); pkg.version='$VERSION'; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2))"
-
-      - name: Build Electron app
-        run: bun run --cwd packages/electron electron:build
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: electron-ubuntu
-          path: packages/electron/dist-electron/
-          retention-days: 1
-
-  build-electron-macos:
-    name: Build Electron (macOS)
-    runs-on: macos-latest
-    needs: get-version
-    if: ${{ needs.get-version.outputs.should-release == 'true' }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Sync Electron version
-        run: |
-          VERSION=${{ needs.get-version.outputs.version }}
+          VERSION=${{ needs.prepare-release.outputs.new_version }}
           cd packages/electron
           node -e "const pkg=require('./package.json'); pkg.version='$VERSION'; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2))"
 
@@ -126,97 +102,54 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
-          name: electron-macos
+          name: electron-${{ matrix.os-name }}
           path: packages/electron/dist-electron/
           retention-days: 1
 
-  build-electron-windows:
-    name: Build Electron (Windows)
-    runs-on: windows-latest
-    needs: get-version
-    if: ${{ needs.get-version.outputs.should-release == 'true' }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Sync Electron version
-        run: |
-          VERSION=${{ needs.get-version.outputs.version }}
-          cd packages/electron
-          node -e "const pkg=require('./package.json'); pkg.version='$VERSION'; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2))"
-
-      - name: Build Electron app
-        run: bun run --cwd packages/electron electron:build
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: electron-windows
-          path: packages/electron/dist-electron/
-          retention-days: 1
-
-  # ==================== GITHUB RELEASE (BEFORE NPM) ====================
+  # ==================== 3. ATTACH BINARIES TO RELEASE ====================
   github-release:
-    name: Create GitHub Release with Binaries
+    name: Upload Binaries to Release
     runs-on: ubuntu-latest
-    needs: [get-version, build-electron-ubuntu, build-electron-macos, build-electron-windows]
-    if: ${{ always() && needs.get-version.outputs.should-release == 'true' && needs.build-electron-ubuntu.result == 'success' && needs.build-electron-macos.result == 'success' && needs.build-electron-windows.result == 'success' }}
-    outputs:
-      release-created: ${{ steps.release.outputs.created }}
+    needs: [prepare-release, build-electron]
+    if: ${{ success() && needs.prepare-release.outputs.published == 'true' }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download all Electron artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
           pattern: electron-*
           merge-multiple: false
 
-      - name: Get version
-        id: version
-        run: echo "version=${{ needs.get-version.outputs.version }}" >> $GITHUB_OUTPUT
-
       - name: Create GitHub Release
-        id: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v${{ steps.version.outputs.version }} \
-            --title "v${{ steps.version.outputs.version }}" \
+          gh release create v${{ needs.prepare-release.outputs.new_version }} \
+            --title "v${{ needs.prepare-release.outputs.new_version }}" \
             --generate-notes \
             --verify-tag \
             artifacts/electron-ubuntu/**/* \
             artifacts/electron-macos/**/* \
             artifacts/electron-windows/**/* \
             --clobber
-          echo "created=true" >> $GITHUB_OUTPUT
 
-  # ==================== NPM PUBLISH (AFTER GITHUB RELEASE) ====================
+  # ==================== 4. NPM PUBLISH ====================
   npm-publish:
     name: Publish npm Package
     runs-on: ubuntu-latest
-    needs: [get-version, github-release]
-    if: ${{ always() && needs.github-release.result == 'success' && needs.get-version.outputs.should-release == 'true' }}
+    needs: [prepare-release, github-release]
+    if: ${{ success() && needs.prepare-release.outputs.published == 'true' }}
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Bun
@@ -229,9 +162,9 @@ jobs:
 
       - name: Get version
         id: version
-        run: echo "version=${{ needs.get-version.outputs.version }}" >> $GITHUB_OUTPUT
+        run: echo "version=${{ needs.prepare-release.outputs.new_version }}" >> $GITHUB_OUTPUT
 
-      - name: Publish npm Package
+      - name: Publish to NPM
         id: npm-publish
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -241,9 +174,8 @@ jobs:
           node -e "const pkg=require('./package.json'); pkg.version='${{ steps.version.outputs.version }}'; require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2))"
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           
-          # Check if version already exists
           if npm view @jorge-moreira.dev/ai-brain-tool@${{ steps.version.outputs.version }} >/dev/null 2>&1; then
-            echo "⚠️  Version ${{ steps.version.outputs.version }} already published on npm"
+            echo "⚠️ Version already published on npm"
             echo "already_published=true" >> $GITHUB_OUTPUT
           else
             npm publish --access public
@@ -251,6 +183,7 @@ jobs:
           fi
 
       - name: Run semantic-release (for changelog + git tag)
+        if: ${{ steps.npm-publish.outputs.already_published != 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -263,33 +196,33 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run update-bug-report-templates.yml
 
-  # ==================== FAILURE HANDLERS ====================
+  # ==================== 5. HANDLERS & CLEANUP ====================
   on-build-failure:
     name: Handle Build Failure
     runs-on: ubuntu-latest
-    needs: [get-version, build-electron-ubuntu, build-electron-macos, build-electron-windows]
-    if: ${{ always() && needs.get-version.outputs.should-release == 'true' && (needs.build-electron-ubuntu.result == 'failure' || needs.build-electron-macos.result == 'failure' || needs.build-electron-windows.result == 'failure') }}
+    needs: [prepare-release, build-electron]
+    if: ${{ always() && needs.prepare-release.outputs.published == 'true' && needs.build-electron.result == 'failure' }}
     steps:
       - name: Log failure
         run: |
           echo "❌ Electron build failed!"
-          echo "Ubuntu: ${{ needs.build-electron-ubuntu.result }}"
-          echo "macOS: ${{ needs.build-electron-macos.result }}"
-          echo "Windows: ${{ needs.build-electron-windows.result }}"
+          echo "Ubuntu: ${{ needs.build-electron.result }}"
+          echo "macOS: ${{ needs.build-electron.result }}"
+          echo "Windows: ${{ needs.build-electron.result }}"
           echo ""
           echo "✅ Nothing was published - safe to fix and retry"
 
   on-npm-failure:
     name: Handle npm Failure
     runs-on: ubuntu-latest
-    needs: [get-version, github-release, npm-publish]
+    needs: [prepare-release, github-release, npm-publish]
     if: ${{ always() && needs.github-release.result == 'success' && needs.npm-publish.result == 'failure' }}
     steps:
       - name: Log failure
         run: |
           echo "❌ npm publish failed!"
           echo ""
-          echo "⚠️  GitHub Release v${{ needs.get-version.outputs.version }} was created successfully"
+          echo "⚠️  GitHub Release v${{ needs.prepare-release.outputs.new_version }} was created successfully"
           echo "⚠️  Users can download binaries from GitHub Releases"
           echo ""
           echo "=== RETRY OPTIONS ==="
@@ -301,5 +234,5 @@ jobs:
           echo ""
           echo "Option 2: Manual publish"
           echo "  cd packages/cli"
-          echo "  npm version ${{ needs.get-version.outputs.version }}"
+          echo "  npm version ${{ needs.prepare-release.outputs.new_version }}"
           echo "  npm publish"
