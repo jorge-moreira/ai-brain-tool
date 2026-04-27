@@ -18,8 +18,8 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run CLI tests with coverage
-        run: bun run test:cli
+      - name: Run CLI tests with coverage (CI mode)
+        run: bun run test:cli:ci
 
       - name: Upload CLI coverage to Codecov
         uses: codecov/codecov-action@v5

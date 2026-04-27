@@ -12,7 +12,8 @@
     "electron:dev": "concurrently \"bun run dev\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "vite build && electron-builder",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:ci": "vitest run --coverage --reporter=github-actions --reporter=junit --outputFile=coverage/junit.xml"
   },
   "dependencies": {
     "@ai-brain/core": "workspace:*",

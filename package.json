@@ -11,9 +11,13 @@
   },
   "scripts": {
     "test": "bun run --filter \"*\" test",
+    "test:ci": "bun run --filter \"*\" test:ci",
     "test:core": "bun run --filter @ai-brain/core test",
+    "test:core:ci": "bun run --filter @ai-brain/core test:ci",
     "test:cli": "bun run --filter @jorge-moreira.dev/ai-brain-tool test",
+    "test:cli:ci": "bun run --filter @jorge-moreira.dev/ai-brain-tool test:ci",
     "test:electron": "bun run --filter @ai-brain/electron test",
+    "test:electron:ci": "bun run --filter @ai-brain/electron test:ci",
     "build": "bun run --filter @ai-brain/electron build",
     "build:electron": "bun run --filter @ai-brain/electron build",
     "dev:electron": "bun run --filter @ai-brain/electron dev",
