@@ -1,0 +1,32 @@
+name: CLI Test
+
+on:
+  push:
+    branches: [main, feature/app]
+  pull_request:
+    branches: [main, feature/app]
+
+jobs:
+  test:
+    name: CLI Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run unit and integration tests
+        run: cd packages/cli && bun run test:coverage:ci
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: packages/cli/coverage/coverage-final.json
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: cli
