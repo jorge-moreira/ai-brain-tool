@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { execSync } from 'child_process'
-import { mkdirSync, rmSync, existsSync, readFileSync, writeFileSync } from 'fs'
+import { mkdirSync, rmSync, existsSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 
@@ -22,20 +22,20 @@ describe('E2E: UV auto-install during setup', () => {
     try {
       rmSync(TEMP_DIR, { recursive: true, force: true })
       console.log(`\nCleaned up temp directory: ${TEMP_DIR}`)
-    } catch (e) {
+    } catch {
       console.log(`Warning: Could not clean up ${TEMP_DIR}: ${e.message}`)
     }
   }, 30000)
 
   it('should install uv automatically if not present', () => {
     console.log('\nStep 1: Checking uv availability...')
-    
+
     // Run the graphify module's ensureUv function via a test script
     const testScript = join(TEMP_DIR, 'test-uv-install.js')
     writeFileSync(
       testScript,
       `
-      import { ensureUv } from '${join(REPO_PATH, 'src', 'graphify.js')}'
+      import { ensureUv } from '${join(REPO_PATH, '..', 'core', 'src', 'graphify.ts')}'
       
       console.log('Running ensureUv...')
       await ensureUv()
@@ -46,30 +46,30 @@ describe('E2E: UV auto-install during setup', () => {
       try {
         const version = execSync('uv --version', { encoding: 'utf8' })
         console.log('UV version:', version.trim())
-      } catch (e) {
+      } catch {
         console.error('UV not found after ensureUv:', e.message)
         process.exit(1)
       }
       `
     )
-    
-    const output = execSync(`node ${testScript}`, {
+
+    const output = execSync(`bun ${testScript}`, {
       encoding: 'utf8',
       env: { ...process.env, __HOME__: TEMP_DIR }
     })
-    
+
     expect(output).toContain('ensureUv completed successfully')
     expect(output).toContain('UV version:')
   }, 120000)
 
   it('should install uv and create working venv', () => {
     console.log('\nStep 2-3: Creating venv and verifying graphify...')
-    
+
     const testScript = join(TEMP_DIR, 'test-venv-full.js')
     writeFileSync(
       testScript,
       `
-      import { createVenv, venvExists } from '${join(REPO_PATH, 'src', 'graphify.js')}'
+      import { createVenv, venvExists } from '${join(REPO_PATH, '..', 'core', 'src', 'graphify.ts')}'
       import { execSync } from 'child_process'
       
       const brainPath = '${BRAIN_PATH}'
@@ -90,27 +90,27 @@ describe('E2E: UV auto-install during setup', () => {
       try {
         const result = execSync(\`\${venvPython} -c "import graphify; print('Graphify OK')" 2>&1\`, { encoding: 'utf8' })
         console.log(result)
-      } catch (e) {
-        console.error('Failed to import graphify:', e.message)
+      } catch {
+        console.error('Failed to import graphify')
         process.exit(1)
       }
       
       console.log('All checks passed!')
       `
     )
-    
-    const output = execSync(`node ${testScript}`, {
+
+    const output = execSync(`bun ${testScript}`, {
       encoding: 'utf8',
       env: { ...process.env, __HOME__: TEMP_DIR }
     })
-    
+
     expect(output).toContain('Venv exists: true')
     expect(output).toMatch(/Graphify OK|All checks passed/)
   }, 180000)
 
   it('should upgrade venv with auto-installed uv', () => {
     console.log('\nStep 4: Testing venv upgrade with auto-installed uv...')
-    
+
     // Create venv first if it doesn't exist
     if (!existsSync(BRAIN_PATH)) {
       console.log('Creating brain path for upgrade test...')
@@ -118,7 +118,7 @@ describe('E2E: UV auto-install during setup', () => {
       writeFileSync(
         setupScript,
         `
-        import { createVenv } from '${join(REPO_PATH, 'src', 'graphify.js')}'
+        import { createVenv } from '${join(REPO_PATH, '..', 'core', 'src', 'graphify.ts')}'
         await createVenv('${BRAIN_PATH}')
         console.log('Venv created')
         `
@@ -129,12 +129,12 @@ describe('E2E: UV auto-install during setup', () => {
         stdio: 'inherit'
       })
     }
-    
+
     const testScript = join(TEMP_DIR, 'test-venv-upgrade.js')
     writeFileSync(
       testScript,
       `
-      import { upgradeVenv } from '${join(REPO_PATH, 'src', 'graphify.js')}'
+      import { upgradeVenv } from '${join(REPO_PATH, '..', 'core', 'src', 'graphify.ts')}'
       
       const brainPath = '${BRAIN_PATH}'
       console.log('Upgrading venv at:', brainPath)
@@ -143,12 +143,12 @@ describe('E2E: UV auto-install during setup', () => {
       console.log('Upgrade completed successfully')
       `
     )
-    
-    const output = execSync(`node ${testScript}`, {
+
+    const output = execSync(`bun ${testScript}`, {
       encoding: 'utf8',
       env: { ...process.env, __HOME__: TEMP_DIR }
     })
-    
+
     expect(output).toContain('Upgrade completed successfully')
   }, 180000)
 })
