@@ -1,8 +1,4 @@
 // @ai-brain/core - Shared business logic
-export * from './commands/status'
-export * from './commands/update'
-export * from './commands/setup'
-export * from './commands/list'
 export * from './config'
 export * from './graphify'
 export * from './git'

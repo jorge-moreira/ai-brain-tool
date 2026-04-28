@@ -17,8 +17,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: true,
-    },
+      sandbox: true
+    }
   })
 
   if (process.env.NODE_ENV === 'development') {
@@ -48,7 +48,7 @@ app.whenReady().then(() => {
     mainWindow?.webContents.send('update-downloaded')
   })
 
-  autoUpdater.on('error', (err) => {
+  autoUpdater.on('error', err => {
     mainWindow?.webContents.send('update-error', err)
   })
 

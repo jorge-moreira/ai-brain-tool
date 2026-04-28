@@ -25,11 +25,23 @@ graphify-out/cost.json
 .obsidian/cache
 `
 
-export async function writeGitignore({ brainPath, commitCache }: { brainPath: string; commitCache: boolean }): Promise<void> {
+export async function writeGitignore({
+  brainPath,
+  commitCache
+}: {
+  brainPath: string
+  commitCache: boolean
+}): Promise<void> {
   writeFileSync(join(brainPath, '.gitignore'), GITIGNORE(commitCache), 'utf8')
 }
 
-export async function initRepo({ brainPath, remoteUrl }: { brainPath: string; remoteUrl?: string }): Promise<void> {
+export async function initRepo({
+  brainPath,
+  remoteUrl
+}: {
+  brainPath: string
+  remoteUrl?: string
+}): Promise<void> {
   await execa('git', ['init'], { cwd: brainPath })
   if (remoteUrl) {
     await execa('git', ['remote', 'add', 'origin', remoteUrl], { cwd: brainPath })

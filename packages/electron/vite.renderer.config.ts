@@ -8,13 +8,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: 'dist/renderer',
+    outDir: 'dist/renderer'
   },
   base: './',
   resolve: {
     alias: {
       '@renderer': path.resolve(__dirname, './src/renderer'),
-      '@ai-brain/ui': path.resolve(__dirname, '../ui/src'),
-    },
-  },
+      '@ai-brain/ui': path.resolve(__dirname, '../ui/src')
+    }
+  }
 })

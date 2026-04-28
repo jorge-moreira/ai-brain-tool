@@ -20,7 +20,15 @@ export function graphJson(brainPath: string): string {
 // Patch a JSON config file with MCP server entry
 // configKey: 'mcpServers' (claude/cursor/gemini) or 'mcp' (opencode)
 // serverEntry: the server config object to merge in
-export function patchJsonConfig({ configPath, configKey, serverEntry }: { configPath: string; configKey: string; serverEntry: Record<string, unknown> }): string {
+export function patchJsonConfig({
+  configPath,
+  configKey,
+  serverEntry
+}: {
+  configPath: string
+  configKey: string
+  serverEntry: Record<string, unknown>
+}): string {
   const dir = dirname(configPath)
   mkdirSync(dir, { recursive: true })
 
@@ -29,7 +37,9 @@ export function patchJsonConfig({ configPath, configKey, serverEntry }: { config
     try {
       current = JSON.parse(readFileSync(configPath, 'utf8'))
     } catch {
-      throw new Error(`Could not parse config at ${configPath}. Please fix the JSON before running setup.`)
+      throw new Error(
+        `Could not parse config at ${configPath}. Please fix the JSON before running setup.`
+      )
     }
   }
 
@@ -45,7 +55,15 @@ export function patchJsonConfig({ configPath, configKey, serverEntry }: { config
 }
 
 // Install a skill file to a directory
-export function installSkillFile({ dir, filename, content }: { dir: string; filename: string; content: string }): void {
+export function installSkillFile({
+  dir,
+  filename,
+  content
+}: {
+  dir: string
+  filename: string
+  content: string
+}): void {
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, filename), content, 'utf8')
 }

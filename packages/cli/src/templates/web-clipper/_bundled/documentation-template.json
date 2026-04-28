@@ -40,9 +40,7 @@
       "type": "multitext"
     }
   ],
-  "triggers": [
-    "schema:@TechArticle"
-  ],
+  "triggers": ["schema:@TechArticle"],
   "noteNameFormat": "{{date|date:\"YYYY-MM-DD\"}} {{title|safe_name}}",
   "path": "raw/documentation"
 }

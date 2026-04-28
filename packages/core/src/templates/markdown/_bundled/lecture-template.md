@@ -1,7 +1,7 @@
 ---
 type: lecture
-created: {{date:YYYY-MM-DD}}
-updated: {{date:YYYY-MM-DD}}
+created: { { date:YYYY-MM-DD } }
+updated: { { date:YYYY-MM-DD } }
 course:
 link:
 ---
@@ -9,10 +9,13 @@ link:
 # {{title}}
 
 ## Notes
+
 -
 
 ## Questions
+
 -
 
 ## Related
+
 -

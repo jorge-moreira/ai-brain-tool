@@ -15,30 +15,23 @@ export interface IpcResponse<T = any> {
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // Brain commands
-  getStatus: (brainId?: string): Promise<IpcResponse<BrainStatus>> => 
+  getStatus: (brainId?: string): Promise<IpcResponse<BrainStatus>> =>
     ipcRenderer.invoke('brain:status', brainId),
-  update: (brainId?: string): Promise<IpcResponse> => 
-    ipcRenderer.invoke('brain:update', brainId),
-  setup: (): Promise<IpcResponse> => 
-    ipcRenderer.invoke('brain:setup'),
-  list: (): Promise<IpcResponse> => 
-    ipcRenderer.invoke('brain:list'),
-  
+  update: (brainId?: string): Promise<IpcResponse> => ipcRenderer.invoke('brain:update', brainId),
+  setup: (): Promise<IpcResponse> => ipcRenderer.invoke('brain:setup'),
+  list: (): Promise<IpcResponse> => ipcRenderer.invoke('brain:list'),
+
   // Config
-  getConfig: (): Promise<IpcResponse> => 
-    ipcRenderer.invoke('config:get'),
-  setConfig: (config: any): Promise<IpcResponse> => 
-    ipcRenderer.invoke('config:set', config),
-  
+  getConfig: (): Promise<IpcResponse> => ipcRenderer.invoke('config:get'),
+  setConfig: (config: any): Promise<IpcResponse> => ipcRenderer.invoke('config:set', config),
+
   // App
-  quit: (): Promise<void> => 
-    ipcRenderer.invoke('app:quit'),
-  checkUpdates: (): Promise<void> => 
-    ipcRenderer.invoke('app:check-updates'),
-  
+  quit: (): Promise<void> => ipcRenderer.invoke('app:quit'),
+  checkUpdates: (): Promise<void> => ipcRenderer.invoke('app:check-updates'),
+
   // Platform
   platform: process.platform,
-  
+
   // Update events
   onUpdateAvailable: (callback: () => void) => {
     ipcRenderer.on('update-available', callback)
@@ -48,5 +41,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   onUpdateError: (callback: (event: any, error: any) => void) => {
     ipcRenderer.on('update-error', callback)
-  },
+  }
 })

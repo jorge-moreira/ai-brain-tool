@@ -1,7 +1,7 @@
 ---
 type: book
-created: {{date:YYYY-MM-DD}}
-updated: {{date:YYYY-MM-DD}}
+created: { { date:YYYY-MM-DD } }
+updated: { { date:YYYY-MM-DD } }
 author:
 year:
 status: reading
@@ -13,13 +13,17 @@ link:
 # {{title}}
 
 ## Notes
+
 -
 
 ## Key Quotes
+
 >
 
 ## Questions
+
 -
 
 ## Related
+
 -

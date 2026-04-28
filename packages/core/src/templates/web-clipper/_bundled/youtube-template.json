@@ -40,9 +40,7 @@
       "type": "multitext"
     }
   ],
-  "triggers": [
-    "https://www.youtube.com/watch"
-  ],
+  "triggers": ["https://www.youtube.com/watch"],
   "noteNameFormat": "{{schema:@VideoObject:uploadDate|date:\"YYYY-MM-DD\"}} {{schema:@VideoObject:name|safe_name}}",
   "path": "raw/media/videos"
 }

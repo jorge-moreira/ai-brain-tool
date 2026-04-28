@@ -40,11 +40,7 @@
       "type": "multitext"
     }
   ],
-  "triggers": [
-    "schema:@Article",
-    "schema:@BlogPosting",
-    "schema:@NewsArticle"
-  ],
+  "triggers": ["schema:@Article", "schema:@BlogPosting", "schema:@NewsArticle"],
   "noteNameFormat": "{{date|date:\"YYYY-MM-DD\"}} {{title|safe_name}}",
   "path": "raw/articles"
 }

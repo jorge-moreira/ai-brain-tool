@@ -27,18 +27,18 @@ interface DetectedPlatform extends Platform {
 export type { DetectedPlatform }
 
 const PLATFORMS: Platform[] = [
-  { name: 'Claude Code',         key: 'claude',   module: claude,   configHint: '~/.claude/' },
-  { name: 'OpenCode',            key: 'opencode', module: opencode, configHint: '~/.config/opencode/' },
-  { name: 'Cursor',              key: 'cursor',   module: cursor,   configHint: '~/.cursor/' },
-  { name: 'Gemini CLI',          key: 'gemini',   module: gemini,   configHint: '~/.gemini/' },
-  { name: 'GitHub Copilot CLI',  key: 'copilot',  module: copilot,  configHint: '~/.config/gh/' },
-  { name: 'OpenAI Codex CLI',    key: 'codex',    module: codex,    configHint: '~/.codex/' },
+  { name: 'Claude Code', key: 'claude', module: claude, configHint: '~/.claude/' },
+  { name: 'OpenCode', key: 'opencode', module: opencode, configHint: '~/.config/opencode/' },
+  { name: 'Cursor', key: 'cursor', module: cursor, configHint: '~/.cursor/' },
+  { name: 'Gemini CLI', key: 'gemini', module: gemini, configHint: '~/.gemini/' },
+  { name: 'GitHub Copilot CLI', key: 'copilot', module: copilot, configHint: '~/.config/gh/' },
+  { name: 'OpenAI Codex CLI', key: 'codex', module: codex, configHint: '~/.codex/' }
 ]
 
 export async function detectAll(homeDir: string = homedir()): Promise<DetectedPlatform[]> {
   return PLATFORMS.map(p => ({
     ...p,
-    detected: p.module.detect(homeDir),
+    detected: p.module.detect(homeDir)
   }))
 }
 
@@ -48,7 +48,11 @@ export interface ConfigureSelectedOptions {
   homeDir?: string
 }
 
-export async function configureSelected({ selected, brainPath, homeDir = homedir() }: ConfigureSelectedOptions): Promise<void> {
+export async function configureSelected({
+  selected,
+  brainPath,
+  homeDir = homedir()
+}: ConfigureSelectedOptions): Promise<void> {
   for (const platform of selected) {
     await platform.module.patch({ brainPath, homeDir })
     await platform.module.installSkill({ homeDir })

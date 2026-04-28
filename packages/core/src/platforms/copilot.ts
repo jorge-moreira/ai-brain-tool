@@ -11,12 +11,14 @@ export async function patch(_options: { brainPath: string; homeDir?: string }): 
   // Copilot CLI does not use a JSON MCP config
 }
 
-export async function installSkill({ homeDir = homedir() }: { homeDir?: string } = {}): Promise<void> {
+export async function installSkill({
+  homeDir = homedir()
+}: { homeDir?: string } = {}): Promise<void> {
   const skillDir = join(homeDir, '.copilot', 'skills', 'brain')
   installSkillFile({
     dir: skillDir,
     filename: 'SKILL.md',
-    content: BRAIN_SKILL_MD,
+    content: BRAIN_SKILL_MD
   })
 }
 

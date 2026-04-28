@@ -1,13 +1,25 @@
 import { join } from 'path'
 import { homedir } from 'os'
 import { existsSync } from 'fs'
-import { patchJsonConfig, pythonBin, graphJson, BRAIN_SKILL_MD, installSkillFile } from './shared.js'
+import {
+  patchJsonConfig,
+  pythonBin,
+  graphJson,
+  BRAIN_SKILL_MD,
+  installSkillFile
+} from './shared.js'
 
 export function detect(homeDir: string = homedir()): boolean {
   return existsSync(join(homeDir, '.gemini'))
 }
 
-export async function patch({ brainPath, homeDir = homedir() }: { brainPath: string; homeDir?: string }): Promise<void> {
+export async function patch({
+  brainPath,
+  homeDir = homedir()
+}: {
+  brainPath: string
+  homeDir?: string
+}): Promise<void> {
   const geminiDir = join(homeDir, '.gemini')
   const settingsPath = join(geminiDir, 'settings.json')
 
@@ -17,18 +29,20 @@ export async function patch({ brainPath, homeDir = homedir() }: { brainPath: str
     serverEntry: {
       'ai-brain': {
         command: pythonBin(brainPath),
-        args: ['-m', 'graphify.serve', graphJson(brainPath)],
-      },
-    },
+        args: ['-m', 'graphify.serve', graphJson(brainPath)]
+      }
+    }
   })
 }
 
-export async function installSkill({ homeDir = homedir() }: { homeDir?: string } = {}): Promise<void> {
+export async function installSkill({
+  homeDir = homedir()
+}: { homeDir?: string } = {}): Promise<void> {
   const skillDir = join(homeDir, '.gemini', 'skills', 'brain')
   installSkillFile({
     dir: skillDir,
     filename: 'SKILL.md',
-    content: BRAIN_SKILL_MD,
+    content: BRAIN_SKILL_MD
   })
 }
 

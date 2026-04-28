@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { detect, patch, installSkill, installAlwaysOn } from '../../../src/platforms/opencode'
 
 describe('platforms/opencode', () => {
   describe('detect', () => {
@@ -9,7 +10,6 @@ describe('platforms/opencode', () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'opencode-test-'))
       mkdirSync(join(fakeHome, '.config', 'opencode'), { recursive: true })
 
-      const { detect } = await import('../../../src/platforms/opencode')
       expect(detect(fakeHome)).toBe(true)
 
       rmSync(fakeHome, { recursive: true, force: true })
@@ -18,7 +18,6 @@ describe('platforms/opencode', () => {
     it('should return false when .config/opencode dir does not exist', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'opencode-test-'))
 
-      const { detect } = await import('../../../src/platforms/opencode')
       expect(detect(fakeHome)).toBe(false)
 
       rmSync(fakeHome, { recursive: true, force: true })
@@ -29,12 +28,13 @@ describe('platforms/opencode', () => {
     it('should create opencode.json with ai-brain mcp entry', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'opencode-test-'))
 
-      const { patch } = await import('../../../src/platforms/opencode')
       await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
 
       const configPath = join(fakeHome, '.config', 'opencode', 'opencode.json')
       expect(existsSync(configPath)).toBe(true)
-      const config = JSON.parse(readFileSync(configPath, 'utf8'))
+      const config = JSON.parse(readFileSync(configPath, 'utf8')) as {
+        mcp: Record<string, { type: string }>
+      }
       expect(config.mcp['ai-brain']).toBeDefined()
       expect(config.mcp['ai-brain'].type).toBe('local')
 
@@ -46,13 +46,18 @@ describe('platforms/opencode', () => {
     it('should write SKILL.md to skills/brain directory', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'opencode-test-'))
 
-      const { installSkill } = await import('../../../src/platforms/opencode')
       await installSkill({ homeDir: fakeHome })
 
       const skillPath = join(fakeHome, '.config', 'opencode', 'skills', 'brain', 'SKILL.md')
       expect(existsSync(skillPath)).toBe(true)
 
       rmSync(fakeHome, { recursive: true, force: true })
+    })
+  })
+
+  describe('installAlwaysOn', () => {
+    it('should be a no-op that resolves', async () => {
+      await expect(installAlwaysOn()).resolves.toBeUndefined()
     })
   })
 })

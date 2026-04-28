@@ -2,7 +2,7 @@ name: Release
 
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ['CI']
     types:
       - completed
     branches:
@@ -170,7 +170,7 @@ jobs:
         run: |
           node -e "const pkg=require('./packages/cli/package.json'); pkg.version='${{ steps.version.outputs.version }}'; require('fs').writeFileSync('packages/cli/package.json', JSON.stringify(pkg, null, 2))"
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-          
+
           if npm view @jorge-moreira.dev/ai-brain-tool@${{ steps.version.outputs.version }} >/dev/null 2>&1; then
             echo "⚠️ Version already published on npm"
             echo "already_published=true" >> $GITHUB_OUTPUT

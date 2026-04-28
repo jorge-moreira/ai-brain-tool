@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@ai-brain/ui'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@ai-brain/ui'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ai-brain/ui'
 import type { BrainStatus, IpcResponse } from '../../main/preload'
 
 interface StatusState {
@@ -19,7 +13,7 @@ export default function App() {
   const [statusState, setStatusState] = useState<StatusState>({
     loading: true,
     status: null,
-    error: null,
+    error: null
   })
 
   const [setupRunning, setSetupRunning] = useState(false)
@@ -36,13 +30,17 @@ export default function App() {
       if (result.success) {
         setStatusState({ loading: false, status: result.data || null, error: null })
       } else {
-        setStatusState({ loading: false, status: null, error: result.error || 'Failed to load status' })
+        setStatusState({
+          loading: false,
+          status: null,
+          error: result.error || 'Failed to load status'
+        })
       }
     } catch (err) {
       setStatusState({
         loading: false,
         status: null,
-        error: err instanceof Error ? err.message : 'Unknown error',
+        error: err instanceof Error ? err.message : 'Unknown error'
       })
     }
   }
@@ -164,9 +162,7 @@ export default function App() {
       <div className="max-w-4xl mx-auto">
         <header className="mb-8">
           <h1 className="text-4xl font-bold mb-2">AI Brain Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage your AI Brain instances and configuration
-          </p>
+          <p className="text-muted-foreground">Manage your AI Brain instances and configuration</p>
         </header>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -198,11 +194,7 @@ function StatusItem({ label, status }: { label: string; status: boolean }) {
   return (
     <div className="flex items-center justify-between py-2 border-b last:border-0">
       <span className="text-sm">{label}</span>
-      <span
-        className={`text-sm font-medium ${
-          status ? 'text-green-600' : 'text-red-600'
-        }`}
-      >
+      <span className={`text-sm font-medium ${status ? 'text-green-600' : 'text-red-600'}`}>
         {status ? '✓' : '✗'}
       </span>
     </div>

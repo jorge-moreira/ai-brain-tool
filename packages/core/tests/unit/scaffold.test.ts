@@ -70,7 +70,11 @@ describe('scaffold', () => {
       const { writeBrainConfig } = await import('../../src/scaffold')
       writeBrainConfig({ brainPath: tmp, gitSync: true })
 
-      const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
+      const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8')) as {
+        gitSync: boolean
+        obsidianDir?: string
+        extras?: string[]
+      }
       expect(cfg.gitSync).toBe(true)
     })
 
@@ -81,7 +85,11 @@ describe('scaffold', () => {
       const { writeBrainConfig } = await import('../../src/scaffold')
       writeBrainConfig({ brainPath: tmp, gitSync: false })
 
-      const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
+      const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8')) as {
+        gitSync: boolean
+        obsidianDir?: string
+        extras?: string[]
+      }
       expect(cfg.gitSync).toBe(false)
     })
 
@@ -92,7 +100,11 @@ describe('scaffold', () => {
       const { writeBrainConfig } = await import('../../src/scaffold')
       writeBrainConfig({ brainPath: tmp, gitSync: false, obsidianDir: '/path/to/vault' })
 
-      const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
+      const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8')) as {
+        gitSync: boolean
+        obsidianDir?: string
+        extras?: string[]
+      }
       expect(cfg.obsidianDir).toBe('/path/to/vault')
     })
 
@@ -103,7 +115,11 @@ describe('scaffold', () => {
       const { writeBrainConfig } = await import('../../src/scaffold')
       writeBrainConfig({ brainPath: tmp, gitSync: false, extras: ['office', 'pdf'] })
 
-      const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8'))
+      const cfg = JSON.parse(readFileSync(join(tmp, '.brain-config.json'), 'utf8')) as {
+        gitSync: boolean
+        obsidianDir?: string
+        extras?: string[]
+      }
       expect(cfg.extras).toEqual(['office', 'pdf'])
     })
   })
@@ -113,7 +129,8 @@ describe('scaffold', () => {
       const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
-      const { writeBrainConfig, readBrainConfig } = await import('../../src/scaffold')
+      const { writeBrainConfig } = await import('../../src/scaffold')
+      const { readBrainConfig } = await import('../../src/config')
       writeBrainConfig({ brainPath: tmp, gitSync: true, extras: ['mcp', 'pdf'] })
 
       const cfg = readBrainConfig(tmp)
@@ -125,7 +142,7 @@ describe('scaffold', () => {
       const tmp = mkdtempSync(join(tmpdir(), 'brain-config-test-'))
       afterEach(() => rmSync(tmp, { recursive: true, force: true }))
 
-      const { readBrainConfig } = await import('../../src/scaffold')
+      const { readBrainConfig } = await import('../../src/config')
       const cfg = readBrainConfig(tmp)
       expect(cfg.gitSync).toBe(false)
       expect(cfg.extras).toEqual([])

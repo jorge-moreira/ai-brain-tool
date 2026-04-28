@@ -1,36 +1,29 @@
 {
   "name": "@ai-brain/core",
-  "version": "2.1.0",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./commands/*": "./src/commands/*.ts",
-    "./config": "./src/config.ts",
-    "./graphify": "./src/graphify.ts",
-    "./platforms/*": "./src/platforms/*.ts",
-    "./git": "./src/git.ts",
-    "./scaffold": "./src/scaffold.ts"
+    "./*": "./src/*.ts"
   },
   "scripts": {
     "test": "vitest run tests/unit tests/integration",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
+    "test:e2e": "vitest run tests/e2e --no-coverage",
+    "test:e2e:ci": "vitest run tests/e2e --no-coverage --reporter=github-actions",
     "test:coverage": "vitest run --coverage tests/unit tests/integration",
     "test:ci": "vitest run --coverage --reporter=github-actions --reporter=junit --outputFile=coverage/junit.xml tests/unit tests/integration",
-    "test:watch": "vitest"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@inquirer/prompts": "^8.4.2",
-    "chalk": "^5.0.0",
-    "commander": "^14.0.3",
-    "execa": "^9.0.0",
-    "ora": "^9.4.0"
+    "execa": "^9.0.0"
   },
   "devDependencies": {
     "typescript": "catalog:",
+    "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "chalk": "^5.0.0",
+    "ora": "^9.4.0"
   }
 }

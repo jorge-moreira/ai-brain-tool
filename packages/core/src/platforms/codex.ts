@@ -7,7 +7,13 @@ export function detect(homeDir: string = homedir()): boolean {
   return existsSync(join(homeDir, '.codex'))
 }
 
-export async function patch({ brainPath, homeDir = homedir() }: { brainPath: string; homeDir?: string }): Promise<void> {
+export async function patch({
+  brainPath,
+  homeDir = homedir()
+}: {
+  brainPath: string
+  homeDir?: string
+}): Promise<void> {
   const codexDir = join(homeDir, '.codex')
   const configPath = join(codexDir, 'config.toml')
 
@@ -25,12 +31,14 @@ export async function patch({ brainPath, homeDir = homedir() }: { brainPath: str
   writeFileSync(configPath, cleaned + entry, 'utf8')
 }
 
-export async function installSkill({ homeDir = homedir() }: { homeDir?: string } = {}): Promise<void> {
+export async function installSkill({
+  homeDir = homedir()
+}: { homeDir?: string } = {}): Promise<void> {
   const skillDir = join(homeDir, '.codex', 'skills', 'brain')
   installSkillFile({
     dir: skillDir,
     filename: 'SKILL.md',
-    content: BRAIN_SKILL_MD,
+    content: BRAIN_SKILL_MD
   })
 }
 

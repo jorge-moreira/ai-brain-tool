@@ -20,7 +20,7 @@ const dirs = [
   'raw/templates/markdown/_custom',
   'raw/templates/web-clipper/_bundled',
   'raw/templates/web-clipper/_custom',
-  'graphify-out',
+  'graphify-out'
 ]
 
 export interface BrainConfigData {
@@ -29,19 +29,35 @@ export interface BrainConfigData {
   obsidianDir?: string | null
 }
 
-export function writeBrainConfig({ brainPath, gitSync, extras = [], obsidianDir = null }: { brainPath: string; gitSync: boolean; extras?: string[]; obsidianDir?: string | null }): void {
+export function writeBrainConfig({
+  brainPath,
+  gitSync,
+  extras = [],
+  obsidianDir = null
+}: {
+  brainPath: string
+  gitSync: boolean
+  extras?: string[]
+  obsidianDir?: string | null
+}): void {
   const config: Record<string, unknown> = { gitSync: !!gitSync, extras }
   if (obsidianDir) config.obsidianDir = obsidianDir
   writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify(config, null, 2), 'utf8')
 }
 
-export function readBrainConfig(brainPath: string): BrainConfigData {
+export function readLocalBrainConfig(brainPath: string): BrainConfigData {
   const configPath = join(brainPath, '.brain-config.json')
   if (!existsSync(configPath)) return { gitSync: false, extras: [], obsidianDir: null }
   return JSON.parse(readFileSync(configPath, 'utf8'))
 }
 
-export async function createBrainFolder({ brainPath, includeObsidian }: { brainPath: string; includeObsidian: boolean }): Promise<void> {
+export async function createBrainFolder({
+  brainPath,
+  includeObsidian
+}: {
+  brainPath: string
+  includeObsidian: boolean
+}): Promise<void> {
   // Create all directories
   for (const dir of dirs) {
     await mkdir(join(brainPath, dir), { recursive: true })
@@ -67,10 +83,6 @@ export async function createBrainFolder({ brainPath, includeObsidian }: { brainP
   // Optionally create .obsidian/
   if (includeObsidian) {
     await mkdir(join(brainPath, '.obsidian'), { recursive: true })
-    await cp(
-      join(TEMPLATES_DIR, 'obsidian'),
-      join(brainPath, '.obsidian'),
-      { recursive: true }
-    )
+    await cp(join(TEMPLATES_DIR, 'obsidian'), join(brainPath, '.obsidian'), { recursive: true })
   }
 }
