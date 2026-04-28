@@ -35,7 +35,7 @@ describe('E2E: UV auto-install during setup', () => {
     writeFileSync(
       testScript,
       `
-      import { ensureUv } from '${join(REPO_PATH, '..', 'core', 'src', 'graphify.ts')}'
+      import { ensureUv } from '${join(REPO_PATH, '../core/src/graphify.ts')}'
       
       console.log('Running ensureUv...')
       await ensureUv()
@@ -69,7 +69,7 @@ describe('E2E: UV auto-install during setup', () => {
     writeFileSync(
       testScript,
       `
-      import { createVenv, venvExists } from '${join(REPO_PATH, '..', 'core', 'src', 'graphify.ts')}'
+      import { createVenv, venvExists } from '${join(REPO_PATH, '../core/src/graphify.ts')}'
       import { execSync } from 'child_process'
       
       const brainPath = '${BRAIN_PATH}'
@@ -118,12 +118,12 @@ describe('E2E: UV auto-install during setup', () => {
       writeFileSync(
         setupScript,
         `
-        import { createVenv } from '${join(REPO_PATH, '..', 'core', 'src', 'graphify.ts')}'
+        import { createVenv } from '${join(REPO_PATH, '../core/src/graphify.ts')}'
         await createVenv('${BRAIN_PATH}')
         console.log('Venv created')
         `
       )
-      execSync(`node ${setupScript}`, {
+      execSync(`bun ${setupScript}`, {
         encoding: 'utf8',
         env: { ...process.env, __HOME__: TEMP_DIR },
         stdio: 'inherit'
@@ -134,7 +134,7 @@ describe('E2E: UV auto-install during setup', () => {
     writeFileSync(
       testScript,
       `
-      import { upgradeVenv } from '${join(REPO_PATH, '..', 'core', 'src', 'graphify.ts')}'
+      import { upgradeVenv } from '${join(REPO_PATH, '../core/src/graphify.ts')}'
       
       const brainPath = '${BRAIN_PATH}'
       console.log('Upgrading venv at:', brainPath)

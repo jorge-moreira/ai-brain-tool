@@ -63,7 +63,7 @@ describe('E2E: Multi-brain scenarios', () => {
   it('should list all configured brains', () => {
     console.log('\nStep 1: Listing all brains...')
 
-    const output = execSync(`bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} list`, {
+    const output = execSync(`bun ${join(REPO_PATH, 'bin/ai-brain.js')} list`, {
       encoding: 'utf8',
       env: { ...process.env, __HOME__: TEMP_DIR }
     })
@@ -84,7 +84,7 @@ describe('E2E: Multi-brain scenarios', () => {
     )
 
     const output = execSync(
-      `bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update work 2>&1 || true`,
+      `bun ${join(REPO_PATH, 'bin/ai-brain.js')} update work 2>&1 || true`,
       {
         encoding: 'utf8',
         env: { ...process.env, __HOME__: TEMP_DIR }
@@ -104,7 +104,7 @@ describe('E2E: Multi-brain scenarios', () => {
     )
 
     const output = execSync(
-      `bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update personal 2>&1 || true`,
+      `bun ${join(REPO_PATH, 'bin/ai-brain.js')} update personal 2>&1 || true`,
       {
         encoding: 'utf8',
         env: { ...process.env, __HOME__: TEMP_DIR }
@@ -117,7 +117,7 @@ describe('E2E: Multi-brain scenarios', () => {
   it('should show status for specific brain', () => {
     console.log('\nStep 4: Checking work brain status...')
 
-    const output = execSync(`bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} status work`, {
+    const output = execSync(`bun ${join(REPO_PATH, 'bin/ai-brain.js')} status work`, {
       encoding: 'utf8',
       env: { ...process.env, __HOME__: TEMP_DIR }
     })
@@ -129,7 +129,7 @@ describe('E2E: Multi-brain scenarios', () => {
   it('should show status for different brain', () => {
     console.log('\nStep 5: Checking personal brain status...')
 
-    const output = execSync(`bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} status personal`, {
+    const output = execSync(`bun ${join(REPO_PATH, 'bin/ai-brain.js')} status personal`, {
       encoding: 'utf8',
       env: { ...process.env, __HOME__: TEMP_DIR }
     })
@@ -141,7 +141,7 @@ describe('E2E: Multi-brain scenarios', () => {
   it('should detect brain from cwd when inside brain folder', () => {
     console.log('\nStep 6: Testing cwd detection...')
 
-    const output = execSync(`bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} status 2>&1 || true`, {
+    const output = execSync(`bun ${join(REPO_PATH, 'bin/ai-brain.js')} status 2>&1 || true`, {
       encoding: 'utf8',
       cwd: BRAIN1_PATH,
       env: { ...process.env, __HOME__: TEMP_DIR }
@@ -156,7 +156,7 @@ describe('E2E: Multi-brain scenarios', () => {
 
     writeFileSync(join(BRAIN2_PATH, 'raw', 'notes', 'another-note.md'), '# Another Note', 'utf8')
 
-    const output = execSync(`bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update 2>&1 || true`, {
+    const output = execSync(`bun ${join(REPO_PATH, 'bin/ai-brain.js')} update 2>&1 || true`, {
       encoding: 'utf8',
       cwd: BRAIN2_PATH,
       env: { ...process.env, __HOME__: TEMP_DIR }
@@ -169,7 +169,7 @@ describe('E2E: Multi-brain scenarios', () => {
   it('should error when not in brain folder and no brain id specified', () => {
     console.log('\nStep 8: Testing error when no brain specified...')
 
-    const output = execSync(`bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update 2>&1 || true`, {
+    const output = execSync(`bun ${join(REPO_PATH, 'bin/ai-brain.js')} update 2>&1 || true`, {
       encoding: 'utf8',
       cwd: TEMP_DIR,
       env: { ...process.env, __HOME__: TEMP_DIR }
@@ -182,7 +182,7 @@ describe('E2E: Multi-brain scenarios', () => {
     console.log('\nStep 9: Testing error for invalid brain id...')
 
     const output = execSync(
-      `bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update nonexistent 2>&1 || true`,
+      `bun ${join(REPO_PATH, 'bin/ai-brain.js')} update nonexistent 2>&1 || true`,
       {
         encoding: 'utf8',
         env: { ...process.env, __HOME__: TEMP_DIR }

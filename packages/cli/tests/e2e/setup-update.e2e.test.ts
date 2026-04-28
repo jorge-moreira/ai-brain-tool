@@ -38,7 +38,7 @@ describe('E2E: ai-brain setup and update', () => {
     )
 
     // Copy bundled templates
-    const templatesSrc = join(REPO_PATH, 'src', 'templates')
+    const templatesSrc = join(REPO_PATH, 'packages/cli/src/templates')
     try {
       cpSync(
         join(templatesSrc, 'markdown', '_bundled'),
@@ -57,7 +57,7 @@ describe('E2E: ai-brain setup and update', () => {
     // Step 2: Install graphify
     console.log('\nStep 2: Installing graphify...')
     const graphifyScript = `
-      import { createVenv } from '${join(REPO_PATH, '..', 'core', 'src', 'graphify.ts')}';
+      import { createVenv } from '${join(REPO_PATH, '../core/src/graphify.ts')}';
       await createVenv('${BRAIN_PATH}', []);
     `
     execSync(`bun -e "${graphifyScript.replace(/\n/g, '')}"`, { stdio: 'inherit' })
@@ -91,7 +91,7 @@ This is a test note for E2E validation.
   it('should build knowledge graph with ai-brain update', () => {
     console.log('\nStep 4: Running ai-brain update...')
     // This should succeed even with only markdown files (no code)
-    execSync(`bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test`, {
+    execSync(`bun ${join(REPO_PATH, 'bin/ai-brain.js')} update test`, {
       cwd: REPO_PATH,
       stdio: 'inherit',
       env: { ...process.env, __HOME__: process.env.HOME || tmpdir() }

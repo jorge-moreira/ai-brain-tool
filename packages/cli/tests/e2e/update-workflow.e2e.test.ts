@@ -79,7 +79,7 @@ This is a test note for the update workflow.
     console.log('\nStep 2: Running update command (expected to fail without graphify)...')
 
     const output = execSync(
-      `bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test 2>&1 || true`,
+      `bun ${join(REPO_PATH, 'bin/ai-brain.js')} update test 2>&1 || true`,
       {
         encoding: 'utf8',
         env: { ...process.env, __HOME__: TEMP_DIR }
@@ -100,7 +100,7 @@ This is a test note for the update workflow.
     console.log('\nStep 4: Running update with no changes...')
 
     const output = execSync(
-      `bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test 2>&1 || true`,
+      `bun ${join(REPO_PATH, 'bin/ai-brain.js')} update test 2>&1 || true`,
       {
         encoding: 'utf8',
         env: { ...process.env, __HOME__: TEMP_DIR }
@@ -118,7 +118,7 @@ This is a test note for the update workflow.
     }
 
     const output = execSync(
-      `bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test 2>&1 || true`,
+      `bun ${join(REPO_PATH, 'bin/ai-brain.js')} update test 2>&1 || true`,
       {
         encoding: 'utf8',
         env: { ...process.env, __HOME__: TEMP_DIR }

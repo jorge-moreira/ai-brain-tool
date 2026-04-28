@@ -40,7 +40,7 @@ describe('E2E: Complete setup workflow', () => {
     mkdirSync(join(BRAIN_PATH, 'raw', 'templates', 'web-clipper', '_custom'), { recursive: true })
     mkdirSync(join(BRAIN_PATH, 'graphify-out'), { recursive: true })
 
-    const templatesSrc = join(REPO_PATH, 'src', 'templates')
+    const templatesSrc = join(REPO_PATH, 'packages/cli/src/templates')
     try {
       cpSync(
         join(templatesSrc, 'markdown', '_bundled'),
@@ -132,7 +132,7 @@ graphify-out/cost.json
       )
     )
 
-    const output = execSync(`bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} list`, {
+    const output = execSync(`bun ${join(REPO_PATH, 'bin/ai-brain.js')} list`, {
       encoding: 'utf8',
       env: { ...process.env, __HOME__: TEMP_DIR }
     })
@@ -150,7 +150,7 @@ graphify-out/cost.json
     )
 
     const output = execSync(
-      `bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} status test 2>&1 || true`,
+      `bun ${join(REPO_PATH, 'bin/ai-brain.js')} status test 2>&1 || true`,
       {
         encoding: 'utf8',
         env: { ...process.env, __HOME__: TEMP_DIR }
