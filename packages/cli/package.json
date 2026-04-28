@@ -16,9 +16,7 @@
     "test:integration": "vitest run tests/integration",
     "test:integration:ci": "bun run test:integration --coverage --coverage.reportsDirectory=coverage/integration --outputFile.junit=coverage/integration/junit.xml",
     "test:e2e": "vitest run tests/e2e",
-    "test:e2e:ci": "bun run test:e2e --coverage --coverage.reportsDirectory=coverage/e2e --outputFile=coverage/e2e/junit.xml",
-    "typecheck": "tsc --noEmit",
-    "typecheck:e2e": "tsc --project tests/e2e/tsconfig.json --noEmit"
+    "test:e2e:ci": "bun run test:e2e --outputFile=coverage/e2e/junit.xml"
   },
   "files": [
     "dist"
