@@ -9,14 +9,16 @@
   "scripts": {
     "build": "bun build ./src/index.ts --outfile ./dist/index.js --target bun",
     "start": "bun run src/index.ts",
-    "test": "vitest run tests/unit tests/integration",
+    "test": "vitest run tests/unit tests/integration tests/e2e",
+    "test:coverage": "bun run test --coverage",
     "test:unit": "vitest run tests/unit",
+    "test:unit:ci": "bun run test:unit -F unit --coverage --coverage.reportsDirectory=coverage/unit --outputFile=coverage/unit/junit.xml",
     "test:integration": "vitest run tests/integration",
-    "test:e2e": "vitest run tests/e2e --no-coverage",
-    "test:e2e:ci": "vitest run tests/e2e --no-coverage --reporter=github-actions",
-    "test:coverage": "vitest run --coverage tests/unit tests/integration",
-    "test:ci": "vitest run --coverage --reporter=github-actions --reporter=junit --outputFile=coverage/junit.xml tests/unit tests/integration",
-    "typecheck": "tsc --noEmit"
+    "test:integration:ci": "bun run test:integration -F integration-tests --coverage --coverage.reportsDirectory=coverage/integration --outputFile.junit=coverage/integration/junit.xml",
+    "test:e2e": "vitest run tests/e2e",
+    "test:e2e:ci": "bun run test:e2e -F e2e --coverage --coverage.reportsDirectory=coverage/e2e --outputFile=coverage/e2e/junit.xml",
+    "typecheck": "tsc --noEmit",
+    "typecheck:e2e": "tsc --project tests/e2e/tsconfig.json --noEmit"
   },
   "files": [
     "dist"
@@ -31,11 +33,14 @@
     "ora": "^9.4.0"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "typescript": "catalog:",
-    "@types/node": "catalog:"
+    "vitest": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "@amiceli/vitest-cucumber": "^6.3.0"
   },
   "engines": {
-    "node": ">=18",
-    "bun": ">=1.0"
+    "node": ">=24",
+    "bun": ">=2.0"
   }
 }

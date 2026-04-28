@@ -5,8 +5,13 @@ on:
 
 jobs:
   cli-test:
-    name: CLI Tests
+    name: CLI ${{ matrix.test-type }} tests
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Ensures all tests runs even if one type fails
+      matrix:
+        test-type: [unit, integration, e2e]
+    
     steps:
       - uses: actions/checkout@v6
 
@@ -18,15 +23,16 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run CLI tests with coverage (CI mode)
-        run: bun run test:cli:ci
+      - name: Run ${{ matrix.test-type }} tests
+        run: |
+          bun run test:cli:${{ matrix.test-type }}:ci
 
-      - name: Upload CLI coverage to Codecov
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: packages/cli/coverage/coverage-final.json
           token: ${{ secrets.CODECOV_TOKEN }}
-          report_type: coverage
+          files: |
+            packages/cli/coverage/${{ matrix.test-type }}/coverage-final.json
+            packages/cli/coverage/${{ matrix.test-type }}/junit.xml
           fail_ci_if_error: false
           verbose: true
-          flags: cli

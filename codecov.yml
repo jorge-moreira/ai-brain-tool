@@ -38,3 +38,35 @@ comment:
 parsers:
   junit:
     enabled: true
+
+# Components: Logical groupings of your codebase
+# https://docs.codecov.com/docs/components
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: 90%
+      - type: patch
+        target: 95%
+
+  individual_components:
+    - component_id: core
+      name: "@ai-brain/core"
+      paths:
+        - packages/core/**
+    - component_id: cli
+      name: "@jorge-moreira.dev/ai-brain-tool"
+      paths:
+        - packages/cli/**
+    - component_id: electron
+      name: "@ai-brain/electron"
+      paths:
+        - packages/electron/**
+    - component_id: ui
+      name: "@ai-brain/ui"
+      paths:
+        - packages/ui/**
+
+# Flags: Categorize uploads by test type
+# https://docs.codecov.com/docs/flags
+# Flags are set during upload via CLI flag: -F flag_name
