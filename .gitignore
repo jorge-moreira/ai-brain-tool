@@ -7,7 +7,7 @@ node_modules/
 .pnp
 .pnp.js
 
-# ---  Build Artifacts ---
+# --- Build Artifacts ---
 # Matches 'dist', 'out', 'build', etc.
 dist/
 lib/
@@ -15,6 +15,9 @@ out/
 build/
 *.tgz
 dist-electron/
+
+# CLI bin wrappers (generated)
+packages/*/bin/
 
 # TypeScript incremental build cache
 *.tsbuildinfo

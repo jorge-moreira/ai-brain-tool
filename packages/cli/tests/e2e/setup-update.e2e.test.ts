@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, beforeAll, afterAll } from 'vitest'
 import { execSync } from 'child_process'
 import { mkdirSync, writeFileSync, rmSync, cpSync } from 'fs'
 import { join } from 'path'
@@ -40,19 +40,27 @@ describe('E2E: ai-brain setup and update', () => {
     // Copy bundled templates
     const templatesSrc = join(REPO_PATH, 'src', 'templates')
     try {
-      cpSync(join(templatesSrc, 'markdown', '_bundled'), join(BRAIN_PATH, 'raw', 'templates', 'markdown', '_bundled'), { recursive: true, force: true })
-      cpSync(join(templatesSrc, 'web-clipper', '_bundled'), join(BRAIN_PATH, 'raw', 'templates', 'web-clipper', '_bundled'), { recursive: true, force: true })
-    } catch (e) {
+      cpSync(
+        join(templatesSrc, 'markdown', '_bundled'),
+        join(BRAIN_PATH, 'raw', 'templates', 'markdown', '_bundled'),
+        { recursive: true, force: true }
+      )
+      cpSync(
+        join(templatesSrc, 'web-clipper', '_bundled'),
+        join(BRAIN_PATH, 'raw', 'templates', 'web-clipper', '_bundled'),
+        { recursive: true, force: true }
+      )
+    } catch {
       console.log('Warning: Could not copy templates, continuing without them')
     }
 
     // Step 2: Install graphify
     console.log('\nStep 2: Installing graphify...')
     const graphifyScript = `
-      import { createVenv } from '${join(REPO_PATH, 'src', 'graphify.js')}';
+      import { createVenv } from '${join(REPO_PATH, '..', 'core', 'src', 'graphify.ts')}';
       await createVenv('${BRAIN_PATH}', []);
     `
-    execSync(`node -e "${graphifyScript.replace(/\n/g, '')}"`, { stdio: 'inherit' })
+    execSync(`bun -e "${graphifyScript.replace(/\n/g, '')}"`, { stdio: 'inherit' })
 
     // Step 3: Add test content (markdown note - typical user scenario)
     console.log('\nStep 3: Adding test content...')
@@ -75,15 +83,15 @@ This is a test note for E2E validation.
     try {
       rmSync(TEMP_DIR, { recursive: true, force: true })
       console.log(`\nCleaned up temp directory: ${TEMP_DIR}`)
-    } catch (e) {
-      console.log(`Warning: Could not clean up ${TEMP_DIR}: ${e.message}`)
+    } catch {
+      console.log(`Warning: Could not clean up ${TEMP_DIR}`)
     }
   })
 
   it('should build knowledge graph with ai-brain update', () => {
     console.log('\nStep 4: Running ai-brain update...')
     // This should succeed even with only markdown files (no code)
-    execSync(`bun run ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test`, {
+    execSync(`bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test`, {
       cwd: REPO_PATH,
       stdio: 'inherit',
       env: { ...process.env, __HOME__: process.env.HOME || tmpdir() }

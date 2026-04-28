@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { execSync } from 'child_process'
-import { mkdirSync, writeFileSync, rmSync, readFileSync, existsSync } from 'fs'
+import { mkdirSync, writeFileSync, rmSync, existsSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
 
@@ -34,11 +34,15 @@ describe('E2E: Update workflow with git sync', () => {
 
     writeFileSync(
       join(GLOBAL_CONFIG_DIR, 'config.json'),
-      JSON.stringify({
-        brains: {
-          test: BRAIN_PATH
-        }
-      }, null, 2)
+      JSON.stringify(
+        {
+          brains: {
+            test: BRAIN_PATH
+          }
+        },
+        null,
+        2
+      )
     )
   }, 30000)
 
@@ -46,14 +50,14 @@ describe('E2E: Update workflow with git sync', () => {
     try {
       rmSync(TEMP_DIR, { recursive: true, force: true })
       console.log(`\nCleaned up temp directory: ${TEMP_DIR}`)
-    } catch (e) {
+    } catch {
       console.log(`Warning: Could not clean up ${TEMP_DIR}: ${e.message}`)
     }
   }, 30000)
 
   it('should update brain with new markdown file', () => {
     console.log('\nStep 1: Adding new markdown file...')
-    
+
     writeFileSync(
       join(BRAIN_PATH, 'raw', 'notes', 'test-note.md'),
       `# Test Note
@@ -67,60 +71,60 @@ This is a test note for the update workflow.
 `,
       'utf8'
     )
-    
+
     expect(existsSync(join(BRAIN_PATH, 'raw', 'notes', 'test-note.md'))).toBe(true)
   })
 
   it('should run update command successfully', () => {
     console.log('\nStep 2: Running update command (expected to fail without graphify)...')
-    
+
     const output = execSync(
-      `bun run ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test 2>&1 || true`,
+      `bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test 2>&1 || true`,
       {
         encoding: 'utf8',
         env: { ...process.env, __HOME__: TEMP_DIR }
       }
     )
-    
+
     expect(output).toContain('Rebuilding knowledge graph')
   })
 
   it('should commit changes to git when gitSync is enabled', () => {
     console.log('\nStep 3: Checking git status...')
-    
+
     const status = execSync('git status --porcelain', { cwd: BRAIN_PATH, encoding: 'utf8' })
     expect(status).toBeDefined()
   })
 
   it('should handle update with no changes gracefully', () => {
     console.log('\nStep 4: Running update with no changes...')
-    
+
     const output = execSync(
-      `bun run ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test 2>&1 || true`,
+      `bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test 2>&1 || true`,
       {
         encoding: 'utf8',
         env: { ...process.env, __HOME__: TEMP_DIR }
       }
     )
-    
+
     expect(output).toMatch(/Rebuilding knowledge graph|brain updated/i)
   })
 
   it('should handle update when graph.json does not exist', () => {
     console.log('\nStep 5: Testing with missing graph.json...')
-    
+
     if (existsSync(join(BRAIN_PATH, 'graphify-out', 'graph.json'))) {
       rmSync(join(BRAIN_PATH, 'graphify-out', 'graph.json'))
     }
-    
+
     const output = execSync(
-      `bun run ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test 2>&1 || true`,
+      `bun ${join(REPO_PATH, 'bin', 'ai-brain.js')} update test 2>&1 || true`,
       {
         encoding: 'utf8',
         env: { ...process.env, __HOME__: TEMP_DIR }
       }
     )
-    
+
     expect(output).toMatch(/Rebuilding knowledge graph|brain updated/i)
   })
 })
