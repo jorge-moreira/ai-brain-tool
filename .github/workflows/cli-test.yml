@@ -35,4 +35,5 @@ jobs:
             packages/cli/coverage/${{ matrix.test-type }}/coverage-final.json
             packages/cli/coverage/${{ matrix.test-type }}/junit.xml
           fail_ci_if_error: false
+          flags: ${{ matrix.test-type }}
           verbose: true
