@@ -16,10 +16,7 @@ build/
 *.tgz
 dist-electron/
 
-# CLI bin wrappers (generated)
-packages/*/bin/
-
-# TypeScript incremental build cache
+# --- TypeScript incremental build cache ---
 *.tsbuildinfo
 
 # --- Environment & Secrets ---

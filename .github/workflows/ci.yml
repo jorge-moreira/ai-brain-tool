@@ -12,8 +12,6 @@ jobs:
 
   cli-test:
     uses: ./.github/workflows/cli-test.yml
-    needs: core-test
 
   electron-test:
     uses: ./.github/workflows/electron-test.yml
-    needs: core-test
