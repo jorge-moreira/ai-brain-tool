@@ -23,6 +23,8 @@
     "test:core:ci": "bun run --filter @ai-brain/core test:ci",
     "test:cli": "bun run --filter @jorge-moreira.dev/ai-brain-tool test",
     "test:cli:ci": "bun run --filter @jorge-moreira.dev/ai-brain-tool test:ci",
+    "test:e2e": "bun run --filter @jorge-moreira.dev/ai-brain-tool test:e2e",
+    "test:e2e:ci": "bun run --filter @jorge-moreira.dev/ai-brain-tool test:e2e:ci",
     "test:electron": "bun run --filter @ai-brain/electron test",
     "test:electron:ci": "bun run --filter @ai-brain/electron test:ci",
     "build": "bun run --filter @ai-brain/electron build",
