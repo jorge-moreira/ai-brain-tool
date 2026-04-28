@@ -359,4 +359,116 @@ describe('commands/setup', () => {
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Setup complete'))
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Next steps'))
   })
+
+  it('should print summary with git and obsidian details', async () => {
+    mockedExistsSync.mockReturnValue(false)
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedInput.mockResolvedValueOnce('ai-brain') // folder name
+    mockedSelect.mockResolvedValueOnce('current') // location
+    mockedSelect.mockResolvedValueOnce('git') // git mode
+    mockedInput.mockResolvedValueOnce('https://github.com/repo') // remote URL
+    mockedConfirm.mockResolvedValueOnce(true) // commit cache
+    mockedConfirm.mockResolvedValueOnce(true) // git sync
+    mockedCheckbox.mockResolvedValueOnce(['office']) // extras
+    mockedDetectAll.mockResolvedValue([{ name: 'Claude', detected: true, configHint: '~/.claude' }] as DetectedPlatform[])
+    mockedCheckbox.mockResolvedValueOnce([{ name: 'Claude', detected: true, configHint: '~/.claude' }] as DetectedPlatform[]) // selected platforms
+    mockedSelect.mockResolvedValueOnce('brain') // obsidian
+
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+    mockedIsBrainIdAvailable.mockReturnValue(true)
+
+    mockedCreateVenv.mockResolvedValue()
+    mockedCreateBrainFolder.mockResolvedValue()
+
+    await run()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Setup complete'))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('git'))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('enabled'))
+  })
+
+  it('should print summary without remote when git local only', async () => {
+    mockedExistsSync.mockReturnValue(false)
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedInput.mockResolvedValueOnce('ai-brain')
+    mockedSelect.mockResolvedValueOnce('current')
+    mockedSelect.mockResolvedValueOnce('git')
+    mockedInput.mockResolvedValueOnce('')
+    mockedConfirm.mockResolvedValueOnce(false)
+    mockedConfirm.mockResolvedValueOnce(false)
+    mockedCheckbox.mockResolvedValueOnce([])
+    mockedDetectAll.mockResolvedValue([])
+    mockedCheckbox.mockResolvedValueOnce([])
+    mockedSelect.mockResolvedValueOnce('skip')
+
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+    mockedIsBrainIdAvailable.mockReturnValue(true)
+
+    mockedCreateVenv.mockResolvedValue()
+    mockedCreateBrainFolder.mockResolvedValue()
+
+    await run()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Setup complete'))
+  })
+
+  it('should handle config parse error in new machine setup', async () => {
+    mockedExistsSync.mockImplementation((path: PathLike) => {
+      const markers = ['raw', '.graphifyignore', '.brain-config.json']
+      return markers.some(m => path.toString().includes(m))
+    })
+
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    const badJson = '{ invalid json }'
+    vi.mocked(await import('fs')).readFileSync.mockReturnValue(badJson as never)
+
+    mockedSelect.mockResolvedValue('brain')
+    mockedCheckbox.mockResolvedValue([])
+
+    mockedDetectAll.mockResolvedValue([
+      { name: 'Claude', detected: true, configHint: '~/.claude' }
+    ] as DetectedPlatform[])
+
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+    mockedIsBrainIdAvailable.mockReturnValue(true)
+
+    mockedCreateVenv.mockResolvedValue()
+    mockedCreateBrainFolder.mockResolvedValue()
+
+    await expect(run()).resolves.not.toThrow()
+  })
+
+  it('should handle separate obsidian vault path', async () => {
+    mockedExistsSync.mockReturnValue(false)
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedInput.mockResolvedValueOnce('ai-brain')
+    mockedSelect.mockResolvedValueOnce('current')
+    mockedSelect.mockResolvedValueOnce('local')
+    mockedCheckbox.mockResolvedValueOnce([])
+    mockedCheckbox.mockResolvedValueOnce([])
+    mockedSelect.mockResolvedValueOnce('separate')
+    mockedInput.mockResolvedValueOnce('/my/vault')
+
+    mockedDetectAll.mockResolvedValue([])
+
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+    mockedIsBrainIdAvailable.mockReturnValue(true)
+
+    mockedCreateVenv.mockResolvedValue()
+    mockedCreateBrainFolder.mockResolvedValue()
+
+    await run()
+
+    expect(mockedInput).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Path to your Obsidian vault:' })
+    )
+  })
 })
