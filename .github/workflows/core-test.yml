@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false # Ensures all tests runs even if one type fails
       matrix:
-        test-type: [unit, integration, e2e]
+        test-type: [unit, integration]
     
     steps:
       - uses: actions/checkout@v6

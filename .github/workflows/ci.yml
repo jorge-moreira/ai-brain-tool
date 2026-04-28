@@ -14,5 +14,6 @@ jobs:
   cli-test:
     uses: ./.github/workflows/cli-test.yml
 
-  electron-test:
-    uses: ./.github/workflows/electron-test.yml
+  # TODO: Remove comment once electron tests are added
+  #electron-test:
+  #  uses: ./.github/workflows/electron-test.yml
