@@ -7,9 +7,6 @@ jobs:
   e2e-test:
     name: E2E Tests
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/cli
     steps:
       - uses: actions/checkout@v6
 
@@ -21,12 +18,8 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Create CLI bin wrapper
-        run: |
-          mkdir -p bin
-          echo '#!/usr/bin/env bun' > bin/ai-brain.js
-          echo "import '../src/index.ts'" >> bin/ai-brain.js
-          chmod +x bin/ai-brain.js
-
       - name: Run e2e tests
+        working-directory: packages/cli
         run: bun run test:e2e:ci
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
