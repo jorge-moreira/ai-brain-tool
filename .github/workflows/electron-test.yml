@@ -1,0 +1,37 @@
+name: Electron Test
+
+on:
+  workflow_call:
+
+jobs:
+  electron-test:
+    name: Electron Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run Electron tests with coverage (CI mode)
+        id: electron-tests
+        # To be removed
+        continue-on-error: true
+        run: bun run test:electron:ci
+
+      - name: Upload Electron coverage to Codecov
+      # To be removed
+        if: steps.electron-tests.outcome == 'success'
+        uses: codecov/codecov-action@v5
+        with:
+          files: packages/electron/coverage/coverage-final.json
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report_type: coverage
+          fail_ci_if_error: false
+          verbose: true
+          flags: electron

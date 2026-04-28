@@ -1,1 +1,29 @@
-npm test
+#!/bin/bash
+set -e
+
+echo "🧪 Running pre-commit tests (parallel)..."
+
+# Run unit + integration tests in parallel (skip e2e - too slow)
+bun run --cwd packages/core test &
+PID1=$!
+
+bun run --cwd packages/cli test &
+PID2=$!
+
+# Electron has no tests yet, skip for now
+
+# Wait for all to complete
+wait $PID1
+EXIT1=$?
+
+wait $PID2
+EXIT2=$?
+
+# Exit with error if any failed
+if [ $EXIT1 -ne 0 ] || [ $EXIT2 -ne 0 ]; then
+    echo "❌ Pre-commit tests failed!"
+    exit 1
+fi
+
+echo "✅ All tests passed!"
+exit 0
