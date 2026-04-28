@@ -1,4 +1,61 @@
-node_modules/
-.DS_Store
+# --- Ignored - Using Bun ---
 package-lock.json
+
+
+# --- Dependencies ---
+node_modules/
+.pnp
+.pnp.js
+
+# --- Build Artifacts ---
+# Matches 'dist', 'out', 'build', etc.
+dist/
+lib/
+out/
+build/
+*.tgz
+dist-electron/
+
+# --- TypeScript incremental build cache ---
+*.tsbuildinfo
+
+# --- Environment & Secrets ---
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+
+# --- Logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+*.log
+
+# --- Testing ---
 coverage/
+.nyc_output
+
+# --- IDEs & OS ---
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# --- Tooling Caches ---
+.eslintcache
+.stylelintcache
+.cache/
+.parcel-cache
+.turbo
+.next

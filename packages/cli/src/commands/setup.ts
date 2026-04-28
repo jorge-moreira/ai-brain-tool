@@ -1,0 +1,310 @@
+import { input, select, checkbox, confirm } from '@inquirer/prompts'
+import chalk from 'chalk'
+import ora from 'ora'
+import { join, resolve, basename } from 'path'
+import { existsSync, readFileSync } from 'fs'
+
+import { createBrainFolder, writeBrainConfig } from '@ai-brain/core/scaffold'
+import { createVenv } from '@ai-brain/core/graphify'
+import { detectAll, configureSelected, type DetectedPlatform } from '@ai-brain/core/index'
+import { initRepo, writeGitignore } from '@ai-brain/core/git'
+import {
+  writeConfig,
+  addBrain,
+  ensureConfigDir,
+  configPath,
+  isBrainIdAvailable
+} from '@ai-brain/core/config'
+
+const BRAIN_MARKER = ['raw', '.graphifyignore', '.brain-config.json']
+
+function isExistingBrain(dir: string): boolean {
+  return BRAIN_MARKER.every(f => existsSync(join(dir, f)))
+}
+
+function section(label: string): void {
+  console.log(chalk.dim('\n  ─── ' + label + ' ' + '─'.repeat(Math.max(0, 40 - label.length))))
+}
+
+function item(label: string, value: string): void {
+  console.log(`  ${chalk.dim(label.padEnd(14))} ${value}`)
+}
+
+async function askBrainId(defaultId: string): Promise<string> {
+  while (true) {
+    const brainId = await input({
+      message: 'Brain identifier (short name, e.g., work, personal):',
+      default: defaultId
+    })
+    if (isBrainIdAvailable(brainId)) {
+      return brainId
+    }
+    console.log(
+      chalk.yellow(
+        `  Brain identifier "${brainId}" is already taken. Please choose a different one.`
+      )
+    )
+  }
+}
+
+export async function run(): Promise<void> {
+  ensureConfigDir()
+  if (!existsSync(configPath())) {
+    writeConfig({ brains: {} })
+  }
+
+  console.log(chalk.bold.cyan('\n  ai-brain') + chalk.bold(' setup wizard'))
+  console.log(chalk.dim('  Your personal AI memory, connected to all your AI tools.\n'))
+
+  const cwd = process.cwd()
+  if (isExistingBrain(cwd)) {
+    await newMachineSetup(cwd)
+    return
+  }
+
+  await freshSetup()
+}
+
+async function freshSetup(): Promise<void> {
+  section('Brain location')
+
+  const name = await input({
+    message: 'Brain folder name:',
+    default: 'ai-brain'
+  })
+
+  const locationChoice = await select({
+    message: 'Where do you want to create it?',
+    choices: [
+      { name: `Current directory  (${process.cwd()})`, value: 'current' },
+      { name: 'Choose a different location', value: 'custom' }
+    ]
+  })
+
+  let baseDir = process.cwd()
+  if (locationChoice === 'custom') {
+    const customPath = await input({ message: 'Path:' })
+    baseDir = resolve(customPath)
+  }
+
+  const brainPath = join(baseDir, name)
+
+  section('Git')
+
+  const gitMode = await select({
+    message: 'How do you want to manage your brain?',
+    choices: [
+      { name: 'Git repository (recommended) — sync across machines via git', value: 'git' },
+      { name: 'Local folder only — this machine only', value: 'local' }
+    ]
+  })
+
+  let remoteUrl: string | null = null
+  let commitCache = true
+  let gitSync = false
+
+  if (gitMode === 'git') {
+    remoteUrl = await input({
+      message: 'Git remote URL (leave blank to init locally, add remote later):',
+      default: ''
+    })
+    remoteUrl = remoteUrl.trim() || null
+
+    commitCache = await confirm({
+      message: 'Commit extraction cache to git? (saves AI tokens on every machine — recommended)',
+      default: true
+    })
+
+    gitSync = await confirm({
+      message: 'Auto-sync after /brain update? (commit + push after each graph rebuild)',
+      default: !!remoteUrl
+    })
+  }
+
+  section('Graphify extras')
+
+  const extras = await checkbox({
+    message: 'Which file types do you want graphify to process? (mcp is always included)',
+    choices: [
+      { name: 'Office documents  — Word, Excel (.docx, .xlsx)', value: 'office' },
+      {
+        name: 'Video / Audio     — mp4, mp3, YouTube URLs (requires faster-whisper + yt-dlp)',
+        value: 'video'
+      }
+    ]
+  })
+
+  section('Scaffold')
+
+  let obsidianDir: string | null = null
+
+  const spinnerScaffold = ora('Creating brain folder...').start()
+  await createBrainFolder({ brainPath, includeObsidian: false })
+  writeBrainConfig({ brainPath, gitSync, extras, obsidianDir })
+  spinnerScaffold.succeed(`Created ${brainPath}`)
+
+  if (gitMode === 'git') {
+    const spinnerGit = ora('Initializing git repo...').start()
+    await initRepo({ brainPath, remoteUrl: remoteUrl ?? undefined })
+    await writeGitignore({ brainPath, commitCache })
+    spinnerGit.succeed('Initialized git repo')
+  }
+
+  const spinnerVenv = ora('Installing graphify...').start()
+  await createVenv(brainPath, extras)
+  spinnerVenv.succeed(`Installed graphify${extras.length ? ` [${extras.join(', ')}]` : ''}`)
+
+  section('AI tools')
+
+  const platforms = await detectAll()
+  const platformChoices: { name: string; value: DetectedPlatform; checked: boolean }[] =
+    platforms.map((p: DetectedPlatform) => ({
+      name: `${p.name.padEnd(22)} ${p.detected ? chalk.green('detected at ' + p.configHint) : chalk.dim('not detected (you can still enable it)')}`,
+      value: p,
+      checked: p.detected
+    }))
+
+  const selected = await checkbox({
+    message: 'Which AI tools do you use? (space to toggle, enter to confirm)',
+    choices: platformChoices
+  })
+
+  const spinnerPlatforms = ora('Configuring AI tools...').start()
+  await configureSelected({ selected, brainPath })
+  spinnerPlatforms.succeed(`Configured ${selected.length} AI tool(s)`)
+
+  section('Obsidian')
+
+  const obsidianChoice = await select({
+    message: 'Do you use Obsidian?',
+    choices: [
+      { name: 'Yes, use this brain folder as my Obsidian vault', value: 'brain' },
+      { name: 'Yes, I have a separate Obsidian vault', value: 'separate' },
+      { name: 'No / Skip', value: 'skip' }
+    ]
+  })
+
+  if (obsidianChoice === 'brain') {
+    const spinnerObs = ora('Configuring Obsidian...').start()
+    await createBrainFolder({ brainPath, includeObsidian: true })
+    obsidianDir = brainPath
+    spinnerObs.succeed('Configured Obsidian vault')
+  } else if (obsidianChoice === 'separate') {
+    const vaultPath = await input({ message: 'Path to your Obsidian vault:' })
+    const spinnerObs = ora('Configuring Obsidian...').start()
+    await createBrainFolder({ brainPath, includeObsidian: true })
+    obsidianDir = vaultPath
+    spinnerObs.succeed(`Configured Obsidian (vault at ${vaultPath})`)
+  }
+
+  writeBrainConfig({ brainPath, gitSync, extras, obsidianDir })
+
+  const brainId = await askBrainId(name)
+
+  addBrain(brainId, brainPath)
+
+  printSummary({ brainPath, gitMode, remoteUrl, gitSync, extras, selected, obsidianChoice })
+}
+
+async function newMachineSetup(brainPath: string): Promise<void> {
+  console.log(chalk.yellow('\n  Existing brain detected — running new-machine setup.\n'))
+
+  let extras: string[] = []
+  try {
+    const cfg = JSON.parse(readFileSync(join(brainPath, '.brain-config.json'), 'utf8')) as {
+      extras?: string[]
+      obsidianDir?: string | null
+    }
+    extras = cfg.extras ?? []
+  } catch {
+    /* ignore — use defaults */
+  }
+
+  const spinnerVenv = ora('Recreating Python environment...').start()
+  await createVenv(brainPath, extras)
+  spinnerVenv.succeed(`Installed graphify${extras.length ? ` [${extras.join(', ')}]` : ''}`)
+
+  const platforms = await detectAll()
+  const platformChoices2: { name: string; value: DetectedPlatform; checked: boolean }[] =
+    platforms.map((p: DetectedPlatform) => ({
+      name: `${p.name.padEnd(22)} ${p.detected ? chalk.green('detected') : chalk.dim('not detected')}`,
+      value: p,
+      checked: p.detected
+    }))
+
+  const selected = await checkbox({
+    message: 'Which AI tools do you want to configure on this machine?',
+    choices: platformChoices2
+  })
+
+  const spinnerPlatforms = ora('Configuring AI tools...').start()
+  await configureSelected({ selected, brainPath })
+  spinnerPlatforms.succeed(`Configured ${selected.length} AI tool(s)`)
+
+  const brainId = await askBrainId(basename(brainPath))
+
+  addBrain(brainId, brainPath)
+
+  console.log(chalk.green('\n  Setup complete!'))
+  item('Brain', brainPath)
+  console.log(chalk.dim('\n  Restart your AI tools to connect to the brain.\n'))
+}
+
+interface PrintSummaryOptions {
+  brainPath: string
+  gitMode: string
+  remoteUrl: string | null
+  gitSync: boolean
+  extras: string[]
+  selected: DetectedPlatform[]
+  obsidianChoice: string
+}
+
+function printSummary({
+  brainPath,
+  gitMode,
+  remoteUrl,
+  gitSync,
+  extras,
+  selected,
+  obsidianChoice
+}: PrintSummaryOptions): void {
+  const platformNames = selected.map(p => p.name).join(', ') || 'none'
+  const gitStatus =
+    gitMode === 'git'
+      ? remoteUrl
+        ? `git  ${chalk.dim(remoteUrl)}`
+        : 'git  (no remote yet)'
+      : 'local only'
+  const syncStatus =
+    gitMode === 'git'
+      ? gitSync
+        ? chalk.green('enabled')
+        : chalk.dim('disabled')
+      : chalk.dim('n/a')
+
+  console.log(chalk.green('\n  Setup complete!\n'))
+
+  item('Brain', chalk.cyan(brainPath))
+  item('Git', gitStatus)
+  item('Auto-sync', syncStatus)
+  item('Graphify', extras.length ? `mcp, ${extras.join(', ')}` : 'mcp')
+  item('Platforms', platformNames)
+  if (obsidianChoice !== 'skip') item('Obsidian', 'vault configured')
+
+  console.log(chalk.dim('\n  ─── Next steps ─────────────────────────────────'))
+  console.log(`  1. Restart your AI tools`)
+  console.log(`  2. Drop notes into ${chalk.cyan('raw/')}`)
+  console.log(`  3. Run ${chalk.cyan('/brain update')} in your AI tool`)
+
+  if (obsidianChoice !== 'skip') {
+    console.log(chalk.dim('\n  ─── Obsidian ────────────────────────────────────'))
+    console.log(`  4. Open Obsidian → Open folder → ${chalk.cyan(brainPath)}`)
+    console.log(`  5. Enable the Templates plugin (already configured)`)
+    console.log(
+      `  6. See ${chalk.cyan('raw/templates/web-clipper/README.md')} for web clipper setup`
+    )
+  }
+
+  console.log()
+}

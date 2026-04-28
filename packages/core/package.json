@@ -1,0 +1,29 @@
+{
+  "name": "@ai-brain/core",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "test": "vitest run tests/unit tests/integration",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "vitest run tests/e2e --no-coverage",
+    "test:e2e:ci": "vitest run tests/e2e --no-coverage --reporter=github-actions",
+    "test:coverage": "vitest run --coverage tests/unit tests/integration",
+    "test:ci": "vitest run --coverage --reporter=github-actions --reporter=junit --outputFile=coverage/junit.xml tests/unit tests/integration",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "execa": "^9.0.0"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "vitest": "catalog:",
+    "chalk": "^5.0.0",
+    "ora": "^9.4.0"
+  }
+}

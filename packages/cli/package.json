@@ -1,0 +1,41 @@
+{
+  "name": "@jorge-moreira.dev/ai-brain-tool",
+  "version": "2.1.0",
+  "description": "Your personal AI memory, connected to all your AI tools",
+  "type": "module",
+  "bin": {
+    "ai-brain": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --outfile ./dist/index.js --target bun",
+    "start": "bun run src/index.ts",
+    "test": "vitest run tests/unit tests/integration",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "vitest run tests/e2e --no-coverage",
+    "test:e2e:ci": "vitest run tests/e2e --no-coverage --reporter=github-actions",
+    "test:coverage": "vitest run --coverage tests/unit tests/integration",
+    "test:ci": "vitest run --coverage --reporter=github-actions --reporter=junit --outputFile=coverage/junit.xml tests/unit tests/integration",
+    "typecheck": "tsc --noEmit"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@ai-brain/core": "*",
+    "@inquirer/prompts": "^8.4.2",
+    "chalk": "^5.0.0",
+    "commander": "^14.0.3",
+    "execa": "^9.0.0",
+    "inquirer": "^13.4.2",
+    "ora": "^9.4.0"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@types/node": "catalog:"
+  },
+  "engines": {
+    "node": ">=18",
+    "bun": ">=1.0"
+  }
+}
