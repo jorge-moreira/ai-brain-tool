@@ -5,15 +5,15 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 
 describe('list command integration', () => {
-  let tmpHome
-  let originalHome
+  let tmpHome: string
+  let originalHome: string | undefined
 
   beforeEach(() => {
     tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-list-test-'))
     originalHome = process.env.HOME
     process.env.HOME = tmpHome
     process.env.__HOME__ = tmpHome
-    
+
     mkdirSync(join(tmpHome, '.ai-brain-tool'), { recursive: true })
     writeFileSync(
       join(tmpHome, '.ai-brain-tool', 'config.json'),
@@ -29,11 +29,11 @@ describe('list command integration', () => {
   })
 
   it('should show empty list when no brains configured', () => {
-    const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} list`,
-      { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
-    )
-    
+    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} list`, {
+      encoding: 'utf8',
+      env: { ...process.env, __HOME__: tmpHome }
+    })
+
     expect(output).toContain('No brains configured')
   })
 
@@ -42,7 +42,7 @@ describe('list command integration', () => {
     const brain2Path = join(tmpHome, 'brain2')
     mkdirSync(brain1Path, { recursive: true })
     mkdirSync(brain2Path, { recursive: true })
-    
+
     writeFileSync(
       join(tmpHome, '.ai-brain-tool', 'config.json'),
       JSON.stringify({
@@ -53,12 +53,12 @@ describe('list command integration', () => {
       }),
       'utf8'
     )
-    
-    const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} list`,
-      { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
-    )
-    
+
+    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} list`, {
+      encoding: 'utf8',
+      env: { ...process.env, __HOME__: tmpHome }
+    })
+
     expect(output).toContain('work')
     expect(output).toContain('personal')
     expect(output).toContain(brain1Path)
@@ -68,12 +68,8 @@ describe('list command integration', () => {
   it('should show brain with local indicator when in brain folder', () => {
     const brainPath = join(tmpHome, 'mybrain')
     mkdirSync(brainPath, { recursive: true })
-    writeFileSync(
-      join(brainPath, '.brain-config.json'),
-      JSON.stringify({ id: 'mybrain' }),
-      'utf8'
-    )
-    
+    writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify({ id: 'mybrain' }), 'utf8')
+
     writeFileSync(
       join(tmpHome, '.ai-brain-tool', 'config.json'),
       JSON.stringify({
@@ -83,12 +79,13 @@ describe('list command integration', () => {
       }),
       'utf8'
     )
-    
-    const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} list`,
-      { encoding: 'utf8', cwd: brainPath, env: { ...process.env, __HOME__: tmpHome } }
-    )
-    
+
+    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} list`, {
+      encoding: 'utf8',
+      cwd: brainPath,
+      env: { ...process.env, __HOME__: tmpHome }
+    })
+
     expect(output).toContain('mybrain')
   })
 })

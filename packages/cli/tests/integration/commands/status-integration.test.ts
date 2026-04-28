@@ -5,15 +5,15 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 
 describe('status command integration', () => {
-  let tmpHome
-  let originalHome
+  let tmpHome: string
+  let originalHome: string | undefined
 
   beforeEach(() => {
     tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-status-test-'))
     originalHome = process.env.HOME
     process.env.HOME = tmpHome
     process.env.__HOME__ = tmpHome
-    
+
     mkdirSync(join(tmpHome, '.ai-brain-tool'), { recursive: true })
   })
 
@@ -25,10 +25,10 @@ describe('status command integration', () => {
 
   it('should show error when no brain configured', () => {
     const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} status 2>&1 || true`,
+      `bun ${join(process.cwd(), 'bin', 'ai-brain.js')} status 2>&1 || true`,
       { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
     )
-    
+
     expect(output).toContain('Config not found')
     expect(output).toContain('ai-brain setup')
   })
@@ -36,16 +36,16 @@ describe('status command integration', () => {
   it('should show status for brain folder', () => {
     const brainPath = join(tmpHome, 'mybrain')
     mkdirSync(brainPath, { recursive: true })
-    
+
     mkdirSync(join(brainPath, 'raw', 'notes'), { recursive: true })
     mkdirSync(join(brainPath, 'graphify-out'), { recursive: true })
-    
+
     writeFileSync(
       join(brainPath, '.brain-config.json'),
       JSON.stringify({ gitSync: false, extras: [] }),
       'utf8'
     )
-    
+
     writeFileSync(
       join(tmpHome, '.ai-brain-tool', 'config.json'),
       JSON.stringify({
@@ -55,12 +55,12 @@ describe('status command integration', () => {
       }),
       'utf8'
     )
-    
-    const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`,
-      { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
-    )
-    
+
+    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`, {
+      encoding: 'utf8',
+      env: { ...process.env, __HOME__: tmpHome }
+    })
+
     expect(output).toContain('Tool version:')
     expect(output).toContain('Brain path:')
     expect(output).toContain('Graphify:')
@@ -70,19 +70,19 @@ describe('status command integration', () => {
     const brainPath = join(tmpHome, 'mybrain')
     mkdirSync(brainPath, { recursive: true })
     mkdirSync(join(brainPath, 'graphify-out'), { recursive: true })
-    
+
     writeFileSync(
       join(brainPath, 'graphify-out', 'graph.json'),
       JSON.stringify({ nodes: [], edges: [] }),
       'utf8'
     )
-    
+
     writeFileSync(
       join(brainPath, '.brain-config.json'),
       JSON.stringify({ gitSync: false, extras: [] }),
       'utf8'
     )
-    
+
     writeFileSync(
       join(tmpHome, '.ai-brain-tool', 'config.json'),
       JSON.stringify({
@@ -92,12 +92,12 @@ describe('status command integration', () => {
       }),
       'utf8'
     )
-    
-    const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`,
-      { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
-    )
-    
+
+    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`, {
+      encoding: 'utf8',
+      env: { ...process.env, __HOME__: tmpHome }
+    })
+
     expect(output).toContain('Graph:')
   })
 
@@ -106,17 +106,17 @@ describe('status command integration', () => {
     mkdirSync(brainPath, { recursive: true })
     mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
     writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
-    
+
     execSync('git init', { cwd: brainPath, stdio: 'ignore' })
     execSync('git config user.email "test@test.com"', { cwd: brainPath, stdio: 'ignore' })
     execSync('git config user.name "Test"', { cwd: brainPath, stdio: 'ignore' })
-    
+
     writeFileSync(
       join(brainPath, '.brain-config.json'),
       JSON.stringify({ gitSync: true, extras: [] }),
       'utf8'
     )
-    
+
     writeFileSync(
       join(tmpHome, '.ai-brain-tool', 'config.json'),
       JSON.stringify({
@@ -126,12 +126,12 @@ describe('status command integration', () => {
       }),
       'utf8'
     )
-    
-    const output = execSync(
-      `node ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`,
-      { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
-    )
-    
+
+    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`, {
+      encoding: 'utf8',
+      env: { ...process.env, __HOME__: tmpHome }
+    })
+
     expect(output).toContain('Tool version:')
   })
 })

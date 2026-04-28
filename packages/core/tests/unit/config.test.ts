@@ -194,9 +194,9 @@ describe('config', () => {
   })
 
   describe('readConfig', () => {
-    it('should throw CONFIG_PARSE_ERROR when config is invalid JSON', async () => {
+    it('should throw parse error when config is invalid JSON', async () => {
       writeFileSync(join(tmpHome, '.ai-brain-tool', 'config.json'), 'invalid json {{{', 'utf8')
-      expect(() => readConfig()).toThrow('CONFIG_PARSE_ERROR')
+      expect(() => readConfig()).toThrow('Config parse error')
     })
   })
 

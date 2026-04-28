@@ -1,10 +1,49 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs'
+import {
+  mkdtempSync,
+  rmSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  existsSync,
+  PathLike
+} from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { detectAll, configureSelected } from '@ai-brain/core/index'
+import {
+  detect as detectClaude,
+  patch as patchClaude,
+  installSkill as installSkillClaude
+} from '@ai-brain/core/platforms/claude'
+import {
+  detect as detectOpencode,
+  patch as patchOpencode,
+  installSkill as installSkillOpencode
+} from '@ai-brain/core/platforms/opencode'
+import {
+  detect as detectCursor,
+  patch as patchCursor,
+  installSkill as installSkillCursor
+} from '@ai-brain/core/platforms/cursor'
+import {
+  detect as detectGemini,
+  patch as patchGemini,
+  installSkill as installSkillGemini
+} from '@ai-brain/core/platforms/gemini'
+import {
+  detect as detectCopilot,
+  patch as patchCopilot,
+  installSkill as installSkillCopilot
+} from '@ai-brain/core/platforms/copilot'
+import {
+  detect as detectCodex,
+  patch as patchCodex,
+  installSkill as installSkillCodex
+} from '@ai-brain/core/platforms/codex'
 
 describe('platforms integration', () => {
-  let tmpHome
+  let tmpHome: PathLike
 
   beforeEach(() => {
     tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-platforms-test-'))
@@ -18,24 +57,22 @@ describe('platforms integration', () => {
 
   describe('claude platform', () => {
     it('should detect claude when .claude dir exists', async () => {
-      mkdirSync(join(tmpHome, '.claude'), { recursive: true })
-      const { detect } = await import('../../../src/platforms/claude')
-      expect(detect(tmpHome)).toBe(true)
+      mkdirSync(join(tmpHome.toString(), '.claude'), { recursive: true })
+      expect(detectClaude(tmpHome.toString())).toBe(true)
     })
 
     it('should patch claude mcp.json with ai-brain server', async () => {
-      const brainPath = join(tmpHome, 'brain')
+      const brainPath = join(tmpHome.toString(), 'brain')
       mkdirSync(brainPath, { recursive: true })
-      mkdirSync(join(tmpHome, '.claude'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.claude'), { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
-      
-      const { patch } = await import('../../../src/platforms/claude')
-      await patch({ brainPath, homeDir: tmpHome })
-      
-      const mcpPath = join(tmpHome, '.claude', 'mcp.json')
+
+      await patchClaude({ brainPath, homeDir: tmpHome.toString() })
+
+      const mcpPath = join(tmpHome.toString(), '.claude', 'mcp.json')
       expect(existsSync(mcpPath)).toBe(true)
-      
+
       const config = JSON.parse(readFileSync(mcpPath, 'utf8'))
       expect(config.mcpServers['ai-brain']).toBeDefined()
       expect(config.mcpServers['ai-brain'].command).toContain('.venv/bin/python3')
@@ -44,12 +81,11 @@ describe('platforms integration', () => {
     })
 
     it('should install brain.md skill file', async () => {
-      const { installSkill } = await import('../../../src/platforms/claude')
-      await installSkill({ homeDir: tmpHome })
-      
-      const skillPath = join(tmpHome, '.claude', 'commands', 'brain.md')
+      await installSkillClaude({ homeDir: tmpHome.toString() })
+
+      const skillPath = join(tmpHome.toString(), '.claude', 'commands', 'brain.md')
       expect(existsSync(skillPath)).toBe(true)
-      
+
       const content = readFileSync(skillPath, 'utf8')
       expect(content.length).toBeGreaterThan(0)
     })
@@ -57,36 +93,40 @@ describe('platforms integration', () => {
 
   describe('opencode platform', () => {
     it('should detect opencode when .config/opencode dir exists', async () => {
-      mkdirSync(join(tmpHome, '.config', 'opencode'), { recursive: true })
-      const { detect } = await import('../../../src/platforms/opencode')
-      expect(detect(tmpHome)).toBe(true)
+      mkdirSync(join(tmpHome.toString(), '.config', 'opencode'), { recursive: true })
+      expect(detectOpencode(tmpHome.toString())).toBe(true)
     })
 
     it('should patch opencode.json with ai-brain mcp entry', async () => {
-      const brainPath = join(tmpHome, 'brain')
+      const brainPath = join(tmpHome.toString(), 'brain')
       mkdirSync(brainPath, { recursive: true })
-      mkdirSync(join(tmpHome, '.config', 'opencode'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.config', 'opencode'), { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
-      
-      const { patch } = await import('../../../src/platforms/opencode')
-      await patch({ brainPath, homeDir: tmpHome })
-      
-      const configPath = join(tmpHome, '.config', 'opencode', 'opencode.json')
+
+      await patchOpencode({ brainPath, homeDir: tmpHome.toString() })
+
+      const configPath = join(tmpHome.toString(), '.config', 'opencode', 'opencode.json')
       expect(existsSync(configPath)).toBe(true)
-      
+
       const config = JSON.parse(readFileSync(configPath, 'utf8'))
       expect(config.mcp['ai-brain']).toBeDefined()
       expect(config.mcp['ai-brain'].type).toBe('local')
     })
 
     it('should install SKILL.md to skills/brain directory', async () => {
-      const { installSkill } = await import('../../../src/platforms/opencode')
-      await installSkill({ homeDir: tmpHome })
-      
-      const skillPath = join(tmpHome, '.config', 'opencode', 'skills', 'brain', 'SKILL.md')
+      await installSkillOpencode({ homeDir: tmpHome.toString() })
+
+      const skillPath = join(
+        tmpHome.toString(),
+        '.config',
+        'opencode',
+        'skills',
+        'brain',
+        'SKILL.md'
+      )
       expect(existsSync(skillPath)).toBe(true)
-      
+
       const content = readFileSync(skillPath, 'utf8')
       expect(content.length).toBeGreaterThan(0)
     })
@@ -94,145 +134,132 @@ describe('platforms integration', () => {
 
   describe('cursor platform', () => {
     it('should detect cursor when .cursor dir exists', async () => {
-      mkdirSync(join(tmpHome, '.cursor'), { recursive: true })
-      const { detect } = await import('../../../src/platforms/cursor')
-      expect(detect(tmpHome)).toBe(true)
+      mkdirSync(join(tmpHome.toString(), '.cursor'), { recursive: true })
+      expect(detectCursor(tmpHome.toString())).toBe(true)
     })
 
     it('should patch cursor mcp.json with ai-brain server', async () => {
-      const brainPath = join(tmpHome, 'brain')
+      const brainPath = join(tmpHome.toString(), 'brain')
       mkdirSync(brainPath, { recursive: true })
-      mkdirSync(join(tmpHome, '.cursor'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.cursor'), { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
-      
-      const { patch } = await import('../../../src/platforms/cursor')
-      await patch({ brainPath, homeDir: tmpHome })
-      
-      const mcpPath = join(tmpHome, '.cursor', 'mcp.json')
+
+      await patchCursor({ brainPath, homeDir: tmpHome.toString() })
+
+      const mcpPath = join(tmpHome.toString(), '.cursor', 'mcp.json')
       expect(existsSync(mcpPath)).toBe(true)
-      
+
       const config = JSON.parse(readFileSync(mcpPath, 'utf8'))
       expect(config.mcpServers['ai-brain']).toBeDefined()
     })
 
     it('should install brain.mdc rule file', async () => {
-      const { installSkill } = await import('../../../src/platforms/cursor')
-      await installSkill({ homeDir: tmpHome })
-      
-      const skillPath = join(tmpHome, '.cursor', 'rules', 'brain.mdc')
+      await installSkillCursor({ homeDir: tmpHome.toString() })
+
+      const skillPath = join(tmpHome.toString(), '.cursor', 'rules', 'brain.mdc')
       expect(existsSync(skillPath)).toBe(true)
     })
   })
 
   describe('gemini platform', () => {
     it('should detect gemini when .gemini dir exists', async () => {
-      mkdirSync(join(tmpHome, '.gemini'), { recursive: true })
-      const { detect } = await import('../../../src/platforms/gemini')
-      expect(detect(tmpHome)).toBe(true)
+      mkdirSync(join(tmpHome.toString(), '.gemini'), { recursive: true })
+      expect(detectGemini(tmpHome.toString())).toBe(true)
     })
 
     it('should patch gemini settings.json with ai-brain mcp server', async () => {
-      const brainPath = join(tmpHome, 'brain')
+      const brainPath = join(tmpHome.toString(), 'brain')
       mkdirSync(brainPath, { recursive: true })
-      mkdirSync(join(tmpHome, '.gemini'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.gemini'), { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
-      
-      const { patch } = await import('../../../src/platforms/gemini')
-      await patch({ brainPath, homeDir: tmpHome })
-      
-      const settingsPath = join(tmpHome, '.gemini', 'settings.json')
+
+      await patchGemini({ brainPath, homeDir: tmpHome.toString() })
+
+      const settingsPath = join(tmpHome.toString(), '.gemini', 'settings.json')
       expect(existsSync(settingsPath)).toBe(true)
-      
+
       const config = JSON.parse(readFileSync(settingsPath, 'utf8'))
       expect(config.mcpServers).toBeDefined()
       expect(config.mcpServers['ai-brain']).toBeDefined()
     })
 
     it('should install SKILL.md skill file', async () => {
-      const { installSkill } = await import('../../../src/platforms/gemini')
-      await installSkill({ homeDir: tmpHome })
-      
-      const skillPath = join(tmpHome, '.gemini', 'skills', 'brain', 'SKILL.md')
+      await installSkillGemini({ homeDir: tmpHome.toString() })
+
+      const skillPath = join(tmpHome.toString(), '.gemini', 'skills', 'brain', 'SKILL.md')
       expect(existsSync(skillPath)).toBe(true)
     })
   })
 
   describe('copilot platform', () => {
     it('should detect copilot when .config/gh dir exists', async () => {
-      mkdirSync(join(tmpHome, '.config', 'gh'), { recursive: true })
-      const { detect } = await import('../../../src/platforms/copilot')
-      expect(detect(tmpHome)).toBe(true)
+      mkdirSync(join(tmpHome.toString(), '.config', 'gh'), { recursive: true })
+      expect(detectCopilot(tmpHome.toString())).toBe(true)
     })
 
     it('should skip patch (Copilot uses skills only)', async () => {
-      const brainPath = join(tmpHome, 'brain')
+      const brainPath = join(tmpHome.toString(), 'brain')
       mkdirSync(brainPath, { recursive: true })
-      mkdirSync(join(tmpHome, '.config', 'gh'), { recursive: true })
-      
-      const { patch } = await import('../../../src/platforms/copilot')
-      await patch({ brainPath, homeDir: tmpHome })
-      
-      const mcpPath = join(tmpHome, '.config', 'gh', 'copilot', 'mcp.json')
+      mkdirSync(join(tmpHome.toString(), '.config', 'gh'), { recursive: true })
+
+      await patchCopilot({ brainPath, homeDir: tmpHome.toString() })
+
+      const mcpPath = join(tmpHome.toString(), '.config', 'gh', 'copilot', 'mcp.json')
       expect(existsSync(mcpPath)).toBe(false)
     })
 
     it('should install SKILL.md skill file', async () => {
-      const { installSkill } = await import('../../../src/platforms/copilot')
-      await installSkill({ homeDir: tmpHome })
-      
-      const skillPath = join(tmpHome, '.copilot', 'skills', 'brain', 'SKILL.md')
+      await installSkillCopilot({ homeDir: tmpHome.toString() })
+
+      const skillPath = join(tmpHome.toString(), '.copilot', 'skills', 'brain', 'SKILL.md')
       expect(existsSync(skillPath)).toBe(true)
     })
   })
 
   describe('codex platform', () => {
     it('should detect codex when .codex dir exists', async () => {
-      mkdirSync(join(tmpHome, '.codex'), { recursive: true })
-      const { detect } = await import('../../../src/platforms/codex')
-      expect(detect(tmpHome)).toBe(true)
+      mkdirSync(join(tmpHome.toString(), '.codex'), { recursive: true })
+      expect(detectCodex(tmpHome.toString())).toBe(true)
     })
 
     it('should patch codex config.toml with ai-brain mcp server', async () => {
-      const brainPath = join(tmpHome, 'brain')
+      const brainPath = join(tmpHome.toString(), 'brain')
       mkdirSync(brainPath, { recursive: true })
-      mkdirSync(join(tmpHome, '.codex'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.codex'), { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
-      
-      const { patch } = await import('../../../src/platforms/codex')
-      await patch({ brainPath, homeDir: tmpHome })
-      
-      const configPath = join(tmpHome, '.codex', 'config.toml')
+
+      await patchCodex({ brainPath, homeDir: tmpHome.toString() })
+
+      const configPath = join(tmpHome.toString(), '.codex', 'config.toml')
       expect(existsSync(configPath)).toBe(true)
-      
+
       const content = readFileSync(configPath, 'utf8')
       expect(content).toContain('[mcp_servers.ai-brain]')
       expect(content).toContain('graphify.serve')
     })
 
     it('should install SKILL.md skill file', async () => {
-      const { installSkill } = await import('../../../src/platforms/codex')
-      await installSkill({ homeDir: tmpHome })
-      
-      const skillPath = join(tmpHome, '.codex', 'skills', 'brain', 'SKILL.md')
+      await installSkillCodex({ homeDir: tmpHome.toString() })
+
+      const skillPath = join(tmpHome.toString(), '.codex', 'skills', 'brain', 'SKILL.md')
       expect(existsSync(skillPath)).toBe(true)
     })
   })
 
   describe('platforms/index', () => {
     it('should detect all platforms', async () => {
-      mkdirSync(join(tmpHome, '.claude'), { recursive: true })
-      mkdirSync(join(tmpHome, '.config', 'opencode'), { recursive: true })
-      mkdirSync(join(tmpHome, '.cursor'), { recursive: true })
-      mkdirSync(join(tmpHome, '.gemini'), { recursive: true })
-      mkdirSync(join(tmpHome, '.config', 'gh'), { recursive: true })
-      mkdirSync(join(tmpHome, '.codex'), { recursive: true })
-      
-      const { detectAll } = await import('../../../src/platforms/index')
-      const platforms = await detectAll(tmpHome)
-      
+      mkdirSync(join(tmpHome.toString(), '.claude'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.config', 'opencode'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.cursor'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.gemini'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.config', 'gh'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.codex'), { recursive: true })
+
+      const platforms = await detectAll(tmpHome.toString())
+
       expect(platforms.length).toBe(6)
       platforms.forEach(p => {
         expect(p.detected).toBe(true)
@@ -240,23 +267,22 @@ describe('platforms integration', () => {
     })
 
     it('should configure selected platforms', async () => {
-      const brainPath = join(tmpHome, 'brain')
+      const brainPath = join(tmpHome.toString(), 'brain')
       mkdirSync(brainPath, { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
-      
-      mkdirSync(join(tmpHome, '.claude'), { recursive: true })
-      mkdirSync(join(tmpHome, '.config', 'opencode'), { recursive: true })
-      
-      const { detectAll, configureSelected } = await import('../../../src/platforms/index')
-      const platforms = await detectAll(tmpHome)
+
+      mkdirSync(join(tmpHome.toString(), '.claude'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.config', 'opencode'), { recursive: true })
+
+      const platforms = await detectAll(tmpHome.toString())
       const selected = platforms.filter(p => p.key === 'claude' || p.key === 'opencode')
-      
-      await configureSelected({ selected, brainPath, homeDir: tmpHome })
-      
-      const claudeMcpPath = join(tmpHome, '.claude', 'mcp.json')
-      const opencodeConfigPath = join(tmpHome, '.config', 'opencode', 'opencode.json')
-      
+
+      await configureSelected({ selected, brainPath, homeDir: tmpHome.toString() })
+
+      const claudeMcpPath = join(tmpHome.toString(), '.claude', 'mcp.json')
+      const opencodeConfigPath = join(tmpHome.toString(), '.config', 'opencode', 'opencode.json')
+
       expect(existsSync(claudeMcpPath)).toBe(true)
       expect(existsSync(opencodeConfigPath)).toBe(true)
     })

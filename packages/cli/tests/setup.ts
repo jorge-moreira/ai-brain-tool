@@ -3,7 +3,7 @@ import { mkdtempSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
-let tmpHome
+let tmpHome: string
 
 beforeEach(() => {
   tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-test-'))

@@ -4,13 +4,13 @@ import { execSync } from 'child_process'
 import { tmpdir } from 'os'
 import { join } from 'path'
 
-function initGitRepo(path) {
+function initGitRepo(path: string) {
   execSync('git init', { cwd: path, stdio: 'ignore' })
   execSync('git config user.email "test@test.com"', { cwd: path, stdio: 'ignore' })
   execSync('git config user.name "Test"', { cwd: path, stdio: 'ignore' })
 }
 
-function makeDummyCommit(path, fileName, content) {
+function makeDummyCommit(path: string, fileName: string, content: string) {
   const dir = join(path, 'raw', 'notes')
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(path, fileName), content, 'utf8')
@@ -18,15 +18,18 @@ function makeDummyCommit(path, fileName, content) {
   execSync('git commit -m "initial"', { cwd: path, stdio: 'ignore' })
 }
 
-function getCommitMessage(brainPath) {
+function getCommitMessage(brainPath: string) {
   const stdout = execSync('git diff --stat HEAD', { cwd: brainPath, encoding: 'utf8' })
   if (!stdout.trim()) return 'Update AI brain'
 
   const lines = stdout.split('\n').filter(l => l.includes('/'))
-  const changes = lines.map(l => {
-    const parts = l.split('|')
-    return parts[0]?.trim().replace('raw/', '').replace('graphify-out/', '')
-  }).filter(Boolean).slice(0, 3)
+  const changes = lines
+    .map(l => {
+      const parts = l.split('|')
+      return parts[0]?.trim().replace('raw/', '').replace('graphify-out/', '')
+    })
+    .filter(Boolean)
+    .slice(0, 3)
 
   if (changes.length === 0) return 'Update AI brain'
   return `brain: update ${changes.join(', ')}`

@@ -34,12 +34,12 @@ export interface ResolvedBrain {
 export function readConfig(): Config {
   const path = configPath()
   if (!existsSync(path)) {
-    throw new Error('CONFIG_NOT_FOUND')
+    throw new Error('Config not found. Run `ai-brain setup` to configure.')
   }
   try {
     return JSON.parse(readFileSync(path, 'utf8')) as Config
   } catch {
-    throw new Error('CONFIG_PARSE_ERROR')
+    throw new Error('Config parse error. Please check your config file.')
   }
 }
 
@@ -126,7 +126,8 @@ export function removeBrain(brainId: string): void {
   if (!config.brains || !config.brains[brainId]) {
     throw new Error(`Brain "${brainId}" not found`)
   }
-  delete config.brains[brainId]
+  const { [brainId]: _removed, ...remainingBrains } = config.brains
+  config.brains = remainingBrains
   writeConfig(config)
 }
 
