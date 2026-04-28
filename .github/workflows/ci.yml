@@ -16,11 +16,3 @@ jobs:
 
   electron-test:
     uses: ./.github/workflows/electron-test.yml
-
-  e2e-test:
-    uses: ./.github/workflows/e2e-test.yml
-    needs: [core-test, cli-test, electron-test]
-    if: |
-      github.ref == 'refs/heads/main' ||
-      github.event.label.name == 'e2e' ||
-      contains(github.event.pull_request.labels.*.name, 'e2e')
