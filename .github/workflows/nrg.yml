@@ -8,8 +8,7 @@ on:
   pull_request:
     paths:
       - 'README.md'
-      - 'README.es.md'
-      - 'README.src.md'
+      - 'README.*.md'
 permissions:
   contents: write
 jobs:
@@ -26,10 +25,10 @@ jobs:
           nrg-version: '1.1'
       - name: Commit regenerated READMEs
         run: |
-          if [ -n "$(git status --porcelain README.md README.es.md)" ]; then
+          if [ -n "$(git status --porcelain README.md README.*.md)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add README.md README.es.md
+            git add README.md README.*.md
             git commit -m "docs: regenerate READMEs from README.src.md"
             git push
           fi
