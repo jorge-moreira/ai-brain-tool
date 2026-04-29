@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs'
-import { execSync } from 'child_process'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { run } from '../../../src/commands/list'
 
 describe('list command integration', () => {
   let tmpHome: string
@@ -28,16 +28,16 @@ describe('list command integration', () => {
     rmSync(tmpHome, { recursive: true, force: true })
   })
 
-  it('should show empty list when no brains configured', () => {
-    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} list`, {
-      encoding: 'utf8',
-      env: { ...process.env, __HOME__: tmpHome }
-    })
+  it('should show empty list when no brains configured', async () => {
+    const consoleSpy = vi.spyOn(console, 'log')
 
-    expect(output).toContain('No brains configured')
+    await run()
+
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No brains configured'))
+    consoleSpy.mockRestore()
   })
 
-  it('should list configured brains', () => {
+  it('should list configured brains', async () => {
     const brain1Path = join(tmpHome, 'brain1')
     const brain2Path = join(tmpHome, 'brain2')
     mkdirSync(brain1Path, { recursive: true })
@@ -54,18 +54,20 @@ describe('list command integration', () => {
       'utf8'
     )
 
-    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} list`, {
-      encoding: 'utf8',
-      env: { ...process.env, __HOME__: tmpHome }
-    })
+    const consoleSpy = vi.spyOn(console, 'log')
 
+    await run()
+
+    const output = consoleSpy.mock.calls.map(call => call.join(' ')).join('\n')
     expect(output).toContain('work')
     expect(output).toContain('personal')
     expect(output).toContain(brain1Path)
     expect(output).toContain(brain2Path)
+
+    consoleSpy.mockRestore()
   })
 
-  it('should show brain with local indicator when in brain folder', () => {
+  it('should show brain with local indicator when in brain folder', async () => {
     const brainPath = join(tmpHome, 'mybrain')
     mkdirSync(brainPath, { recursive: true })
     writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify({ id: 'mybrain' }), 'utf8')
@@ -80,12 +82,13 @@ describe('list command integration', () => {
       'utf8'
     )
 
-    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} list`, {
-      encoding: 'utf8',
-      cwd: brainPath,
-      env: { ...process.env, __HOME__: tmpHome }
-    })
+    const consoleSpy = vi.spyOn(console, 'log')
 
+    await run()
+
+    const output = consoleSpy.mock.calls.map(call => call.join(' ')).join('\n')
     expect(output).toContain('mybrain')
+
+    consoleSpy.mockRestore()
   })
 })
