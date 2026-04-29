@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     include: ['tests/e2e/**/*.spec.ts'],
     timeout: 120000,
-    reporters: ['junit', 'json'],
+    reporters: ['verbose', 'junit', 'json'],
     outputFile: {
       junit: 'tests/e2e/results/junit.xml',
       json: 'tests/e2e/results/results.json'
