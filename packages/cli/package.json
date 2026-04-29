@@ -9,14 +9,15 @@
   "scripts": {
     "build": "bun build ./src/index.ts --outfile ./dist/index.js --target bun",
     "start": "bun run src/index.ts",
-    "test": "vitest run tests/unit tests/integration tests/e2e",
+    "test": "vitest run",
     "test:coverage": "bun run test --coverage",
     "test:unit": "vitest run tests/unit",
     "test:unit:ci": "bun run test:unit --coverage --coverage.reportsDirectory=coverage/unit --outputFile=coverage/unit/junit.xml",
     "test:integration": "vitest run tests/integration",
     "test:integration:ci": "bun run test:integration --coverage --coverage.reportsDirectory=coverage/integration --outputFile.junit=coverage/integration/junit.xml",
-    "test:e2e": "vitest run tests/e2e",
-    "test:e2e:ci": "bun run test:e2e --outputFile=coverage/e2e/junit.xml"
+    "test:e2e": "vitest run --config vitest.e2e.config.js",
+    "test:e2e:ci": "bun run test:e2e --config=vitest.e2e.config.js",
+    "test:e2e:docker": "docker compose -f tests/e2e/docker-compose.e2e.yml up --build"
   },
   "files": [
     "dist"
@@ -31,11 +32,12 @@
     "ora": "^9.4.0"
   },
   "devDependencies": {
+    "@amiceli/vitest-cucumber": "^6.3.0",
     "@types/node": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "@amiceli/vitest-cucumber": "^6.3.0"
+    "fast-xml-parser": "^5.7.2",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=24",

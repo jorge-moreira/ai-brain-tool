@@ -1,0 +1,45 @@
+# Use the official Bun Alpine image
+FROM oven/bun:alpine
+
+# Install git (needed for git sync features)
+RUN apk add --no-cache git
+
+# Set the working directory to the workspace root
+WORKDIR /app
+
+# 1. Copy workspace configuration and lockfile
+COPY package.json bun.lock tsconfig.json ./
+
+# 2. Copy source files only (excluding tests via .dockerignore or explicit paths)
+# We need the core package as the CLI likely depends on it
+COPY packages/core/package.json ./packages/core/
+COPY packages/core/src ./packages/core/src
+
+COPY packages/cli/package.json ./packages/cli/
+COPY packages/cli/src ./packages/cli/src
+COPY packages/cli/tsconfig.json ./packages/cli/
+
+# 3. Install dependencies at the workspace root
+# This ensures workspace symlinks (core -> cli) are created correctly
+RUN bun install --frozen-lockfile
+
+# 4. Build the CLI
+WORKDIR /app/packages/cli
+RUN bun run build
+
+# 5. Install the built CLI globally
+# This links the 'bin' defined in packages/cli/package.json to /usr/local/bin
+RUN bun install -g .
+
+# 6. Copy E2E test files and configurations
+# We do this after the build to keep the build cache clean
+COPY packages/cli/tests/e2e ./tests/e2e
+COPY packages/cli/vitest.e2e.config.js ./
+
+# 7. Set up a non-polluted HOME directory for tests
+# This ensures 'ai-brain' writes its config to a sandbox folder
+ENV HOME=/tmp/ai-brain-tests
+RUN mkdir -p $HOME
+
+# Set the execution command
+CMD ["bun", "test:e2e"]

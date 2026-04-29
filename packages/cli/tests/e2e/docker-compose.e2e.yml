@@ -1,0 +1,11 @@
+services:
+  e2e:
+    build:
+      context: ../../../..
+      dockerfile: packages/cli/tests/e2e/Dockerfile.e2e
+    volumes:
+      # Mount results to local disk for inspection
+      - ./results:/app/tests/e2e/results
+    environment:
+      - CI=true
+      - NODE_ENV=test

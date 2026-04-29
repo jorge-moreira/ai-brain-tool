@@ -37,37 +37,22 @@ jobs:
           fail_ci_if_error: false
           flags: ${{ matrix.test-type }}
           verbose: true
-
-      - name: Upload Test Results to Codecov
-        if: always()
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: |
-            packages/core/coverage/${{ matrix.test-type }}/coverage-final.json
-            packages/core/coverage/${{ matrix.test-type }}/junit.xml
-          flags: ${{ matrix.test-type }}
   
   cli-e2e:
     name: CLI E2E tests
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'e2e')
-    
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-      - name: Install dependencies
-        run: bun install
-      - name: Run E2E tests
-        run: bun run test:cli:e2e:ci
       
+      - name: Run E2E Tests
+        run: |
+          docker compose -f packages/cli/tests/e2e/docker-compose.e2e.yml up --build --abort-on-container-exit
+
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
         uses: codecov/test-results-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: packages/core/coverage/e2e/junit.xml
+          files: packages/cli/tests/e2e/results/junit.xml
           flags: e2e
