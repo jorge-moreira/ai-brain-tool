@@ -95,8 +95,13 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
       mkdirSync(join(brainPath, 'raw', 'notes'), { recursive: true })
       mkdirSync(join(ctx.tempDir, '.ai-brain-tool'), { recursive: true })
 
-      const config = { brains: { [brainName]: brainPath } }
-      writeFileSync(join(ctx.tempDir, '.ai-brain-tool', 'config.json'), JSON.stringify(config))
+      // Read existing config and add new brain
+      const configPath = join(ctx.tempDir, '.ai-brain-tool', 'config.json')
+      const config = existsSync(configPath)
+        ? JSON.parse(readFileSync(configPath, 'utf8'))
+        : { brains: {} }
+      config.brains[brainName] = brainPath
+      writeFileSync(configPath, JSON.stringify(config))
       writeFileSync(
         join(brainPath, '.brain-config.json'),
         JSON.stringify({ gitSync: false, extras: [], obsidianDir: null })
@@ -115,6 +120,10 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
     })
 
     Then('the output should contain {string}', (_, text: string) => {
+      expect(ctx.lastOutput).toContain(text)
+    })
+
+    And('the output should contain {string}', (_, text: string) => {
       expect(ctx.lastOutput).toContain(text)
     })
   })
@@ -141,8 +150,8 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
       )
     })
 
-    When('I run status with --brain-id {string}', async (_, brainId: string) => {
-      const result = await execa('ai-brain', ['status', '--brain-id', brainId], {
+    When('I run status with --brain-id work-brain', async () => {
+      const result = await execa('ai-brain', ['status', '--brain-id', 'work-brain'], {
         env: { ...process.env, HOME: ctx.tempDir },
         reject: false,
         all: true
@@ -152,8 +161,8 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
       ctx.lastExitCode = result.exitCode ?? 0
     })
 
-    Then('the output should show {string} path', (_, brainName: string) => {
-      expect(ctx.lastOutput).toContain(brainName)
+    Then('the output should show work-brain path', () => {
+      expect(ctx.lastOutput).toContain('work-brain')
     })
   })
 
@@ -179,13 +188,14 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
       )
     })
 
-    And('I am inside the {string} folder', (_, folderName: string) => {
-      ctx.brainPath = join(ctx.tempDir, folderName)
+    And('I am inside the test-brain folder', () => {
+      ctx.brainPath = join(ctx.tempDir, 'test-brain')
     })
 
     When('I run status without --brain-id', async () => {
       const result = await execa('ai-brain', ['status'], {
-        env: { ...process.env, HOME: ctx.tempDir, PWD: ctx.brainPath },
+        cwd: ctx.brainPath,
+        env: { ...process.env, HOME: ctx.tempDir },
         reject: false,
         all: true
       })
@@ -194,9 +204,9 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
       ctx.lastExitCode = result.exitCode ?? 0
     })
 
-    Then('it should auto-detect and show {string} status', (_, brainName: string) => {
+    Then('it should auto-detect and show test-brain status', () => {
       expect(ctx.lastOutput).toContain('Brain path:')
-      expect(ctx.lastOutput).toContain(brainName)
+      expect(ctx.lastOutput).toContain('test-brain')
     })
   })
 

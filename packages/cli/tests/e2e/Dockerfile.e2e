@@ -1,45 +1,46 @@
-# Use the official Bun Alpine image
-FROM oven/bun:alpine
+FROM docker.io/oven/bun:slim
 
-# Install git (needed for git sync features)
-RUN apk add --no-cache git
+RUN apt-get update && apt-get install -y --no-install-recommends git
 
-# Set the working directory to the workspace root
 WORKDIR /app
 
-# 1. Copy workspace configuration and lockfile
+# 1. Copy root manifests (Required for 'catalog:' resolution)
 COPY package.json bun.lock tsconfig.json ./
 
-# 2. Copy source files only (excluding tests via .dockerignore or explicit paths)
-# We need the core package as the CLI likely depends on it
+# 3. Copy ONLY package manifests (not source)
 COPY packages/core/package.json ./packages/core/
-COPY packages/core/src ./packages/core/src
-
 COPY packages/cli/package.json ./packages/cli/
+COPY packages/electron/package.json ./packages/electron/
+COPY packages/ui/package.json ./packages/ui/
+
+# 4. Install dependencies (CACHED unless package.json or bun.lock changes)
+RUN bun install
+
+# 5. Copy source code (INVALIDATED when you change code, but bun install stays cached)
+COPY packages/core/src ./packages/core/src
 COPY packages/cli/src ./packages/cli/src
 COPY packages/cli/tsconfig.json ./packages/cli/
 
-# 3. Install dependencies at the workspace root
-# This ensures workspace symlinks (core -> cli) are created correctly
-RUN bun install --frozen-lockfile
+# 6. Build (runs when source changes, uses cached node_modules)
+RUN rm -rf /app/packages/cli/node_modules /app/packages/core/node_modules \
+    && ln -s /app/node_modules /app/packages/cli/node_modules \
+    && ln -s /app/node_modules /app/packages/core/node_modules \
+    && cd /app/packages/cli \
+    && bun run build
 
-# 4. Build the CLI
+# 6. Global Install & Setup
+# bun install -g doesn't work well with workspace deps, create symlink manually
 WORKDIR /app/packages/cli
-RUN bun run build
+RUN ln -s /app/packages/cli/dist/index.js /usr/local/bin/ai-brain
 
-# 5. Install the built CLI globally
-# This links the 'bin' defined in packages/cli/package.json to /usr/local/bin
-RUN bun install -g .
+# Create expected package.json path (CLI looks for ../../package.json from dist/)
+RUN mkdir -p /app/packages && ln -s /app/package.json /app/packages/package.json
 
-# 6. Copy E2E test files and configurations
-# We do this after the build to keep the build cache clean
-COPY packages/cli/tests/e2e ./tests/e2e
-COPY packages/cli/vitest.e2e.config.js ./
+# Copy E2E test files
+COPY packages/cli/tests/e2e tests/e2e
 
-# 7. Set up a non-polluted HOME directory for tests
-# This ensures 'ai-brain' writes its config to a sandbox folder
-ENV HOME=/tmp/ai-brain-tests
+RUN mkdir -p tests/e2e/results
+ENV HOME=/tmp/ai-brain-home
 RUN mkdir -p $HOME
 
-# Set the execution command
-CMD ["bun", "test:e2e"]
+CMD ["bun", "run", "test:e2e"]

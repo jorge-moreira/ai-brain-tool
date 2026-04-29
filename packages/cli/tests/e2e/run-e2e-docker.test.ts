@@ -1,104 +1,79 @@
-import { describe, it, beforeAll } from 'vitest'
+import { describe, it, beforeAll, afterAll } from 'vitest'
 import { execa } from 'execa'
 import { readFileSync, existsSync } from 'fs'
-import { XMLParser } from 'fast-xml-parser'
+import { TestResults } from './types/test-results'
+import { parseFeatureFiles } from './utils/parse-feature-files'
 
-interface JUnitResults {
-  testsuites?: {
-    testsuite?: Array<{
-      name?: string
-      testcase?: Array<{ name?: string; failure?: unknown }>
-    }>
-  }
-}
+// Parse feature files at module load time (auto-discovers all scenarios)
+const featuresDir = './tests/e2e/features'
+const allScenarios = parseFeatureFiles(featuresDir)
 
-describe('E2E Tests (Docker)', () => {
-  let junitResults: JUnitResults | undefined
+describe('E2E Tests', () => {
+  let junitResults: TestResults | undefined
 
   beforeAll(async () => {
-    // Run Docker once for all tests
+    // Build with cache
     await execa(
       'docker',
-      [
-        'compose',
-        '-f',
-        'tests/e2e/docker-compose.e2e.yml',
-        'up',
-        '--build',
-        '--abort-on-container-exit',
-        '--exit-code-from',
-        'e2e'
-      ],
-      {
-        reject: false
-      }
+      ['compose', '-f', 'tests/e2e/docker-compose.e2e.yml', 'build', '--pull'],
+      { reject: false, stdio: 'inherit' }
     )
 
-    // Read JUnit results
-    const junitPath = './tests/e2e/results/junit.xml'
-    if (existsSync(junitPath)) {
-      const junitContent = readFileSync(junitPath, 'utf8')
-      const parser = new XMLParser({ ignoreAttributes: false })
-      junitResults = parser.parse(junitContent) as JUnitResults
+    // Run tests
+    await execa(
+      'docker',
+      ['compose', '-f', 'tests/e2e/docker-compose.e2e.yml', 'up', '--abort-on-container-exit'],
+      { reject: false }
+    )
+
+    // Load JSON results
+    const jsonPath = './tests/e2e/results/results.json'
+    if (existsSync(jsonPath)) {
+      const jsonContent = readFileSync(jsonPath, 'utf8')
+      junitResults = JSON.parse(jsonContent) as TestResults
     }
-  }, 300000) // 5 min timeout for Docker build
+  }, 300000)
 
-  // Setup Feature Tests
-  it('Setup - Fresh setup creates brain folder', () => {
-    assertTestPassed('Setup Command', 'Fresh setup creates brain folder')
+  afterAll(async () => {
+    await execa(
+      'docker',
+      ['compose', '-f', 'tests/e2e/docker-compose.e2e.yml', 'down', '--remove-orphans'],
+      { reject: false }
+    )
+    await execa('docker', ['rmi', 'ai-brain-tool-cli-e2e-tests'], { reject: false })
   })
 
-  it('Setup - Setup registers brain in config', () => {
-    assertTestPassed('Setup Command', 'Setup registers brain in config')
+  // Group scenarios by feature for organized test output
+  const features = [...new Set(allScenarios.map(s => s.featureName))]
+
+  features.forEach(featureName => {
+    describe(featureName, () => {
+      const scenarios = allScenarios.filter(s => s.featureName === featureName)
+
+      scenarios.forEach(({ scenarioName }) => {
+        it(scenarioName, () => {
+          if (!junitResults) {
+            throw new Error('No test results available. Docker run may have failed.')
+          }
+
+          // Find matching test in results
+          const testCase = junitResults.testResults
+            .flatMap(file => file.assertionResults)
+            .find(
+              test =>
+                test.ancestorTitles[0]?.includes(featureName) &&
+                test.ancestorTitles[1]?.includes(scenarioName)
+            )
+
+          if (!testCase) {
+            throw new Error(`Scenario not found in results: ${scenarioName}`)
+          }
+
+          if (testCase.status === 'failed') {
+            throw new Error(`${scenarioName} failed:\n${testCase.failureMessages[0]}`)
+          }
+        })
+      })
+    })
   })
-
-  it('Setup - List shows configured brains', () => {
-    assertTestPassed('Setup Command', 'List shows configured brains')
-  })
-
-  it('Setup - Status shows brain information', () => {
-    assertTestPassed('Setup Command', 'Status shows brain information')
-  })
-
-  // Multi-Brain Feature Tests
-  it('Multi-Brain - Create multiple brains', () => {
-    assertTestPassed('Multi-Brain Management', 'Create multiple brains')
-  })
-
-  it('Multi-Brain - List shows all brains', () => {
-    assertTestPassed('Multi-Brain Management', 'List shows all brains')
-  })
-
-  it('Multi-Brain - Status with specific brain-id', () => {
-    assertTestPassed('Multi-Brain Management', 'Status with specific brain-id')
-  })
-
-  it('Multi-Brain - Auto-detect brain from current directory', () => {
-    assertTestPassed('Multi-Brain Management', 'Auto-detect brain from current directory')
-  })
-
-  function assertTestPassed(featureName: string, scenarioName: string): void {
-    if (!junitResults?.testsuites?.testsuite) {
-      throw new Error('No JUnit results available. Docker run may have failed.')
-    }
-
-    const testSuite = junitResults.testsuites.testsuite.find(s => s.name?.includes(featureName))
-
-    if (!testSuite) {
-      throw new Error(`Feature not found: ${featureName}`)
-    }
-
-    const testCase = testSuite.testcase?.find(t => t.name?.includes(scenarioName))
-
-    if (!testCase) {
-      throw new Error(`Scenario not found: ${scenarioName}`)
-    }
-
-    if (testCase.failure) {
-      const failureMsg = Array.isArray(testCase.failure)
-        ? JSON.stringify(testCase.failure[0])
-        : JSON.stringify(testCase.failure)
-      throw new Error(`E2E test failed: ${scenarioName}\n${failureMsg}`)
-    }
-  }
 })

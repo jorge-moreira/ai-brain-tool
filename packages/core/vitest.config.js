@@ -11,8 +11,5 @@ export default defineConfig({
       exclude: ['**/node_modules/**', '**/tests/**', '**/__tests__/**', '**/*.test.ts'],
       enabled: false
     }
-  },
-  esbuild: {
-    target: 'node24'
   }
 })

@@ -4,17 +4,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     reporters: ['default', 'junit', 'github-actions'],
-    include: [
-      'tests/unit/**/*.test.ts',
-      'tests/integration/**/*.test.ts',
-      'tests/e2e/run-e2e-docker.test.ts'  // E2E wrapper test
-    ],
-    exclude: [
-      'tests/e2e/**/*.spec.ts',  // Cucumber tests run separately in Docker
-      'tests/e2e/step-definitions/**',
-      'tests/e2e/features/**',
-      'tests/e2e/shared/**'
-    ],
+    exclude: ['**/node_modules/**', '**/tests/e2e/features/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'json-summary', 'html', 'lcov'],
