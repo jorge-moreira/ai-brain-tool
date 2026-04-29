@@ -1,6 +1,21 @@
 #!/bin/bash
 set -e
 
+# Check if changes are only documentation or workflow related
+DOCS_ONLY=true
+for file in $(git diff --cached --name-only); do
+  # Skip if file is NOT in docs/workflow categories
+  if [[ ! "$file" =~ ^(\.github/|.*\.md$|docs/|README\.md|CHANGELOG\.md)$ ]]; then
+    DOCS_ONLY=false
+    break
+  fi
+done
+
+if [ "$DOCS_ONLY" = true ]; then
+  echo "📄 Docs/workflow only changes - skipping tests"
+  exit 0
+fi
+
 echo "🧪 Running pre-commit tests (parallel)..."
 
 # Run unit + integration tests in parallel (skip e2e - too slow)
