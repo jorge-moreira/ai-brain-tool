@@ -58,4 +58,4 @@ Thumbs.db
 .cache/
 .parcel-cache
 .turbo
-.next
+.next.worktrees
