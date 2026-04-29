@@ -20,6 +20,7 @@ RUN bun install
 COPY packages/core/src ./packages/core/src
 COPY packages/cli/src ./packages/cli/src
 COPY packages/cli/tsconfig.json ./packages/cli/
+COPY packages/cli/requirements.txt ./packages/cli/
 
 # 6. Build (runs when source changes, uses cached node_modules)
 RUN rm -rf /app/packages/cli/node_modules /app/packages/core/node_modules \

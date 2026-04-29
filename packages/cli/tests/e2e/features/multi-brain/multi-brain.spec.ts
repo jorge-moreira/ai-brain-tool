@@ -22,6 +22,21 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
     lastExitCode: 0
   }
 
+  AfterEachScenario(async () => {
+    // Save output to file for debugging failures
+    if (ctx.lastOutput && ctx.lastExitCode !== 0) {
+      writeFileSync('./tests/e2e/results/last-output.txt', ctx.lastOutput)
+    }
+
+    if (ctx.tempDir && existsSync(ctx.tempDir)) {
+      rmSync(ctx.tempDir, { recursive: true, force: true })
+    }
+    ctx.tempDir = ''
+    ctx.brainPath = ''
+    ctx.lastOutput = ''
+    ctx.lastExitCode = 0
+  })
+
   // Shared step for setting up a brain
   const setupBrain = async (brainName: string) => {
     const brainPath = join(ctx.tempDir, brainName)
@@ -98,8 +113,8 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
       // Read existing config and add new brain
       const configPath = join(ctx.tempDir, '.ai-brain-tool', 'config.json')
       const config = existsSync(configPath)
-        ? JSON.parse(readFileSync(configPath, 'utf8'))
-        : { brains: {} }
+        ? (JSON.parse(readFileSync(configPath, 'utf8')) as Config)
+        : ({ brains: {} } as Config)
       config.brains[brainName] = brainPath
       writeFileSync(configPath, JSON.stringify(config))
       writeFileSync(
@@ -208,15 +223,5 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
       expect(ctx.lastOutput).toContain('Brain path:')
       expect(ctx.lastOutput).toContain('test-brain')
     })
-  })
-
-  AfterEachScenario(() => {
-    if (ctx.tempDir && existsSync(ctx.tempDir)) {
-      rmSync(ctx.tempDir, { recursive: true, force: true })
-    }
-    ctx.tempDir = ''
-    ctx.brainPath = ''
-    ctx.lastOutput = ''
-    ctx.lastExitCode = 0
   })
 })

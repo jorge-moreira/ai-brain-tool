@@ -1,8 +1,8 @@
 import { describe, it, beforeAll, afterAll } from 'vitest'
 import { execa } from 'execa'
 import { readFileSync, existsSync } from 'fs'
-import { TestResults } from './types/test-results'
 import { parseFeatureFiles } from './utils/parse-feature-files'
+import { TestResults } from './types/test-results'
 
 // Parse feature files at module load time (auto-discovers all scenarios)
 const featuresDir = './tests/e2e/features'
@@ -56,21 +56,35 @@ describe('E2E Tests', () => {
             throw new Error('No test results available. Docker run may have failed.')
           }
 
-          // Find matching test in results
-          const testCase = junitResults.testResults
+          // Find ALL assertions for this scenario
+          const assertions = junitResults.testResults
             .flatMap(file => file.assertionResults)
-            .find(
+            .filter(
               test =>
                 test.ancestorTitles[0]?.includes(featureName) &&
                 test.ancestorTitles[1]?.includes(scenarioName)
             )
 
-          if (!testCase) {
+          if (assertions.length === 0) {
             throw new Error(`Scenario not found in results: ${scenarioName}`)
           }
 
-          if (testCase.status === 'failed') {
-            throw new Error(`${scenarioName} failed:\n${testCase.failureMessages[0]}`)
+          // Check if ANY assertion failed
+          const failed = assertions.find(a => a.status === 'failed')
+          if (failed) {
+            // Read CLI output from file (written by spec files inside Docker)
+            let cliOutput = ''
+            const outputPath = './tests/e2e/results/last-output.txt'
+            if (existsSync(outputPath)) {
+              cliOutput = readFileSync(outputPath, 'utf8')
+              // Extract just the ENOENT error (skip stack trace)
+              const lines = cliOutput.split('\n')
+              const enoentIdx = lines.findIndex(l => l.includes('ENOENT:'))
+              if (enoentIdx >= 0) {
+                cliOutput = lines.slice(enoentIdx, enoentIdx + 6).join('\n')
+              }
+            }
+            throw new Error(`${scenarioName} failed:\n${cliOutput || failed.failureMessages[0]}`)
           }
         })
       })

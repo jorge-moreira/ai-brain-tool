@@ -2,7 +2,7 @@ import { loadFeature, describeFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
 import { execa } from 'execa'
 import { join } from 'path'
-import { readFileSync, mkdirSync, writeFileSync, existsSync, rmSync } from 'fs'
+import { mkdirSync, writeFileSync, existsSync, rmSync } from 'fs'
 
 interface E2EContext {
   tempDir: string
@@ -20,6 +20,22 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
     lastOutput: '',
     lastExitCode: 0
   }
+
+  AfterEachScenario(async () => {
+    // Save output to file for debugging failures (mounted volume)
+    if (ctx.lastOutput && ctx.lastExitCode !== 0) {
+      const { writeFileSync } = await import('fs')
+      writeFileSync('./tests/e2e/results/last-output.txt', ctx.lastOutput)
+    }
+
+    if (ctx.tempDir && existsSync(ctx.tempDir)) {
+      rmSync(ctx.tempDir, { recursive: true, force: true })
+    }
+    ctx.tempDir = ''
+    ctx.brainPath = ''
+    ctx.lastOutput = ''
+    ctx.lastExitCode = 0
+  })
 
   Scenario('List shows configured brains', ({ Given, When, Then, And }) => {
     Given('I have a brain named {string}', async (_, brainName: string) => {
@@ -141,15 +157,5 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
     Then('the output should contain {string}', (_, text: string) => {
       expect(ctx.lastOutput).toContain(text)
     })
-  })
-
-  AfterEachScenario(() => {
-    if (ctx.tempDir && existsSync(ctx.tempDir)) {
-      rmSync(ctx.tempDir, { recursive: true, force: true })
-    }
-    ctx.tempDir = ''
-    ctx.brainPath = ''
-    ctx.lastOutput = ''
-    ctx.lastExitCode = 0
   })
 })
