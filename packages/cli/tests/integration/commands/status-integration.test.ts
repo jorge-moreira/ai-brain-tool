@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vite
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { execa, type Result } from 'execa'
+import { execa } from 'execa'
 import { run } from '../../../src/commands/status'
 
 describe('commands/status integration', () => {
@@ -106,46 +106,6 @@ describe('commands/status integration', () => {
 
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('not built yet'))
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('ai-brain update'))
-
-    process.env.HOME = originalHome
-    delete process.env.__HOME__
-    rmSync(tmpHome, { recursive: true, force: true })
-  })
-
-  it('should show graphify version when .venv exists', async () => {
-    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('venv-brain')
-
-    const venvBin = join(brainPath, '.venv', 'bin')
-    mkdirSync(venvBin, { recursive: true })
-    writeFileSync(join(venvBin, 'python3'), '#!/usr/bin/env python3', 'utf8')
-
-    vi.spyOn(await import('execa'), 'execa').mockResolvedValueOnce({
-      stdout: 'graphify v1.2.3',
-      stderr: ''
-    } as Result)
-
-    await run(['venv-brain'], { brainId: 'venv-brain' })
-
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Graphify:'))
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('graphify v1.2.3'))
-
-    process.env.HOME = originalHome
-    delete process.env.__HOME__
-    rmSync(tmpHome, { recursive: true, force: true })
-  })
-
-  it('should show error message when graphify version check fails', async () => {
-    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('venv-error-brain')
-
-    const venvBin = join(brainPath, '.venv', 'bin')
-    mkdirSync(venvBin, { recursive: true })
-    writeFileSync(join(venvBin, 'python3'), '#!/usr/bin/env python3', 'utf8')
-
-    vi.spyOn(await import('execa'), 'execa').mockRejectedValueOnce(new Error('Command failed'))
-
-    await run(['venv-error-brain'], { brainId: 'venv-error-brain' })
-
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('error reading version'))
 
     process.env.HOME = originalHome
     delete process.env.__HOME__

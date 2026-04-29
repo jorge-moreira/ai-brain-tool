@@ -86,12 +86,12 @@ describe('commands/update integration', () => {
   }
 
   async function initGitRepo(brainPath: string, withRemote = false, remoteRepo?: string) {
-    await execa('git', ['init'], { cwd: brainPath })
+    await execa('git', ['init', '--initial-branch=main'], { cwd: brainPath })
     await execa('git', ['config', 'user.email', 'test@test.com'], { cwd: brainPath })
     await execa('git', ['config', 'user.name', 'Test'], { cwd: brainPath })
 
     if (withRemote && remoteRepo) {
-      await execa('git', ['init', '--bare', remoteRepo])
+      await execa('git', ['init', '--bare', '--initial-branch=main', remoteRepo])
       await execa('git', ['remote', 'add', 'origin', remoteRepo], { cwd: brainPath })
     }
   }
