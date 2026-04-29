@@ -11,9 +11,14 @@
     "preview": "vite preview",
     "electron:dev": "concurrently \"bun run dev\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "vite build && electron-builder",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "test:ci": "vitest run --coverage --reporter=github-actions --reporter=junit --outputFile=coverage/junit.xml"
+    "test": "vitest run tests/unit tests/integration tests/e2e",
+    "test:coverage": "bun run test --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:unit:ci": "bun run test:unit --coverage --coverage.reportsDirectory=coverage/unit --outputFile=coverage/unit/junit.xml",
+    "test:integration": "vitest run tests/integration",
+    "test:integration:ci": "bun run test:integration --coverage --coverage.reportsDirectory=coverage/integration --outputFile=coverage/integration/junit.xml",
+    "test:e2e": "vitest run tests/e2e",
+    "test:e2e:ci": "bun run test:e2e --outputFile=coverage/e2e/junit.xml"
   },
   "dependencies": {
     "@ai-brain/core": "workspace:*",
@@ -21,21 +26,21 @@
     "electron-updater": "^6.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "vitest": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "@types/node": "catalog:",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@vitejs/plugin-react": "^4.0.0",
-    "@vitest/coverage-v8": "catalog:",
     "concurrently": "^8.0.0",
     "electron": "^30.0.0",
     "electron-builder": "^24.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "typescript": "catalog:",
     "vite": "^5.0.0",
     "vite-plugin-electron": "^0.28.0",
     "vite-plugin-electron-renderer": "^0.14.0",
-    "vitest": "catalog:",
     "wait-on": "^7.0.0"
   }
 }

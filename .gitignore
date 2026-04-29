@@ -37,6 +37,7 @@ lerna-debug.log*
 # --- Testing ---
 coverage/
 .nyc_output
+packages/cli/tests/e2e/results
 
 # --- IDEs & OS ---
 .vscode/*
@@ -58,4 +59,4 @@ Thumbs.db
 .cache/
 .parcel-cache
 .turbo
-.next
+.next.worktrees

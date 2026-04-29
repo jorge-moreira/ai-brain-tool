@@ -5,8 +5,13 @@ on:
 
 jobs:
   core-test:
-    name: Core Tests
+    name: Core ${{ matrix.test-type }} tests
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Ensures all tests runs even if one type fails
+      matrix:
+        test-type: [unit, integration]
+    
     steps:
       - uses: actions/checkout@v6
 
@@ -18,15 +23,17 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run core tests with coverage (CI mode)
-        run: bun run test:core:ci
+      - name: Run ${{ matrix.test-type }} tests
+        run: |
+          bun run test:core:${{ matrix.test-type }}:ci
 
-      - name: Upload core coverage to Codecov
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: packages/core/coverage/coverage-final.json
           token: ${{ secrets.CODECOV_TOKEN }}
-          report_type: coverage
+          files: |
+            packages/core/coverage/${{ matrix.test-type }}/coverage-final.json
+            packages/core/coverage/${{ matrix.test-type }}/junit.xml
           fail_ci_if_error: false
+          flags: ${{ matrix.test-type }}
           verbose: true
-          flags: core

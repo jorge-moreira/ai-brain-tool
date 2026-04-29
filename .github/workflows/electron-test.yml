@@ -5,8 +5,13 @@ on:
 
 jobs:
   electron-test:
-    name: Electron Tests
+    name: Electron ${{ matrix.test-type }} tests
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Ensures all tests runs even if one type fails
+      matrix:
+        test-type: [unit, integration]
+    
     steps:
       - uses: actions/checkout@v6
 
@@ -18,20 +23,41 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run Electron tests with coverage (CI mode)
-        id: electron-tests
-        # To be removed
-        continue-on-error: true
-        run: bun run test:electron:ci
+      - name: Run ${{ matrix.test-type }} tests
+        run: |
+          bun run test:electron:${{ matrix.test-type }}:ci
 
-      - name: Upload Electron coverage to Codecov
-      # To be removed
-        if: steps.electron-tests.outcome == 'success'
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: packages/electron/coverage/coverage-final.json
           token: ${{ secrets.CODECOV_TOKEN }}
-          report_type: coverage
+          files: |
+            packages/electron/coverage/${{ matrix.test-type }}/coverage-final.json
+            packages/electron/coverage/${{ matrix.test-type }}/junit.xml
           fail_ci_if_error: false
+          flags: ${{ matrix.test-type }}
           verbose: true
-          flags: electron
+  
+  electron-e2e:
+    name: Electron E2E tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'e2e')
+    
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install
+      - name: Run E2E tests
+        run: bun run test:electron:e2e:ci
+      
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: packages/electron/coverage/e2e/junit.xml
+          flags: e2e

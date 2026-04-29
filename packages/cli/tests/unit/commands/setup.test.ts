@@ -371,8 +371,12 @@ describe('commands/setup', () => {
     mockedConfirm.mockResolvedValueOnce(true) // commit cache
     mockedConfirm.mockResolvedValueOnce(true) // git sync
     mockedCheckbox.mockResolvedValueOnce(['office']) // extras
-    mockedDetectAll.mockResolvedValue([{ name: 'Claude', detected: true, configHint: '~/.claude' }] as DetectedPlatform[])
-    mockedCheckbox.mockResolvedValueOnce([{ name: 'Claude', detected: true, configHint: '~/.claude' }] as DetectedPlatform[]) // selected platforms
+    mockedDetectAll.mockResolvedValue([
+      { name: 'Claude', detected: true, configHint: '~/.claude' }
+    ] as DetectedPlatform[])
+    mockedCheckbox.mockResolvedValueOnce([
+      { name: 'Claude', detected: true, configHint: '~/.claude' }
+    ] as DetectedPlatform[]) // selected platforms
     mockedSelect.mockResolvedValueOnce('brain') // obsidian
 
     mockedConfigPath.mockReturnValue('/fake/config/path')

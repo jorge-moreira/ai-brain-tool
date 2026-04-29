@@ -1,0 +1,9 @@
+node_modules
+packages/*/node_modules
+packages/*/dist
+packages/*/tests/unit
+packages/*/tests/integration
+packages/*/coverage
+.git
+
+packages/cli/tests/e2e/results

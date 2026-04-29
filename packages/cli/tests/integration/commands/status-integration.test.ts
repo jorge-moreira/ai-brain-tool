@@ -1,137 +1,128 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest'
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs'
-import { execSync } from 'child_process'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { execa } from 'execa'
+import { run } from '../../../src/commands/status'
 
-describe('status command integration', () => {
-  let tmpHome: string
-  let originalHome: string | undefined
+describe('commands/status integration', () => {
+  let consoleLogSpy: Mock<Console['log']>
 
   beforeEach(() => {
-    tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-status-test-'))
-    originalHome = process.env.HOME
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  function createBrainWithConfig(brainName: string) {
+    const tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-status-test-'))
+    const originalHome = process.env.HOME
     process.env.HOME = tmpHome
     process.env.__HOME__ = tmpHome
 
     mkdirSync(join(tmpHome, '.ai-brain-tool'), { recursive: true })
-  })
 
-  afterEach(() => {
+    const brainPath = join(tmpHome, brainName)
+    mkdirSync(brainPath, { recursive: true })
+    mkdirSync(join(brainPath, 'graphify-out'), { recursive: true })
+
+    writeFileSync(
+      join(brainPath, '.brain-config.json'),
+      JSON.stringify({ gitSync: false, extras: [], obsidianDir: null }),
+      'utf8'
+    )
+
+    writeFileSync(
+      join(tmpHome, '.ai-brain-tool', 'config.json'),
+      JSON.stringify({ brains: { [brainName]: brainPath } }),
+      'utf8'
+    )
+
+    return { brainPath, tmpHome, originalHome }
+  }
+
+  it('should show tool version and brain path', async () => {
+    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('test-brain')
+
+    await run(['test-brain'], { brainId: 'test-brain' })
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Tool version:'))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Brain path:'))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining(brainPath))
+
     process.env.HOME = originalHome
     delete process.env.__HOME__
     rmSync(tmpHome, { recursive: true, force: true })
   })
 
-  it('should show error when no brain configured', () => {
-    const output = execSync(
-      `bun ${join(process.cwd(), 'bin', 'ai-brain.js')} status 2>&1 || true`,
-      { encoding: 'utf8', env: { ...process.env, __HOME__: tmpHome } }
-    )
+  it('should show git status when git repo exists', async () => {
+    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('git-brain')
 
-    expect(output).toContain('Config not found')
-    expect(output).toContain('ai-brain setup')
+    await execa('git', ['init'], { cwd: brainPath })
+    await execa('git', ['config', 'user.email', 'test@test.com'], { cwd: brainPath })
+    await execa('git', ['config', 'user.name', 'Test'], { cwd: brainPath })
+
+    await run(['git-brain'], { brainId: 'git-brain' })
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Tool version:'))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Brain path:'))
+
+    process.env.HOME = originalHome
+    delete process.env.__HOME__
+    rmSync(tmpHome, { recursive: true, force: true })
   })
 
-  it('should show status for brain folder', () => {
-    const brainPath = join(tmpHome, 'mybrain')
-    mkdirSync(brainPath, { recursive: true })
-
-    mkdirSync(join(brainPath, 'raw', 'notes'), { recursive: true })
-    mkdirSync(join(brainPath, 'graphify-out'), { recursive: true })
-
-    writeFileSync(
-      join(brainPath, '.brain-config.json'),
-      JSON.stringify({ gitSync: false, extras: [] }),
-      'utf8'
-    )
-
-    writeFileSync(
-      join(tmpHome, '.ai-brain-tool', 'config.json'),
-      JSON.stringify({
-        brains: {
-          test: brainPath
-        }
-      }),
-      'utf8'
-    )
-
-    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`, {
-      encoding: 'utf8',
-      env: { ...process.env, __HOME__: tmpHome }
-    })
-
-    expect(output).toContain('Tool version:')
-    expect(output).toContain('Brain path:')
-    expect(output).toContain('Graphify:')
-  })
-
-  it('should show graph status when graph.json exists', () => {
-    const brainPath = join(tmpHome, 'mybrain')
-    mkdirSync(brainPath, { recursive: true })
-    mkdirSync(join(brainPath, 'graphify-out'), { recursive: true })
+  it('should show graph statistics when graph exists', async () => {
+    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('graph-brain')
 
     writeFileSync(
       join(brainPath, 'graphify-out', 'graph.json'),
-      JSON.stringify({ nodes: [], edges: [] }),
-      'utf8'
-    )
-
-    writeFileSync(
-      join(brainPath, '.brain-config.json'),
-      JSON.stringify({ gitSync: false, extras: [] }),
-      'utf8'
-    )
-
-    writeFileSync(
-      join(tmpHome, '.ai-brain-tool', 'config.json'),
       JSON.stringify({
-        brains: {
-          test: brainPath
-        }
+        nodes: [{ id: '1', label: 'Test' }],
+        edges: [{ source: '1', target: '2' }]
       }),
       'utf8'
     )
 
-    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`, {
-      encoding: 'utf8',
-      env: { ...process.env, __HOME__: tmpHome }
-    })
+    await run(['graph-brain'], { brainId: 'graph-brain' })
 
-    expect(output).toContain('Graph:')
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Graph:'))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('nodes'))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('edges'))
+
+    process.env.HOME = originalHome
+    delete process.env.__HOME__
+    rmSync(tmpHome, { recursive: true, force: true })
   })
 
-  it('should show git status when git repo exists', () => {
-    const brainPath = join(tmpHome, 'mybrain')
-    mkdirSync(brainPath, { recursive: true })
-    mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
-    writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
+  it('should show message when graph not built', async () => {
+    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('no-graph-brain')
 
-    execSync('git init', { cwd: brainPath, stdio: 'ignore' })
-    execSync('git config user.email "test@test.com"', { cwd: brainPath, stdio: 'ignore' })
-    execSync('git config user.name "Test"', { cwd: brainPath, stdio: 'ignore' })
+    rmSync(join(brainPath, 'graphify-out'), { recursive: true, force: true })
 
-    writeFileSync(
-      join(brainPath, '.brain-config.json'),
-      JSON.stringify({ gitSync: true, extras: [] }),
-      'utf8'
-    )
+    await run(['no-graph-brain'], { brainId: 'no-graph-brain' })
 
-    writeFileSync(
-      join(tmpHome, '.ai-brain-tool', 'config.json'),
-      JSON.stringify({
-        brains: {
-          test: brainPath
-        }
-      }),
-      'utf8'
-    )
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('not built yet'))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('ai-brain update'))
 
-    const output = execSync(`bun ${join(process.cwd(), 'bin', 'ai-brain.js')} status test`, {
-      encoding: 'utf8',
-      env: { ...process.env, __HOME__: tmpHome }
-    })
+    process.env.HOME = originalHome
+    delete process.env.__HOME__
+    rmSync(tmpHome, { recursive: true, force: true })
+  })
 
-    expect(output).toContain('Tool version:')
+  it('should show error message when graph.json is invalid', async () => {
+    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('invalid-graph-brain')
+
+    writeFileSync(join(brainPath, 'graphify-out', 'graph.json'), 'not valid json', 'utf8')
+
+    await run(['invalid-graph-brain'], { brainId: 'invalid-graph-brain' })
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('could not read graph.json'))
+
+    process.env.HOME = originalHome
+    delete process.env.__HOME__
+    rmSync(tmpHome, { recursive: true, force: true })
   })
 })

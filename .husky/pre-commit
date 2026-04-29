@@ -4,10 +4,10 @@ set -e
 echo "🧪 Running pre-commit tests (parallel)..."
 
 # Run unit + integration tests in parallel (skip e2e - too slow)
-bun run --cwd packages/core test &
+bun run --cwd packages/core test:unit &
 PID1=$!
 
-bun run --cwd packages/cli test &
+bun run --cwd packages/cli test:unit &
 PID2=$!
 
 # Electron has no tests yet, skip for now
