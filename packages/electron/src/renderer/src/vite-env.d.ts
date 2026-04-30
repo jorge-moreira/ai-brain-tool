@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 import { type IpcResponse, type BrainStatus } from '../../main/preload'
+import { type DetectedPlatform } from '@ai-brain/core/platforms'
 
 interface Window {
   electronAPI: {
@@ -16,5 +17,10 @@ interface Window {
     onUpdateAvailable: (callback: () => void) => void
     onUpdateDownloaded: (callback: () => void) => void
     onUpdateError: (callback: (event: any, error: any) => void) => void
+    ensureUv: () => Promise<IpcResponse>
+    detectPlatforms: () => Promise<IpcResponse<DetectedPlatform[]>>
+    installSkills: (selected: string[]) => Promise<IpcResponse>
+    setWizardCompleted: (completed: boolean) => Promise<IpcResponse>
+    getWizardCompleted: () => Promise<IpcResponse<{ wizardCompleted: boolean }>>
   }
 }

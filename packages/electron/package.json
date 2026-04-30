@@ -2,6 +2,7 @@
   "name": "@ai-brain/electron",
   "version": "2.1.0",
   "private": true,
+  "type": "module",
   "description": "AI Brain Desktop Application",
   "main": "dist/main/index.js",
   "scripts": {
@@ -26,21 +27,27 @@
     "electron-updater": "^6.0.0"
   },
   "devDependencies": {
-    "vitest": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
-    "typescript": "catalog:",
+    "@tailwindcss/vite": "^4.2.4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "catalog:",
-    "@types/react": "^18.0.0",
-    "@types/react-dom": "^18.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.0.0",
+    "@vitest/coverage-v8": "catalog:",
+    "autoprefixer": "^10.5.0",
     "concurrently": "^8.0.0",
     "electron": "^30.0.0",
     "electron-builder": "^24.0.0",
+    "jsdom": "^29.1.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "catalog:",
     "vite": "^5.0.0",
     "vite-plugin-electron": "^0.28.0",
     "vite-plugin-electron-renderer": "^0.14.0",
+    "vitest": "catalog:",
     "wait-on": "^7.0.0"
   }
 }

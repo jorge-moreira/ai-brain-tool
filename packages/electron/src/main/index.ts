@@ -6,8 +6,37 @@ import * as brainUpdate from '@ai-brain/core/commands/update'
 import * as brainSetup from '@ai-brain/core/commands/setup'
 import * as brainList from '@ai-brain/core/commands/list'
 import { getConfig, setConfig } from '@ai-brain/core/config'
+import { ensureUv } from '@ai-brain/core/graphify'
+import { detectAll, installSkills } from '@ai-brain/core/platforms'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
 
 let mainWindow: BrowserWindow | null = null
+
+// App-specific config (stored in Electron's app data)
+interface AppConfig {
+  wizardCompleted?: boolean
+}
+
+function getAppConfigPath(): string {
+  return path.join(app.getPath('userData'), 'app-config.json')
+}
+
+function readAppConfig(): AppConfig {
+  const configPath = getAppConfigPath()
+  if (!existsSync(configPath)) {
+    return {}
+  }
+  try {
+    return JSON.parse(readFileSync(configPath, 'utf8')) as AppConfig
+  } catch {
+    return {}
+  }
+}
+
+function writeAppConfig(data: AppConfig): void {
+  const configPath = getAppConfigPath()
+  writeFileSync(configPath, JSON.stringify(data, null, 2), 'utf8')
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -22,7 +51,7 @@ function createWindow() {
   })
 
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:5173')
+    mainWindow.loadURL('http://localhost:3000')
     mainWindow.webContents.openDevTools()
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
@@ -128,4 +157,69 @@ ipcMain.handle('app:quit', () => {
 
 ipcMain.handle('app:check-updates', () => {
   return autoUpdater.checkForUpdatesAndNotify()
+})
+
+ipcMain.handle('app:ensure-uv', async () => {
+  try {
+    await ensureUv()
+    return { success: true }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error) 
+    }
+  }
+})
+
+ipcMain.handle('app:detect-platforms', async () => {
+  try {
+    const platforms = await detectAll()
+    return { success: true, data: platforms }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error),
+      data: []
+    }
+  }
+})
+
+ipcMain.handle('app:install-skills', async (_event, selectedKeys: string[]) => {
+  try {
+    const platforms = await detectAll()
+    const selected = platforms.filter(p => selectedKeys.includes(p.key))
+    await installSkills({ selected })
+    return { success: true }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error) 
+    }
+  }
+})
+
+ipcMain.handle('app:set-wizard-completed', async (_event, completed: boolean) => {
+  try {
+    const config = readAppConfig()
+    writeAppConfig({ ...config, wizardCompleted: completed })
+    return { success: true }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error) 
+    }
+  }
+})
+
+ipcMain.handle('app:get-wizard-completed', async () => {
+  try {
+    const config = readAppConfig()
+    return { success: true, data: { wizardCompleted: config.wizardCompleted } }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error),
+      data: { wizardCompleted: false }
+    }
+  }
 })

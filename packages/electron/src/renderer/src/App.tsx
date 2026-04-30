@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@ai-brain/ui'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ai-brain/ui'
-import type { BrainStatus, IpcResponse } from '../../main/preload'
+import type { BrainStatus } from '../../main/preload'
+import { Wizard } from './components/InstallationWizard'
 
 interface StatusState {
   loading: boolean
@@ -10,6 +11,7 @@ interface StatusState {
 }
 
 export default function App() {
+  const [showWizard, setShowWizard] = useState(false)
   const [statusState, setStatusState] = useState<StatusState>({
     loading: true,
     status: null,
@@ -20,11 +22,38 @@ export default function App() {
   const [updateAvailable, setUpdateAvailable] = useState(false)
 
   useEffect(() => {
-    loadStatus()
+    checkFirstLaunch()
     setupUpdateListeners()
   }, [])
 
+  const checkFirstLaunch = async () => {
+    if (!window.electronAPI) {
+      // Running in browser (not Electron), show wizard for testing
+      setShowWizard(true)
+      return
+    }
+    try {
+      const result = await window.electronAPI.getWizardCompleted()
+      const wizardCompleted = result.data?.wizardCompleted
+      if (!result.success || wizardCompleted !== true) {
+        setShowWizard(true)
+      } else {
+        loadStatus()
+      }
+    } catch (err) {
+      setShowWizard(true)
+    }
+  }
+
   const loadStatus = async () => {
+    if (!window.electronAPI) {
+      setStatusState({ 
+        loading: false, 
+        status: null, 
+        error: 'Not running in Electron' 
+      })
+      return
+    }
     try {
       const result = await window.electronAPI.getStatus()
       if (result.success) {
@@ -45,7 +74,32 @@ export default function App() {
     }
   }
 
+  const setupUpdateListeners = () => {
+    if (!window.electronAPI) return
+    
+    window.electronAPI.onUpdateAvailable(() => {
+      setUpdateAvailable(true)
+    })
+
+    window.electronAPI.onUpdateDownloaded(() => {
+      console.log('Update downloaded')
+    })
+
+    window.electronAPI.onUpdateError((_, error) => {
+      console.error('Update error:', error)
+    })
+  }
+
   const handleSetup = async () => {
+    if (!window.electronAPI) {
+      console.log('Running in browser - mocking setup')
+      setSetupRunning(true)
+      setTimeout(() => {
+        setSetupRunning(false)
+        loadStatus()
+      }, 1000)
+      return
+    }
     setSetupRunning(true)
     try {
       const result = await window.electronAPI.setup()
@@ -58,6 +112,11 @@ export default function App() {
   }
 
   const handleUpdate = async () => {
+    if (!window.electronAPI) {
+      console.log('Running in browser - mocking update')
+      await loadStatus()
+      return
+    }
     try {
       const result = await window.electronAPI.update()
       if (result.success) {
@@ -69,21 +128,11 @@ export default function App() {
   }
 
   const handleQuit = async () => {
+    if (!window.electronAPI) {
+      console.log('Running in browser - cannot quit')
+      return
+    }
     await window.electronAPI.quit()
-  }
-
-  const setupUpdateListeners = () => {
-    window.electronAPI.onUpdateAvailable(() => {
-      setUpdateAvailable(true)
-    })
-
-    window.electronAPI.onUpdateDownloaded(() => {
-      console.log('Update downloaded')
-    })
-
-    window.electronAPI.onUpdateError((_, error) => {
-      console.error('Update error:', error)
-    })
   }
 
   const renderStatusCard = () => {
@@ -108,7 +157,7 @@ export default function App() {
             <CardDescription>{statusState.error}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={loadStatus} variant="outline">
+            <Button onClick={loadStatus} variant="outline" disabled={!window.electronAPI}>
               Retry
             </Button>
           </CardContent>
@@ -158,34 +207,40 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">AI Brain Dashboard</h1>
-          <p className="text-muted-foreground">Manage your AI Brain instances and configuration</p>
-        </header>
+    <div className="min-h-screen bg-background">
+      {showWizard ? (
+        <Wizard onComplete={() => setShowWizard(false)} />
+      ) : (
+        <div className="min-h-screen bg-background p-8">
+          <div className="max-w-4xl mx-auto">
+            <header className="mb-8">
+              <h1 className="text-4xl font-bold mb-2">AI Brain Dashboard</h1>
+              <p className="text-muted-foreground">Manage your AI Brain instances and configuration</p>
+            </header>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          {renderStatusCard()}
+            <div className="grid gap-6 md:grid-cols-2">
+              {renderStatusCard()}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions</CardTitle>
-              <CardDescription>Manage your application</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button onClick={handleQuit} variant="destructive" className="w-full">
-                Quit Application
-              </Button>
-              {updateAvailable && (
-                <div className="text-sm text-muted-foreground mt-2">
-                  An update is available and will be installed on quit.
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Actions</CardTitle>
+                  <CardDescription>Manage your application</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button onClick={handleQuit} variant="destructive" className="w-full">
+                    Quit Application
+                  </Button>
+                  {updateAvailable && (
+                    <div className="text-sm text-muted-foreground mt-2">
+                      An update is available and will be installed on quit.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

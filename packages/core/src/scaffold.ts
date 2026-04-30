@@ -2,6 +2,7 @@ import { mkdir, writeFile, cp } from 'fs/promises'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { writeFileSync, readFileSync, existsSync } from 'fs'
+import { BrainConfig } from './config'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const TEMPLATES_DIR = join(__dirname, 'templates')
@@ -48,7 +49,7 @@ export function writeBrainConfig({
 export function readLocalBrainConfig(brainPath: string): BrainConfigData {
   const configPath = join(brainPath, '.brain-config.json')
   if (!existsSync(configPath)) return { gitSync: false, extras: [], obsidianDir: null }
-  return JSON.parse(readFileSync(configPath, 'utf8'))
+  return JSON.parse(readFileSync(configPath, 'utf8')) as BrainConfig
 }
 
 export async function createBrainFolder({

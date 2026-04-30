@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import { type DetectedPlatform } from '@ai-brain/core/platforms'
 
 export interface BrainStatus {
   version: string
@@ -28,6 +29,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // App
   quit: (): Promise<void> => ipcRenderer.invoke('app:quit'),
   checkUpdates: (): Promise<void> => ipcRenderer.invoke('app:check-updates'),
+
+  // Installation Wizard
+  ensureUv: (): Promise<IpcResponse> => ipcRenderer.invoke('app:ensure-uv'),
+  detectPlatforms: (): Promise<IpcResponse<DetectedPlatform[]>> => ipcRenderer.invoke('app:detect-platforms'),
+  installSkills: (selected: string[]): Promise<IpcResponse> => ipcRenderer.invoke('app:install-skills', selected),
+  setWizardCompleted: (completed: boolean): Promise<IpcResponse> => ipcRenderer.invoke('app:set-wizard-completed', completed),
+  getWizardCompleted: (): Promise<IpcResponse<{ wizardCompleted: boolean }>> => ipcRenderer.invoke('app:get-wizard-completed'),
 
   // Platform
   platform: process.platform,
