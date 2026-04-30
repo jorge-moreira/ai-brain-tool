@@ -12,7 +12,6 @@ interface PlatformModule {
   installSkill: (options: { homeDir: string }) => Promise<void>
   installAlwaysOn: (options: { brainPath: string; homeDir: string }) => Promise<void>
 }
-
 interface Platform {
   name: string
   key: string
@@ -22,6 +21,12 @@ interface Platform {
 
 interface DetectedPlatform extends Platform {
   detected: boolean
+}
+
+export interface ConfigureSelectedOptions {
+  selected: DetectedPlatform[]
+  brainPath: string
+  homeDir?: string
 }
 
 export type { DetectedPlatform }
@@ -42,41 +47,38 @@ export async function detectAll(homeDir: string = homedir()): Promise<DetectedPl
   }))
 }
 
-export interface ConfigureSelectedOptions {
+export async function installSkills({
+  selected,
+  homeDir = homedir()
+}: {
   selected: DetectedPlatform[]
-  brainPath: string
   homeDir?: string
-}
-
-export async function installSkills({ 
-  selected 
-}: { 
-  selected: DetectedPlatform[] 
 }): Promise<void> {
   for (const platform of selected) {
-    await platform.module.installSkill({ homeDir: homedir() })
+    await platform.module.installSkill({ homeDir })
   }
 }
 
-export async function connectBrain({ 
-  selected, 
-  brainPath 
-}: { 
-  selected: DetectedPlatform[],
-  brainPath: string 
+export async function connectBrain({
+  selected,
+  brainPath,
+  homeDir = homedir()
+}: {
+  selected: DetectedPlatform[]
+  brainPath: string
+  homeDir?: string
 }): Promise<void> {
-  const homeDir = homedir()
   for (const platform of selected) {
     await platform.module.patch({ brainPath, homeDir })
     await platform.module.installAlwaysOn({ brainPath, homeDir })
   }
 }
 
-export async function configureSelected({ 
-  selected, 
+export async function configureSelected({
+  selected,
   brainPath,
   homeDir = homedir()
 }: ConfigureSelectedOptions): Promise<void> {
-  await installSkills({ selected })
-  await connectBrain({ selected, brainPath })
+  await installSkills({ selected, homeDir })
+  await connectBrain({ selected, brainPath, homeDir })
 }
