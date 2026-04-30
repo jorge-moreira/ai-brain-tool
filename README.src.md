@@ -47,16 +47,12 @@ Después úsala desde cualquier lugar:<!--es-->
 ai-brain <command>
 ```
 
-> [!NOTE]<!--en-->
+> [!NOTE]
 > You can also opt to use the tool portable using:<!--en-->
-> ```bash<!--en-->
-> npx @jorge-moreira.dev/ai-brain-tool <command><!--en-->
-> ```<!--en-->
-> [!NOTE]<!--es-->
 > También puedes usar la herramienta de forma portable con:<!--es-->
-> ```bash<!--es-->
-> npx @jorge-moreira.dev/ai-brain-tool <command><!--es-->
-> ```<!--es-->
+> ```bash
+> npx @jorge-moreira.dev/ai-brain-tool <command>
+> ```
 
 ---
 
@@ -90,9 +86,8 @@ ai-brain <command> personal
 ai-brain <command> --brain-id personal
 ```
 
-> [!NOTE]<!--en-->
+> [!NOTE]
 > If you're in a brain folder (or a subfolder), commands automatically detect which brain to use — no need to specify the identifier.<!--en-->
-> [!NOTE]<!--es-->
 > Si estás dentro de la carpeta de un cerebro (o de una subcarpeta), los comandos detectan automáticamente cuál usar — no hace falta indicar el identificador.<!--es-->
 
 ### List brains<!--en-->
@@ -156,9 +151,8 @@ ai-brain update                   # Used if already on the brain folder
 ai-brain update --brain-id work   # Specify brain by identifier
 ```
 
-> [!NOTE]<!--en-->
+> [!NOTE]
 > Inside any AI tool, `/brain update` loads the graphify skill which rebuilds the graph using AI subagents for semantic extraction. If auto-sync was enabled during setup, the skill automatically commits and pushes after the rebuild.<!--en-->
-> [!NOTE]<!--es-->
 > Dentro de cualquier herramienta de IA, `/brain update` carga el skill de graphify, que reconstruye el grafo usando subagentes de IA para la extracción semántica. Si el auto-sync estaba activado, el skill hace commit y push automáticamente tras la reconstrucción.<!--es-->
 
 ---
