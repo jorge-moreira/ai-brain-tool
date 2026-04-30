@@ -5,15 +5,10 @@ on:
     paths:
       - 'README.src.md'
       - '.github/workflows/nrg.yml'
-  pull_request:
-    paths:
-      - 'README.md'
-      - 'README.*.md'
 permissions:
   contents: write
 jobs:
   regenerate:
-    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,20 +20,13 @@ jobs:
           nrg-version: '1.1'
       - name: Commit regenerated READMEs
         run: |
-          if [ -n "$(git status --porcelain README.md README.*.md)" ]; then
+          paths='README.md docs/i18n/README.*.md'
+          if [ -n "$(git status --porcelain $paths)" ]; then
+            changed=$(git status --porcelain $paths | sed 's/^...//' | sed 's/^/  - /')
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add README.md README.*.md
-            git commit -m "docs: regenerate READMEs from README.src.md"
+            git add $paths
+            git commit -m "docs: regenerate READMEs from README.src.md" \
+              -m $'Files updated:\n'"$changed"
             git push
           fi
-  drift-check:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: nanolaba/nrg-action@v1
-        with:
-          file: README.src.md
-          mode: check
-          nrg-version: '1.1'

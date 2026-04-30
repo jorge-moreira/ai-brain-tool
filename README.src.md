@@ -1,5 +1,6 @@
 <!--@nrg.languages=en,es-->
 <!--@nrg.defaultLanguage=en-->
+<!--@nrg.fileNamePattern.es=docs/i18n/README.es.md-->
 <div align="center">
   <a href="#"><img src="https://raw.githubusercontent.com/jorge-moreira/ai-brain-tool/main/docs/logo.svg" height="150" alt="ai-brain-tool"/></a>
   
@@ -13,7 +14,8 @@
 [![npm downloads](https://img.shields.io/npm/dm/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/jorge-moreira)
 
-[English](README.md) · [Español](README.es.md)
+[English](README.md) · [Español](docs/i18n/README.es.md)<!--en-->
+[English](../../README.md) · [Español](README.es.md)<!--es-->
 
 *Powered by* **[graphify](https://github.com/safishamsi/graphify)**<!--en-->
 *Desarrollado con* **[graphify](https://github.com/safishamsi/graphify)**<!--es-->

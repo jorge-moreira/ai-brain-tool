@@ -12,7 +12,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/jorge-moreira)
 
-[English](README.md) · [Español](README.es.md)
+[English](README.md) · [Español](docs/i18n/README.es.md)
 
 *Powered by* **[graphify](https://github.com/safishamsi/graphify)**
 
