@@ -1,6 +1,6 @@
 {
-  "name": "electron",
-  "productName": "electron",
+  "name": "@ai-brain/electron",
+  "productName": "AI Brain Tool",
   "version": "1.0.0",
   "description": "AI Brain Tool - App",
   "main": ".vite/build/main.js",
@@ -48,8 +48,8 @@
   "license": "MIT",
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "@ai-brain/core": "*"
   },
   "devDependencies": {
@@ -62,19 +62,16 @@
     "@electron-forge/plugin-fuses": "^7.11.1",
     "@electron-forge/plugin-vite": "^7.11.1",
     "@electron/fuses": "^1.8.0",
-    "@tailwindcss/vite": "^4.2.4",
     "@types/electron-squirrel-startup": "^1.0.2",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
-    "@typescript-eslint/parser": "^5.62.0",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@typescript-eslint/eslint-plugin": "catalog:",
+    "@typescript-eslint/parser": "catalog:",
     "@vitejs/plugin-react": "^6.0.1",
-    "electron": "41.4.0",
-    "eslint": "^8.57.1",
-    "eslint-plugin-import": "^2.32.0",
-    "postcss": "^8.5.13",
-    "tailwindcss": "^4.2.4",
+    "electron": "^41.5.0",
+    "eslint": "catalog:",
+    "@tailwindcss/vite": "catalog:",
     "typescript": "catalog:",
-    "vite": "^5.4.21"
+    "vite": "^8.0.10"
   }
 }

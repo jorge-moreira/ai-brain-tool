@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, globalShortcut } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 
@@ -10,15 +10,15 @@ if (started) {
 let mainWindow: BrowserWindow | null = null;
 
 // Window sizes
-const WIZARD_SIZE = { width: 500, height: 600 };
+const WIZARD_SIZE = { width: 700, height: 750 };
 const DASHBOARD_SIZE = { width: 1200, height: 800 };
 
 const createWindow = () => {
-  // Start with wizard size - will resize after setup check
+  // Start with wizard size - resizable only after setup completes
   mainWindow = new BrowserWindow({
     width: WIZARD_SIZE.width,
     height: WIZARD_SIZE.height,
-    resizable: true,
+    resizable: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -33,7 +33,7 @@ const createWindow = () => {
     );
   }
 
-  // Open the DevTools in development.
+  // Open DevTools in development only
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.webContents.openDevTools();
   }
@@ -46,11 +46,35 @@ ipcMain.handle('resize-window', (_event, size: 'wizard' | 'dashboard') => {
   const targetSize = size === 'wizard' ? WIZARD_SIZE : DASHBOARD_SIZE;
   mainWindow.setSize(targetSize.width, targetSize.height, true);
   mainWindow.center();
+  
+  // Only allow resizing in dashboard mode
+  mainWindow.setResizable(size === 'dashboard');
+});
+
+// IPC handler to toggle DevTools (development only)
+ipcMain.handle('toggle-devtools', () => {
+  if (!mainWindow) return;
+  if (!MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    console.warn('DevTools only available in development mode');
+    return;
+  }
+  mainWindow.webContents.toggleDevTools();
 });
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
-app.on('ready', createWindow);
+app.on('ready', () => {
+  createWindow();
+  
+  // Register global shortcut for DevTools (development only)
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    globalShortcut.register('CommandOrControl+Shift+I', () => {
+      if (mainWindow) {
+        mainWindow.webContents.toggleDevTools();
+      }
+    });
+  }
+});
 
 // Quit when all windows are closed, except on macOS.
 app.on('window-all-closed', () => {
@@ -65,4 +89,9 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+// Unregister shortcuts on quit
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
 });
