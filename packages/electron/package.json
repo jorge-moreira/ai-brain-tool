@@ -34,9 +34,12 @@
     "concurrent": false
   },
   "scripts": {
+    "prestart": "bun scripts/link-electron.ts",
     "start": "electron-forge start",
-    "package": "electron-forge package",
+    "premake": "bun scripts/link-electron.ts",
     "make": "electron-forge make",
+    "prepackage": "bun scripts/link-electron.ts",
+    "package": "electron-forge package",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },

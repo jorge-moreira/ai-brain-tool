@@ -28,7 +28,7 @@
     "lint:fix": "eslint --fix",
     "build": "bun run --filter @ai-brain/electron build",
     "build:electron": "bun run --filter @ai-brain/electron build",
-    "dev:electron": "bun run --filter ./packages/electron start",
+    "dev:electron": "bun run --cwd packages/electron start",
     "cli:start": "bun run --filter @jorge-moreira.dev/ai-brain-tool start",
     "test": "bun run --filter \"*\" test",
     "test:core": "bun run --filter @ai-brain/core test",
