@@ -1,3 +1,13 @@
+## [2.1.2](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.1.1...v2.1.2) (2026-05-02)
+
+### 🐞 Bug Fixes
+
+* update graphifyy version to 0.6.5 ([#46](https://github.com/jorge-moreira/ai-brain-tool/issues/46)) ([634688e](https://github.com/jorge-moreira/ai-brain-tool/commit/634688e5bda10dee93c4f2b0c893b7aa308c508e))
+
+### 🔧 Maintenance
+
+* update version list in bug report template ([9aad4df](https://github.com/jorge-moreira/ai-brain-tool/commit/9aad4dfb461b96bd20984b1fe3788cb65efcb155))
+
 ## [2.1.1](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.1.0...v2.1.1) (2026-04-30)
 
 ### 🐞 Bug Fixes
