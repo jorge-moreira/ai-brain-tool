@@ -158,3 +158,19 @@ This project uses GitHub issue templates. When opening an issue, please use the 
 
 - **Bug report** — for reporting bugs (requires description and reproduction steps)
 - **Feature request** — for suggesting enhancements (requires verification that it hasn't been suggested before)
+
+## Translating the README
+
+`README.md` and the per-language `docs/i18n/README.<lang>.md` files are auto-generated from `README.src.md`. **Don't edit them directly** — the next regeneration overwrites your changes.
+
+To add a new language (example: French / `fr`):
+
+1. Edit `README.src.md`.
+2. Add `fr` to `<!--@nrg.languages=en,es-->` near the top → `<!--@nrg.languages=en,es,fr-->`.
+3. Add `<!--@nrg.fileNamePattern.fr=docs/i18n/README.fr.md-->` so the output file lands under `docs/i18n/`.
+4. For each line tagged `<!--en-->`, add a parallel line with your French translation tagged `<!--fr-->`. Lines without a marker are shared across every language.
+5. Open a PR. On merge to `main`, the regenerate job commits the new `docs/i18n/README.fr.md` automatically.
+
+To update an existing translation, edit only the lines tagged with that language inside `README.src.md`. The drift-check job on PRs will fail if a generated file was hand-edited, with a clear diff pointing back at `README.src.md`.
+
+See [`.github/workflows/nrg.yml`](.github/workflows/nrg.yml) for the active workflow and [nanolaba/readme-generator](https://github.com/nanolaba/readme-generator) for the full template syntax reference.
