@@ -1,11 +1,10 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
 import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
+import { getPackageResource } from '../path-utils'
 
 // Brain skill content - single source of truth
-export const BRAIN_SKILL_MD = readFileSync(join(__dirname, 'brain-skills.md'), 'utf8')
+const BRAIN_SKILLS_PATH = getPackageResource('src/platforms/brain-skills.md')
+export const BRAIN_SKILL_MD = readFileSync(BRAIN_SKILLS_PATH, 'utf8')
 
 // Build python binary path for a given brain
 export function pythonBin(brainPath: string): string {

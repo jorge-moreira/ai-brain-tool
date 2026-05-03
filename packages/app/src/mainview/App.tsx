@@ -12,11 +12,12 @@ function Dashboard() {
   );
 }
 
-export function App() {
+function App() {
   const [isSetupComplete, setIsSetupComplete] = useState<boolean | null>(null);
 
   useEffect(() => {
     const setupDone = localStorage.getItem('ai-brain-setup-complete') === 'true';
+    console.log('Setup complete:', setupDone);
     setIsSetupComplete(setupDone);
   }, []);
 
@@ -26,7 +27,11 @@ export function App() {
   };
 
   if (isSetupComplete === null) {
-    return null;
+    return (
+      <div className="flex items-center justify-center w-full h-full">
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   return isSetupComplete ? (
@@ -35,3 +40,5 @@ export function App() {
     <Wizard onComplete={handleWizardComplete} />
   );
 }
+
+export default App;

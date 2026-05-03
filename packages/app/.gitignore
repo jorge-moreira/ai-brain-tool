@@ -1,0 +1,17 @@
+# ElectroBun build output
+dist/
+views/
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log

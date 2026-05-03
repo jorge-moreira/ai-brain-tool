@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "paths": {
+      "@ai-brain/core/*": ["../core/src/*"],
+      "@ai-brain/ui": ["../ui/src"],
+      "@ai-brain/ui/*": ["../ui/src/*"],
+      "@/*": ["./src/mainview/*"]
+    }
+  },
+  "include": ["src/**/*", "electrobun.config.ts", "vite.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

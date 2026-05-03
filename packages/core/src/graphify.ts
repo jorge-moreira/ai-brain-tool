@@ -1,14 +1,13 @@
 import { existsSync, readFileSync } from 'fs'
 import { join, dirname } from 'path'
 import { platform } from 'process'
-import { fileURLToPath } from 'url'
 import { homedir } from 'os'
 import { execa } from 'execa'
+import { getPackageResource } from './path-utils'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-
-// Pinned version read from requirements.txt — single source of truth for Dependabot
-const REQUIREMENTS = readFileSync(join(__dirname, '..', 'requirements.txt'), 'utf8')
+// Get requirements.txt - works in CLI and bundled contexts
+const REQUIREMENTS_PATH = getPackageResource('requirements.txt')
+const REQUIREMENTS = readFileSync(REQUIREMENTS_PATH, 'utf8')
 const GRAPHIFYY_VERSION = REQUIREMENTS.match(/graphifyy\[mcp\]==(.+)/)?.[1].trim()
 
 // Build the pip-package specifier from a list of extras (always includes mcp)

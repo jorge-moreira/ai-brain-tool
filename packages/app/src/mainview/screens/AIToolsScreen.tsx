@@ -4,12 +4,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Checkbox } from '@ai-brain/ui/components/checkbox';
 import { Label } from '@ai-brain/ui/components/label';
 import { Alert, AlertDescription } from '@ai-brain/ui/components/alert';
-
-interface AITool {
-  key: string;
-  name: string;
-  detected: boolean;
-}
+import type { AITool } from '../types';
+import { rpc } from '../lib/rpc';
 
 interface AIToolsScreenProps {
   onComplete: (selectedTools: string[]) => void;
@@ -24,21 +20,16 @@ export function AIToolsScreen({ onComplete, onBack }: AIToolsScreenProps) {
   useEffect(() => {
     async function detectTools() {
       setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const detectedTools: AITool[] = [
-        { key: 'claude', name: 'Claude Code', detected: true },
-        { key: 'opencode', name: 'OpenCode', detected: true },
-        { key: 'cursor', name: 'Cursor', detected: false },
-        { key: 'gemini', name: 'Gemini CLI', detected: false },
-        { key: 'copilot', name: 'GitHub Copilot', detected: false },
-        { key: 'codex', name: 'OpenAI Codex', detected: false },
-      ];
-      
-      setTools(detectedTools);
-      const preselected = new Set(detectedTools.filter(t => t.detected).map(t => t.key));
-      setSelected(preselected);
-      setIsLoading(false);
+      try {
+        const detectedTools = await rpc.detectAiTools();
+        setTools(detectedTools);
+        const preselected = new Set(detectedTools.filter(t => t.detected).map(t => t.key));
+        setSelected(preselected);
+      } catch (error) {
+        console.error('Failed to detect AI tools:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
     detectTools();

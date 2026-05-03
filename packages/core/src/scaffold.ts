@@ -1,11 +1,10 @@
 import { mkdir, writeFile, cp } from 'fs/promises'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { join } from 'path'
 import { writeFileSync, readFileSync, existsSync } from 'fs'
 import { BrainConfig } from './config'
+import { getPackageResource } from './path-utils'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const TEMPLATES_DIR = join(__dirname, 'templates')
+const TEMPLATES_DIR = getPackageResource('src/templates')
 
 const GRAPHIFYIGNORE = `# Exclude templates and node_modules from graph indexing
 raw/templates/

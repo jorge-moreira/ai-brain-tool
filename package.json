@@ -26,9 +26,9 @@
     "format:check": "prettier --check .",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "build": "bun run --filter @ai-brain/electron build",
-    "build:electron": "bun run --filter @ai-brain/electron build",
-    "dev:electron": "bun run --cwd packages/electron start",
+    "build": "bun run --filter @ai-brain/app build",
+    "build:app": "bun run --filter @ai-brain/app build",
+    "dev:app": "bun run --filter @ai-brain/app dev:hmr",
     "cli:start": "bun run --filter @jorge-moreira.dev/ai-brain-tool start",
     "test": "bun run --filter \"*\" test",
     "test:core": "bun run --filter @ai-brain/core test",
@@ -37,11 +37,7 @@
     "test:cli": "bun run --filter @jorge-moreira.dev/ai-brain-tool test",
     "test:cli:unit:ci": "bun run --filter @jorge-moreira.dev/ai-brain-tool test:unit:ci",
     "test:cli:integration:ci": "bun run --filter @jorge-moreira.dev/ai-brain-tool test:integration:ci",
-    "test:cli:e2e": "bun run --filter @jorge-moreira.dev/ai-brain-tool test:e2e",
-    "test:electron": "bun run --filter @ai-brain/electron test",
-    "test:electron:unit:ci": "bun run --filter @ai-brain/electron test:unit:ci",
-    "test:electron:integration:ci": "bun run --filter @ai-brain/electron test:integration:ci",
-    "test:electron:e2e:ci": "bun run --filter @ai-brain/electron test:e2e:ci"
+    "test:cli:e2e": "bun run --filter @jorge-moreira.dev/ai-brain-tool test:e2e"
   },
   "license": "MIT",
   "dependencies": {

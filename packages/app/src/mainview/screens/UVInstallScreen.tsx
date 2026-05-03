@@ -3,6 +3,7 @@ import { Button } from '@ai-brain/ui/components/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@ai-brain/ui/components/card';
 import { Progress } from '@ai-brain/ui/components/progress';
 import { Alert, AlertDescription } from '@ai-brain/ui/components/alert';
+import { rpc } from '../lib/rpc';
 
 interface UVInstallScreenProps {
   onComplete: () => void;
@@ -14,31 +15,24 @@ export function UVInstallScreen({ onComplete, onBack }: UVInstallScreenProps) {
   const [progress, setProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
-  console.log('[UVInstallScreen] Render, status:', status);
-
   useEffect(() => {
-    console.log('[UVInstallScreen] useEffect triggered');
-    
     async function installUv() {
       try {
-        console.log('[UVInstallScreen] Starting install, setting status to installing');
         setStatus('installing');
         setProgress(30);
         
-        await new Promise(resolve => setTimeout(resolve, 500));
-        console.log('[UVInstallScreen] Progress 60%');
+        const result = await rpc.ensureUv();
         setProgress(60);
         
-        await new Promise(resolve => setTimeout(resolve, 500));
-        console.log('[UVInstallScreen] Progress 100%, status done');
-        setProgress(100);
-        
-        setStatus('done');
-        
-        console.log('[UVInstallScreen] Calling onComplete in 1s');
-        setTimeout(onComplete, 1000);
+        if (result.success) {
+          setProgress(100);
+          setStatus('done');
+          setTimeout(onComplete, 1000);
+        } else {
+          setStatus('error');
+          setErrorMessage(result.error || 'Failed to install UV');
+        }
       } catch (error) {
-        console.error('[UVInstallScreen] Error:', error);
         setStatus('error');
         setErrorMessage(error instanceof Error ? error.message : 'Unknown error');
       }
