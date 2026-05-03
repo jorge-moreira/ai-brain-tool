@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url'
 export function getPackageRoot(): string {
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = dirname(__filename)
-  
+
   // Bundled context detection: if we're in a path containing 'app/bun',
   // we're in an ElectroBun bundle where resources are at app/core
   if (__dirname.includes('app/bun')) {
@@ -20,7 +20,7 @@ export function getPackageRoot(): string {
       return corePath
     }
   }
-  
+
   // Development/CLI context: walk up to find package.json
   let currentDir = __dirname
   while (currentDir !== '/' && currentDir !== '.') {
@@ -29,10 +29,10 @@ export function getPackageRoot(): string {
     }
     currentDir = dirname(currentDir)
   }
-  
+
   throw new Error(
     'Could not find @ai-brain/core package root. ' +
-    'Make sure package.json exists in the package directory.'
+      'Make sure package.json exists in the package directory.'
   )
 }
 
@@ -44,4 +44,3 @@ export function getPackageResource(relativePath: string): string {
   const root = getPackageRoot()
   return join(root, relativePath)
 }
-
