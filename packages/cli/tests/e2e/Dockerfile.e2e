@@ -10,7 +10,7 @@ COPY package.json bun.lock tsconfig.json ./
 # 3. Copy ONLY package manifests (not source)
 COPY packages/core/package.json ./packages/core/
 COPY packages/cli/package.json ./packages/cli/
-COPY packages/electron/package.json ./packages/electron/
+COPY packages/app/package.json ./packages/app/
 COPY packages/ui/package.json ./packages/ui/
 
 # 4. Install dependencies (CACHED unless package.json or bun.lock changes)
