@@ -18,18 +18,16 @@ RUN bun install
 
 # 5. Copy source code (INVALIDATED when you change code, but bun install stays cached)
 COPY packages/core/src ./packages/core/src
+COPY packages/core/package.json ./packages/core/
+COPY packages/core/requirements.txt ./packages/core/
 COPY packages/cli/src ./packages/cli/src
 COPY packages/cli/tsconfig.json ./packages/cli/
-COPY packages/cli/requirements.txt ./packages/cli/
 
-# 6. Build (runs when source changes, uses cached node_modules)
-RUN rm -rf /app/packages/cli/node_modules /app/packages/core/node_modules \
-    && ln -s /app/node_modules /app/packages/cli/node_modules \
-    && ln -s /app/node_modules /app/packages/core/node_modules \
-    && cd /app/packages/cli \
+# 6. Build
+RUN cd /app/packages/cli \
     && bun run build
 
-# 6. Global Install & Setup
+# 7. Global Install & Setup
 # bun install -g doesn't work well with workspace deps, create symlink manually
 WORKDIR /app/packages/cli
 RUN ln -s /app/packages/cli/dist/index.js /usr/local/bin/ai-brain

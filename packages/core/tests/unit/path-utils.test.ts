@@ -87,6 +87,14 @@ describe('Package Path Utilities', () => {
 
       expect(() => getPackageRoot()).toThrow(/Could not find @ai-brain\/core package root/)
     })
+
+    it('should return dist folder when in cli/dist context', () => {
+      const fakeFile = path.join('/mock', 'cli', 'dist', 'index.js')
+      mockUrl.fileURLToPath.mockReturnValue(fakeFile)
+
+      const root = getPackageRoot()
+      expect(root.replace(/\\/g, '/')).toBe('/mock/cli/dist')
+    })
   })
 
   describe('getPackageResource', () => {

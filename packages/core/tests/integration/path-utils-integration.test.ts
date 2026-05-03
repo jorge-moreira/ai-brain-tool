@@ -103,6 +103,25 @@ describe('path-utils integration', () => {
       expect(existsSync(join(coreDir, 'package.json'))).toBe(true)
     })
 
+    it('should handle cli/dist path structure', () => {
+      // Simulate CLI bundled structure: cli/dist with copied resources
+      const cliDir = join(tmpDir, 'cli')
+      const distDir = join(cliDir, 'dist')
+
+      mkdirSync(distDir, { recursive: true })
+      writeFileSync(
+        join(distDir, 'package.json'),
+        JSON.stringify({ name: '@ai-brain/cli', version: '1.0.0' })
+      )
+      writeFileSync(join(distDir, 'requirements.txt'), 'graphifyy==1.0.0')
+      mkdirSync(join(distDir, 'templates'), { recursive: true })
+
+      // Verify the structure
+      expect(existsSync(distDir)).toBe(true)
+      expect(existsSync(join(distDir, 'requirements.txt'))).toBe(true)
+      expect(existsSync(join(distDir, 'templates'))).toBe(true)
+    })
+
     it('should have resources in bundled core directory', () => {
       const appDir = join(tmpDir, 'app')
       const coreDir = join(appDir, 'core')

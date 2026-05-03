@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'fs'
-import { join, dirname } from 'path'
+import { join } from 'path'
 import { platform } from 'process'
 import { homedir } from 'os'
 import { execa } from 'execa'
