@@ -10,7 +10,7 @@ import {
   isBrainIdAvailable,
   isInstallationComplete
 } from '@ai-brain/core/config'
-import { createVenv, globalVenvExists } from '@ai-brain/core/graphify'
+import { createVenv, globalVenvExists, ensureUv, createGlobalVenv } from '@ai-brain/core/graphify'
 import { detectAll, type DetectedPlatform } from '@ai-brain/core/index'
 import { initRepo, writeGitignore } from '@ai-brain/core/git'
 import { run } from '../../../src/commands/setup'
@@ -35,7 +35,8 @@ vi.mock('chalk', () => {
 vi.mock('ora', () => ({
   default: vi.fn(() => ({
     start: vi.fn().mockReturnThis(),
-    succeed: vi.fn()
+    succeed: vi.fn().mockReturnThis(),
+    fail: vi.fn().mockReturnThis()
   }))
 }))
 
@@ -119,6 +120,8 @@ const mockedExistsSync = existsSync as Mock<typeof existsSync>
 const mockedWriteFileSync = writeFileSync as Mock<typeof writeFileSync>
 const mockedIsInstallationComplete = isInstallationComplete as Mock<typeof isInstallationComplete>
 const mockedGlobalVenvExists = globalVenvExists as Mock<typeof globalVenvExists>
+const mockedEnsureUv = ensureUv as Mock<typeof ensureUv>
+const mockedCreateGlobalVenv = createGlobalVenv as Mock<typeof createGlobalVenv>
 
 describe('commands/setup', () => {
   let consoleLogSpy: Mock<Console['log']>
@@ -501,5 +504,33 @@ describe('commands/setup', () => {
     expect(mockedInput).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'Path to your Obsidian vault:' })
     )
+  })
+
+  it('should propagate error when ensureUv fails during installation', async () => {
+    mockedExistsSync.mockReturnValue(false)
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedIsInstallationComplete.mockReturnValue(false)
+    mockedGlobalVenvExists.mockReturnValue(true)
+
+    mockedEnsureUv.mockRejectedValue(new Error('uv install failed'))
+
+    await expect(run()).rejects.toThrow('uv install failed')
+  })
+
+  it('should propagate error when createGlobalVenv fails during installation', async () => {
+    mockedExistsSync.mockReturnValue(false)
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedIsInstallationComplete.mockReturnValue(false)
+    mockedGlobalVenvExists.mockReturnValue(true)
+
+    mockedEnsureUv.mockResolvedValue(undefined)
+    mockedCreateGlobalVenv.mockRejectedValue(new Error('venv creation failed'))
+
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+
+    await expect(run()).rejects.toThrow('venv creation failed')
   })
 })
