@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@ai-brain/ui/components/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@ai-brain/ui/components/card';
 
@@ -8,7 +7,7 @@ interface WelcomeScreenProps {
 
 export function WelcomeScreen({ onNext }: WelcomeScreenProps) {
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md card-rounded">
       <CardHeader>
         <CardTitle>Welcome to AI Brain</CardTitle>
         <CardDescription>
@@ -21,7 +20,7 @@ export function WelcomeScreen({ onNext }: WelcomeScreenProps) {
         </p>
       </CardContent>
       <CardFooter>
-        <Button onClick={onNext} className="w-full">
+        <Button onClick={onNext} className="w-full btn-pill">
           Get Started
         </Button>
       </CardFooter>

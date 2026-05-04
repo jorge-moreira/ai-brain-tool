@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const pkg = JSON.parse(rf(join(__dirname, '../../package.json'), 'utf8'))
+const pkg = JSON.parse(rf(join(__dirname, '../../package.json'), 'utf8')) as { version: string }
 
 export async function run(args: string[], options: { brainId?: string } = {}): Promise<void> {
   const brainPath = getBrainPath(args, options)
@@ -33,7 +33,10 @@ export async function run(args: string[], options: { brainId?: string } = {}): P
   const graphPath = join(brainPath, 'graphify-out', 'graph.json')
   if (existsSync(graphPath)) {
     try {
-      const graph = JSON.parse(readFileSync(graphPath, 'utf8'))
+      const graph = JSON.parse(readFileSync(graphPath, 'utf8')) as {
+        nodes?: Array<unknown>
+        edges?: Array<unknown>
+      }
       const nodeCount = graph.nodes?.length ?? '?'
       const edgeCount = graph.edges?.length ?? '?'
       console.log(`  Graph:          ${nodeCount} nodes, ${edgeCount} edges`)

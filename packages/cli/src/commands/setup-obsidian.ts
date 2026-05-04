@@ -52,7 +52,7 @@ export async function run(
   let vaultPath: string | null = options.vaultPath ?? null
   if (vaultPath === null) {
     const { default: inquirer } = await import('inquirer')
-    const result = await inquirer.prompt([
+    const result = await inquirer.prompt<{ vaultPath: string }>([
       {
         type: 'input',
         name: 'vaultPath',

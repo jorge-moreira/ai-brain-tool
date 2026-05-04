@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@ai-brain/ui/components/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@ai-brain/ui/components/card';
 import { Progress } from '@ai-brain/ui/components/progress';
@@ -42,7 +42,7 @@ export function UVInstallScreen({ onComplete, onBack }: UVInstallScreenProps) {
   }, [onComplete]);
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md card-rounded">
       <CardHeader>
         <CardTitle>Installing UV</CardTitle>
         <CardDescription>
@@ -61,7 +61,7 @@ export function UVInstallScreen({ onComplete, onBack }: UVInstallScreenProps) {
         )}
         
         {status === 'done' && (
-          <Alert>
+          <Alert className="alert-pill">
             <AlertDescription>
               UV installed successfully!
             </AlertDescription>
@@ -69,7 +69,7 @@ export function UVInstallScreen({ onComplete, onBack }: UVInstallScreenProps) {
         )}
         
         {status === 'error' && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="alert-pill">
             <AlertDescription>
               {errorMessage}
             </AlertDescription>
@@ -79,16 +79,16 @@ export function UVInstallScreen({ onComplete, onBack }: UVInstallScreenProps) {
       <CardFooter className="flex gap-2">
         {status === 'error' && (
           <>
-            <Button variant="outline" onClick={onBack}>
+            <Button variant="outline" onClick={onBack} className="btn-pill">
               Back
             </Button>
-            <Button onClick={() => window.location.reload()} className="flex-1">
+            <Button onClick={() => window.location.reload()} className="flex-1 btn-pill">
               Retry
             </Button>
           </>
         )}
         {status !== 'error' && status !== 'checking' && (
-          <Button onClick={onComplete} className="w-full" disabled={status !== 'done'}>
+          <Button onClick={onComplete} className="w-full btn-pill" disabled={status !== 'done'}>
             Continue
           </Button>
         )}

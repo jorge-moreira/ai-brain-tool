@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest'
 import * as fs from 'fs'
-import { getBrainPath } from '@ai-brain/core/config'
+import { getBrainPath, readConfig, type Config } from '@ai-brain/core/config'
 import { upgradeVenv } from '@ai-brain/core/graphify'
 import { run } from '../../../src/commands/upgrade'
 
@@ -30,7 +30,8 @@ vi.mock('ora', () => ({
 }))
 
 vi.mock('@ai-brain/core/config', () => ({
-  getBrainPath: vi.fn<typeof getBrainPath>()
+  getBrainPath: vi.fn<typeof getBrainPath>(),
+  readConfig: vi.fn<typeof readConfig>()
 }))
 
 vi.mock('@ai-brain/core/graphify', () => ({
@@ -38,8 +39,8 @@ vi.mock('@ai-brain/core/graphify', () => ({
 }))
 
 const mockedGetBrainPath = getBrainPath as Mock<typeof getBrainPath>
+const mockedReadConfig = readConfig as Mock<typeof readConfig>
 const mockedUpgradeVenv = upgradeVenv as Mock<typeof upgradeVenv>
-const mockedReadFileSync = fs.readFileSync as unknown as Mock<typeof fs.readFileSync>
 const mockedCpSync = fs.cpSync as unknown as Mock<typeof fs.cpSync>
 const mockedMkdtempSync = fs.mkdtempSync as unknown as Mock<typeof fs.mkdtempSync>
 
@@ -74,8 +75,8 @@ describe('commands/upgrade', () => {
   it('should upgrade graphify without extras when no brain config', async () => {
     const tmp = '/tmp/test-brain'
     mockedMkdtempSync.mockReturnValue(tmp)
-    mockedReadFileSync.mockImplementation(() => {
-      throw new Error('File not found')
+    mockedReadConfig.mockImplementation(() => {
+      throw new Error('Config not found')
     })
 
     mockedGetBrainPath.mockReturnValue(tmp)
@@ -87,10 +88,10 @@ describe('commands/upgrade', () => {
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Upgrade complete'))
   })
 
-  it('should upgrade graphify with extras from brain config', async () => {
+  it('should upgrade graphify with extras from global config', async () => {
     const tmp = '/tmp/test-brain'
     mockedMkdtempSync.mockReturnValue(tmp)
-    mockedReadFileSync.mockReturnValue(JSON.stringify({ extras: ['office', 'video'] }))
+    mockedReadConfig.mockReturnValue({ graphifyyExtras: ['office', 'video'] })
 
     mockedGetBrainPath.mockReturnValue(tmp)
     mockedUpgradeVenv.mockResolvedValue()
@@ -103,7 +104,7 @@ describe('commands/upgrade', () => {
   it('should copy bundled templates', async () => {
     const tmp = '/tmp/test-brain'
     mockedMkdtempSync.mockReturnValue(tmp)
-    mockedReadFileSync.mockReturnValue(JSON.stringify({ extras: [] }))
+    mockedReadConfig.mockReturnValue({ graphifyyExtras: [] })
 
     mockedGetBrainPath.mockReturnValue(tmp)
     mockedUpgradeVenv.mockResolvedValue()
@@ -120,7 +121,7 @@ describe('commands/upgrade', () => {
   it('should accept brain-id from args', async () => {
     const tmp = '/tmp/test-brain'
     mockedMkdtempSync.mockReturnValue(tmp)
-    mockedReadFileSync.mockReturnValue(JSON.stringify({ extras: [] }))
+    mockedReadConfig.mockReturnValue({ graphifyyExtras: [] })
 
     mockedGetBrainPath.mockReturnValue(tmp)
     mockedUpgradeVenv.mockResolvedValue()
@@ -133,7 +134,7 @@ describe('commands/upgrade', () => {
   it('should accept brain-id from options', async () => {
     const tmp = '/tmp/test-brain'
     mockedMkdtempSync.mockReturnValue(tmp)
-    mockedReadFileSync.mockReturnValue(JSON.stringify({ extras: [] }))
+    mockedReadConfig.mockReturnValue({ graphifyyExtras: [] })
 
     mockedGetBrainPath.mockReturnValue(tmp)
     mockedUpgradeVenv.mockResolvedValue()
@@ -146,7 +147,7 @@ describe('commands/upgrade', () => {
   it('should handle empty extras array', async () => {
     const tmp = '/tmp/test-brain'
     mockedMkdtempSync.mockReturnValue(tmp)
-    mockedReadFileSync.mockReturnValue(JSON.stringify({}))
+    mockedReadConfig.mockReturnValue({ graphifyyExtras: undefined })
 
     mockedGetBrainPath.mockReturnValue(tmp)
     mockedUpgradeVenv.mockResolvedValue()

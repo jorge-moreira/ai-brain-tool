@@ -34,7 +34,7 @@ export function patchJsonConfig({
   let current: Record<string, unknown> = {}
   if (existsSync(configPath)) {
     try {
-      current = JSON.parse(readFileSync(configPath, 'utf8'))
+      current = JSON.parse(readFileSync(configPath, 'utf8')) as Record<string, unknown>
     } catch {
       throw new Error(
         `Could not parse config at ${configPath}. Please fix the JSON before running setup.`

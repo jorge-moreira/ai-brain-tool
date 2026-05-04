@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync, existsSync, PathLike } from 'fs'
+import { mkdtempSync, rmSync, mkdirSync, existsSync, PathLike } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import {
@@ -33,7 +33,12 @@ describe('config integration', () => {
   describe('full config workflow', () => {
     it('should create config dir, write config, add brain, and read it back', async () => {
       ensureConfigDir()
-      writeConfig({ brains: {} })
+      writeConfig({
+        installationComplete: false,
+        graphifyyExtras: [],
+        aiTools: [],
+        brains: {}
+      })
 
       expect(existsSync(configPath())).toBe(true)
 
@@ -106,24 +111,6 @@ describe('config integration', () => {
       expect(resolved.id).toBe('mybrain')
       expect(resolved.isLocal).toBe(true)
     })
-
-    it('should resolve from local .brain-config.json', async () => {
-      const brainPath = join(tmpHome.toString(), 'localbrain')
-      mkdirSync(brainPath, { recursive: true })
-
-      writeConfig({ brains: {} })
-      writeFileSync(
-        join(brainPath, '.brain-config.json'),
-        JSON.stringify({ id: 'localbrain' }),
-        'utf8'
-      )
-
-      process.cwd = () => brainPath
-      const resolved = resolveBrain()
-
-      expect(resolved.id).toBe('localbrain')
-      expect(resolved.path).toBe(brainPath)
-    })
   })
 
   describe('getBrainPath integration', () => {
@@ -160,7 +147,12 @@ describe('config integration', () => {
     })
 
     it('should provide helpful error when no brain configured', async () => {
-      writeConfig({ brains: {} })
+      writeConfig({
+        installationComplete: false,
+        graphifyyExtras: [],
+        aiTools: [],
+        brains: {}
+      })
 
       expect(() => getBrainPath([], {})).toThrow('No brain configured')
     })
@@ -184,13 +176,11 @@ describe('config integration', () => {
       writeBrainConfig({
         brainPath,
         gitSync: true,
-        extras: ['office', 'video'],
         obsidianDir: '/obsidian'
       })
 
       const config = readLocalBrainConfig(brainPath)
       expect(config.gitSync).toBe(true)
-      expect(config.extras).toEqual(['office', 'video'])
       expect(config.obsidianDir).toBe('/obsidian')
     })
 
@@ -199,7 +189,6 @@ describe('config integration', () => {
 
       const config = readLocalBrainConfig(brainPath)
       expect(config.gitSync).toBe(false)
-      expect(config.extras).toEqual([])
       expect(config.obsidianDir).toBeNull()
     })
   })

@@ -5,6 +5,32 @@ import { homedir } from 'os'
 import { execa } from 'execa'
 import { getPackageResource } from './path-utils'
 
+// Global venv path (shared by all brains)
+export const GLOBAL_VENV_PATH = join(homedir(), '.ai-brain-tool', '.venv')
+
+// Check if running on Windows
+export function isWindows(): boolean {
+  return platform === 'win32'
+}
+
+// Get Python executable path for a venv
+function getVenvPythonPath(venvPath: string): string {
+  if (isWindows()) {
+    return join(venvPath, 'Scripts', 'python.exe')
+  }
+  return join(venvPath, 'bin', 'python3')
+}
+
+// Global venv Python path
+export function globalVenvPythonPath(): string {
+  return getVenvPythonPath(GLOBAL_VENV_PATH)
+}
+
+// Check if global venv exists
+export function globalVenvExists(): boolean {
+  return existsSync(globalVenvPythonPath())
+}
+
 // Get requirements.txt - works in CLI and bundled contexts
 const REQUIREMENTS_PATH = getPackageResource('requirements.txt')
 const REQUIREMENTS = readFileSync(REQUIREMENTS_PATH, 'utf8')
@@ -18,10 +44,7 @@ function buildPkg(extras: string[] = []): string {
 
 // Returns path to the venv Python executable
 export function venvPythonPath(brainPath: string): string {
-  if (platform === 'win32') {
-    return join(brainPath, '.venv', 'Scripts', 'python.exe')
-  }
-  return join(brainPath, '.venv', 'bin', 'python3')
+  return getVenvPythonPath(join(brainPath, '.venv'))
 }
 
 // Returns true if the .venv already exists and has the Python executable
@@ -69,8 +92,7 @@ export async function ensureUv(): Promise<void> {
   }
 
   try {
-    const isWindows = platform === 'win32'
-    const installCmd = isWindows
+    const installCmd = isWindows()
       ? {
           cmd: 'powershell',
           args: ['-c', 'irm https://astral.sh/uv/install.ps1 | iex']
@@ -86,7 +108,7 @@ export async function ensureUv(): Promise<void> {
     const uvBinDir = join(homedir(), '.local', 'bin')
     const currentPath = process.env.PATH || ''
     if (!currentPath.includes(uvBinDir)) {
-      const sep = platform === 'win32' ? ';' : ':'
+      const sep = isWindows() ? ';' : ':'
       process.env.PATH = `${uvBinDir}${sep}${currentPath}`
     }
 
@@ -148,6 +170,35 @@ export async function upgradeVenv(brainPath: string, extras: string[] = []): Pro
 
   const pkg = buildPkg(extras)
   await execa('uv', ['pip', 'install', '--upgrade', pkg, '--python', venvPythonPath(brainPath)], {
+    stdio: 'inherit'
+  })
+}
+
+// Create global .venv and install graphifyy with extras
+export async function createGlobalVenv(extras: string[] = []): Promise<void> {
+  await ensureUv()
+
+  const pkg = buildPkg(extras)
+  const python = await detectPython()
+
+  // Create venv at global path
+  if (python) {
+    await execa('uv', ['venv', '--python', python, GLOBAL_VENV_PATH], { stdio: 'inherit' })
+  } else {
+    await execa('uv', ['venv', '--python', '3.10', GLOBAL_VENV_PATH], { stdio: 'inherit' })
+  }
+
+  // Install graphifyy in global venv
+  await execa('uv', ['pip', 'install', pkg, '--python', globalVenvPythonPath()], {
+    stdio: 'inherit'
+  })
+}
+
+// Upgrade global graphifyy
+export async function upgradeGlobalVenv(extras: string[] = []): Promise<void> {
+  await ensureUv()
+  const pkg = buildPkg(extras)
+  await execa('uv', ['pip', 'install', '--upgrade', pkg, '--python', globalVenvPythonPath()], {
     stdio: 'inherit'
   })
 }

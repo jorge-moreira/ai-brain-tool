@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Wizard } from './components/Wizard';
+import { rpc } from './lib/rpc';
 
 function Dashboard() {
   return (
@@ -13,20 +14,26 @@ function Dashboard() {
 }
 
 function App() {
-  const [isSetupComplete, setIsSetupComplete] = useState<boolean | null>(null);
+  const [isInstalled, setIsInstalled] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const setupDone = localStorage.getItem('ai-brain-setup-complete') === 'true';
-    console.log('Setup complete:', setupDone);
-    setIsSetupComplete(setupDone);
+    // Check if global installation was done (uv + AI tools configured)
+    rpc.checkInstallation()
+      .then(result => {
+        console.log('Installation check:', result.installed);
+        setIsInstalled(result.installed);
+      })
+      .catch(error => {
+        console.error('Failed to check installation:', error);
+        setIsInstalled(false);
+      });
   }, []);
 
   const handleWizardComplete = () => {
-    localStorage.setItem('ai-brain-setup-complete', 'true');
-    setIsSetupComplete(true);
+    setIsInstalled(true);
   };
 
-  if (isSetupComplete === null) {
+  if (isInstalled === null) {
     return (
       <div className="flex items-center justify-center w-full h-full">
         <p>Loading...</p>
@@ -34,7 +41,7 @@ function App() {
     );
   }
 
-  return isSetupComplete ? (
+  return isInstalled ? (
     <Dashboard />
   ) : (
     <Wizard onComplete={handleWizardComplete} />

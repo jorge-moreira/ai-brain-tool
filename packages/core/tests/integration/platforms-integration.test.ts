@@ -73,7 +73,9 @@ describe('platforms integration', () => {
       const mcpPath = join(tmpHome.toString(), '.claude', 'mcp.json')
       expect(existsSync(mcpPath)).toBe(true)
 
-      const config = JSON.parse(readFileSync(mcpPath, 'utf8'))
+      const config = JSON.parse(readFileSync(mcpPath, 'utf8')) as unknown as {
+        mcpServers: Record<string, { command?: string; args?: string[] }>
+      }
       expect(config.mcpServers['ai-brain']).toBeDefined()
       expect(config.mcpServers['ai-brain'].command).toContain('.venv/bin/python3')
       expect(config.mcpServers['ai-brain'].args).toContain('-m')
@@ -109,7 +111,9 @@ describe('platforms integration', () => {
       const configPath = join(tmpHome.toString(), '.config', 'opencode', 'opencode.json')
       expect(existsSync(configPath)).toBe(true)
 
-      const config = JSON.parse(readFileSync(configPath, 'utf8'))
+      const config = JSON.parse(readFileSync(configPath, 'utf8')) as unknown as {
+        mcp: Record<string, { type?: string }>
+      }
       expect(config.mcp['ai-brain']).toBeDefined()
       expect(config.mcp['ai-brain'].type).toBe('local')
     })
@@ -150,7 +154,9 @@ describe('platforms integration', () => {
       const mcpPath = join(tmpHome.toString(), '.cursor', 'mcp.json')
       expect(existsSync(mcpPath)).toBe(true)
 
-      const config = JSON.parse(readFileSync(mcpPath, 'utf8'))
+      const config = JSON.parse(readFileSync(mcpPath, 'utf8')) as unknown as {
+        mcpServers: Record<string, unknown>
+      }
       expect(config.mcpServers['ai-brain']).toBeDefined()
     })
 
@@ -180,7 +186,9 @@ describe('platforms integration', () => {
       const settingsPath = join(tmpHome.toString(), '.gemini', 'settings.json')
       expect(existsSync(settingsPath)).toBe(true)
 
-      const config = JSON.parse(readFileSync(settingsPath, 'utf8'))
+      const config = JSON.parse(readFileSync(settingsPath, 'utf8')) as unknown as {
+        mcpServers: Record<string, unknown>
+      }
       expect(config.mcpServers).toBeDefined()
       expect(config.mcpServers['ai-brain']).toBeDefined()
     })
@@ -345,7 +353,9 @@ describe('platforms integration', () => {
     })
 
     it('should handle empty selected array', async () => {
-      await expect(installSkills({ selected: [], homeDir: tmpHome.toString() })).resolves.toBeUndefined()
+      await expect(
+        installSkills({ selected: [], homeDir: tmpHome.toString() })
+      ).resolves.toBeUndefined()
     })
 
     it('should connect brain to selected platforms', async () => {
@@ -368,8 +378,12 @@ describe('platforms integration', () => {
       expect(existsSync(claudeMcpPath)).toBe(true)
       expect(existsSync(opencodeConfigPath)).toBe(true)
 
-      const claudeConfig = JSON.parse(readFileSync(claudeMcpPath, 'utf8'))
-      const opencodeConfig = JSON.parse(readFileSync(opencodeConfigPath, 'utf8'))
+      const claudeConfig = JSON.parse(readFileSync(claudeMcpPath, 'utf8')) as unknown as {
+        mcpServers: Record<string, unknown>
+      }
+      const opencodeConfig = JSON.parse(readFileSync(opencodeConfigPath, 'utf8')) as unknown as {
+        mcp: Record<string, unknown>
+      }
 
       expect(claudeConfig.mcpServers['ai-brain']).toBeDefined()
       expect(opencodeConfig.mcp['ai-brain']).toBeDefined()

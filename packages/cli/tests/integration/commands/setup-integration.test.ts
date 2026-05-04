@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync, existsSync, readFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import type { Mock } from 'vitest'
 
 vi.mock('@inquirer/prompts', () => ({
   input: vi.fn(),
@@ -23,12 +24,42 @@ vi.mock('ora', () => {
 
 vi.mock('@ai-brain/core/graphify', () => ({
   createVenv: vi.fn().mockResolvedValue(undefined),
-  venvPythonPath: vi.fn((path: string) => join(path, '.venv', 'bin', 'python3'))
+  createGlobalVenv: vi.fn().mockResolvedValue(undefined),
+  venvPythonPath: vi.fn((path: string) => join(path, '.venv', 'bin', 'python3')),
+  globalVenvPythonPath: vi.fn(() => '/fake/.venv/bin/python3'),
+  globalVenvExists: vi.fn().mockReturnValue(true),
+  ensureUv: vi.fn().mockResolvedValue(undefined),
+  detectPython: vi.fn().mockResolvedValue('python3'),
+  isWindows: vi.fn().mockReturnValue(false)
 }))
 
 vi.mock('@ai-brain/core/index', () => ({
   detectAll: vi.fn().mockResolvedValue([]),
   configureSelected: vi.fn().mockResolvedValue(undefined)
+}))
+
+let mockIsBrainIdAvailable: Mock
+let mockWriteConfig: Mock
+let mockAddBrain: Mock
+let mockReadConfig: Mock
+let mockGraphifyyExtras: string[]
+
+vi.mock('@ai-brain/core/config', () => ({
+  readConfig: vi.fn(() => ({ brains: {} })),
+  writeConfig: vi.fn(),
+  addBrain: vi.fn(),
+  ensureConfigDir: vi.fn(),
+  configPath: vi.fn(() => '/fake/config/path'),
+  isBrainIdAvailable: vi.fn().mockReturnValue(true),
+  isInstallationComplete: vi.fn().mockReturnValue(true),
+  setInstallationComplete: vi.fn(),
+  addGraphifyyExtra: vi.fn(),
+  createInitialConfig: vi.fn(() => ({
+    installationComplete: false,
+    graphifyyExtras: [],
+    aiTools: [],
+    brains: []
+  }))
 }))
 
 describe('setup integration', () => {
@@ -37,7 +68,7 @@ describe('setup integration', () => {
   let tmpCwd: string
   let originalCwd: string
 
-  beforeEach(() => {
+  beforeEach(async () => {
     tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-setup-test-'))
     tmpCwd = mkdtempSync(join(tmpdir(), 'ai-brain-setup-cwd-'))
     originalHome = process.env.HOME
@@ -47,6 +78,44 @@ describe('setup integration', () => {
     process.chdir(tmpCwd)
 
     mkdirSync(join(tmpHome, '.ai-brain-tool'), { recursive: true })
+
+    // Reset mocks and set up defaults
+    vi.clearAllMocks()
+    mockGraphifyyExtras = []
+
+    const configModule = await import('@ai-brain/core/config')
+    mockIsBrainIdAvailable = configModule.isBrainIdAvailable as Mock
+    mockWriteConfig = configModule.writeConfig as Mock
+    mockAddBrain = configModule.addBrain as Mock
+    mockReadConfig = configModule.readConfig as Mock
+
+    mockIsBrainIdAvailable.mockReturnValue(true)
+    mockWriteConfig.mockImplementation((config: { graphifyyExtras?: string[] }) => {
+      if (config?.graphifyyExtras) {
+        mockGraphifyyExtras = config.graphifyyExtras
+      }
+      writeFileSync(
+        join(tmpHome, '.ai-brain-tool', 'config.json'),
+        JSON.stringify({ brains: {}, graphifyyExtras: mockGraphifyyExtras }),
+        'utf8'
+      )
+    })
+    mockAddBrain.mockImplementation((id: string, path: string) => {
+      const configPath = join(tmpHome, '.ai-brain-tool', 'config.json')
+      const config = JSON.parse(readFileSync(configPath, 'utf8')) as {
+        brains: Record<string, string>
+      }
+      config.brains[id] = path
+      writeFileSync(configPath, JSON.stringify(config), 'utf8')
+    })
+    mockReadConfig.mockImplementation(() => {
+      const configPath = join(tmpHome, '.ai-brain-tool', 'config.json')
+      if (existsSync(configPath)) {
+        return JSON.parse(readFileSync(configPath, 'utf8')) as { brains: Record<string, string> }
+      }
+      return { brains: {} }
+    })
+
     writeFileSync(
       join(tmpHome, '.ai-brain-tool', 'config.json'),
       JSON.stringify({ brains: {} }),
@@ -207,6 +276,10 @@ describe('setup integration', () => {
       return []
     })
 
+    mockIsBrainIdAvailable.mockImplementation((brainId: string) => {
+      return brainId !== 'test-brain'
+    })
+
     const { run } = await import('../../../src/commands/setup')
     await run()
 
@@ -295,6 +368,10 @@ describe('setup integration', () => {
   it('should create brain with extras selected', async () => {
     const { input, select, checkbox, confirm } = await import('@inquirer/prompts')
 
+    // Reset installation state to trigger installation flow
+    const configModule = await import('@ai-brain/core/config')
+    ;(configModule.isInstallationComplete as Mock).mockReturnValue(false)
+
     vi.mocked(input).mockImplementation(async ({ message, default: defaultValue }) => {
       if (message.includes('folder name')) return 'extras-brain'
       if (message.includes('Path:')) return tmpCwd
@@ -310,13 +387,14 @@ describe('setup integration', () => {
     })
 
     vi.mocked(confirm).mockImplementation(async ({ message, default: defaultValue }) => {
+      if (message.includes('video')) return true
+      if (message.includes('office')) return true
       if (message.includes('Commit extraction')) return true
       if (message.includes('Auto-sync')) return false
       return defaultValue ?? false
     })
 
     vi.mocked(checkbox).mockImplementation(async ({ message }) => {
-      if (message.includes('file types')) return ['office', 'video']
       if (message.includes('AI tools')) return []
       return []
     })
@@ -324,11 +402,10 @@ describe('setup integration', () => {
     const { run } = await import('../../../src/commands/setup')
     await run()
 
-    const brainPath = join(tmpCwd, 'extras-brain')
-    const configContent = JSON.parse(
-      readFileSync(join(brainPath, '.brain-config.json'), 'utf8')
-    ) as { extras: string[] }
-    expect(configContent.extras).toEqual(['office', 'video'])
+    const globalConfigContent = JSON.parse(
+      readFileSync(join(tmpHome, '.ai-brain-tool', 'config.json'), 'utf8')
+    ) as { graphifyyExtras: string[] }
+    expect(globalConfigContent.graphifyyExtras).toEqual(['video', 'office'])
   })
 
   it('should setup obsidian with brain as vault', async () => {

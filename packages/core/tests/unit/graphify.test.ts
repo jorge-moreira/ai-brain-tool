@@ -11,7 +11,12 @@ import {
   detectPackageManager,
   createVenv,
   runGraphify,
-  upgradeVenv
+  upgradeVenv,
+  GLOBAL_VENV_PATH,
+  globalVenvPythonPath,
+  globalVenvExists,
+  createGlobalVenv,
+  upgradeGlobalVenv
 } from '@ai-brain/core/graphify'
 
 vi.mock('chalk', () => ({
@@ -273,6 +278,49 @@ describe('graphify', () => {
       writeFileSync(join(tmp, '.venv', 'bin', 'python3'), '')
       await expect(runGraphify(tmp)).rejects.toThrow('Some other error')
       rmSync(tmp, { recursive: true, force: true })
+    })
+  })
+
+  describe('global venv', () => {
+    it('should return correct global venv path', () => {
+      expect(GLOBAL_VENV_PATH).toContain('.ai-brain-tool')
+      expect(GLOBAL_VENV_PATH).toContain('.venv')
+    })
+
+    it('should return correct global venv Python path', () => {
+      const expected = globalVenvPythonPath()
+      expect(expected).toContain('.ai-brain-tool')
+      expect(expected).toContain('.venv')
+    })
+
+    it('should check if global venv exists', () => {
+      const result = globalVenvExists()
+      expect(typeof result).toBe('boolean')
+    })
+
+    it('should create global venv', async () => {
+      mockedExeca
+        .mockResolvedValueOnce({ stdout: 'uv 0.5.0', stderr: '' })
+        .mockResolvedValueOnce({ stdout: '', stderr: '' })
+        .mockResolvedValueOnce({ stdout: '', stderr: '' })
+      await createGlobalVenv(['mcp'])
+      expect(mockedExeca).toHaveBeenCalledWith(
+        'uv',
+        expect.arrayContaining(['venv']),
+        expect.anything()
+      )
+    })
+
+    it('should upgrade global venv', async () => {
+      mockedExeca
+        .mockResolvedValueOnce({ stdout: 'uv 0.5.0', stderr: '' })
+        .mockResolvedValueOnce({ stdout: '', stderr: '' })
+      await upgradeGlobalVenv(['mcp'])
+      expect(mockedExeca).toHaveBeenCalledWith(
+        'uv',
+        expect.arrayContaining(['pip', 'install', '--upgrade']),
+        expect.anything()
+      )
     })
   })
 })

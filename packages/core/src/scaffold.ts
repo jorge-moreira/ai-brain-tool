@@ -23,31 +23,23 @@ const dirs = [
   'graphify-out'
 ]
 
-export interface BrainConfigData {
-  gitSync: boolean
-  extras: string[]
-  obsidianDir?: string | null
-}
-
 export function writeBrainConfig({
   brainPath,
   gitSync,
-  extras = [],
   obsidianDir = null
 }: {
   brainPath: string
   gitSync: boolean
-  extras?: string[]
   obsidianDir?: string | null
 }): void {
-  const config: Record<string, unknown> = { gitSync: !!gitSync, extras }
+  const config: Record<string, unknown> = { gitSync: !!gitSync }
   if (obsidianDir) config.obsidianDir = obsidianDir
   writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify(config, null, 2), 'utf8')
 }
 
-export function readLocalBrainConfig(brainPath: string): BrainConfigData {
+export function readLocalBrainConfig(brainPath: string): BrainConfig {
   const configPath = join(brainPath, '.brain-config.json')
-  if (!existsSync(configPath)) return { gitSync: false, extras: [], obsidianDir: null }
+  if (!existsSync(configPath)) return { gitSync: false, obsidianDir: null }
   return JSON.parse(readFileSync(configPath, 'utf8')) as BrainConfig
 }
 

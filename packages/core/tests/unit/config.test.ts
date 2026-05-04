@@ -12,8 +12,19 @@ import {
   removeBrain,
   isBrainIdAvailable,
   readBrainConfig,
-  getBrainPath
+  getBrainPath,
+  isInstallationComplete,
+  setInstallationComplete,
+  addGraphifyyExtra,
+  type Config
 } from '@ai-brain/core/config'
+
+const emptyConfig: Config = {
+  installationComplete: false,
+  graphifyyExtras: [],
+  aiTools: [],
+  brains: {}
+}
 
 vi.mock('chalk', () => ({
   default: {
@@ -32,12 +43,91 @@ describe('config', () => {
     process.env.__HOME__ = tmpHome
 
     ensureConfigDir()
-    writeConfig({ brains: {} })
+    writeConfig(emptyConfig)
   })
 
   afterEach(() => {
     rmSync(tmpHome, { recursive: true, force: true })
     delete process.env.__HOME__
+  })
+
+  describe('isInstallationComplete', () => {
+    it('should return false when config file does not exist', async () => {
+      rmSync(join(tmpHome, '.ai-brain-tool', 'config.json'), { force: true })
+      expect(isInstallationComplete()).toBe(false)
+    })
+
+    it('should return false when installationComplete is not set', async () => {
+      writeConfig({ installationComplete: false, graphifyyExtras: [], aiTools: [], brains: {} })
+      expect(isInstallationComplete()).toBe(false)
+    })
+
+    it('should return false when installationComplete is false', async () => {
+      writeConfig({ installationComplete: false, graphifyyExtras: [], aiTools: [], brains: {} })
+      expect(isInstallationComplete()).toBe(false)
+    })
+
+    it('should return true when installationComplete is true', async () => {
+      writeConfig({ installationComplete: true, graphifyyExtras: [], aiTools: [], brains: {} })
+      expect(isInstallationComplete()).toBe(true)
+    })
+
+    it('should return false when config is invalid JSON', async () => {
+      writeFileSync(join(tmpHome, '.ai-brain-tool', 'config.json'), 'invalid json {{{', 'utf8')
+      expect(isInstallationComplete()).toBe(false)
+    })
+  })
+
+  describe('setInstallationComplete', () => {
+    it('should set installationComplete to true in existing config', async () => {
+      writeConfig({ installationComplete: false, graphifyyExtras: [], aiTools: [], brains: {} })
+      setInstallationComplete()
+      const config = readConfig()
+      expect(config.installationComplete).toBe(true)
+    })
+
+    it('should create config and set installationComplete to true', async () => {
+      rmSync(join(tmpHome, '.ai-brain-tool', 'config.json'), { force: true })
+      setInstallationComplete()
+      const config = readConfig()
+      expect(config.installationComplete).toBe(true)
+    })
+  })
+
+  describe('addGraphifyyExtra', () => {
+    it('should add extra to existing config', async () => {
+      writeConfig({ installationComplete: true, graphifyyExtras: [], aiTools: [], brains: {} })
+      addGraphifyyExtra('office')
+      const config = readConfig()
+      expect(config.graphifyyExtras).toContain('office')
+    })
+
+    it('should not add duplicate extras', async () => {
+      writeConfig({
+        installationComplete: true,
+        graphifyyExtras: ['office'],
+        aiTools: [],
+        brains: {}
+      })
+      addGraphifyyExtra('office')
+      const config = readConfig()
+      expect(config.graphifyyExtras.filter(e => e === 'office').length).toBe(1)
+    })
+
+    it('should create config if not exists', async () => {
+      rmSync(join(tmpHome, '.ai-brain-tool', 'config.json'), { force: true })
+      addGraphifyyExtra('video')
+      const config = readConfig()
+      expect(config.graphifyyExtras).toContain('video')
+    })
+
+    it('should add multiple extras', async () => {
+      writeConfig({ installationComplete: true, graphifyyExtras: [], aiTools: [], brains: {} })
+      addGraphifyyExtra('office')
+      addGraphifyyExtra('video')
+      const config = readConfig()
+      expect(config.graphifyyExtras).toEqual(['office', 'video'])
+    })
   })
 
   describe('resolveBrain', () => {
@@ -53,13 +143,23 @@ describe('config', () => {
     })
 
     it('should throw when no brains configured', async () => {
-      writeConfig({ brains: {} })
+      writeConfig(emptyConfig)
       expect(() => resolveBrain()).toThrow('No brains configured')
     })
 
     it('should throw when not in brain folder and no args', async () => {
       addBrain('work', join(tmpHome, 'work'))
       expect(() => resolveBrain()).toThrow('Not in a brain folder')
+    })
+
+    it('should throw when brains is undefined in config', async () => {
+      const configPath = join(tmpHome, '.ai-brain-tool', 'config.json')
+      writeFileSync(
+        configPath,
+        JSON.stringify({ installationComplete: true, graphifyyExtras: [], aiTools: [] }),
+        'utf8'
+      )
+      expect(() => resolveBrain()).toThrow('No brains configured')
     })
 
     it('should resolve brain when cwd matches brain path', async () => {
@@ -73,21 +173,6 @@ describe('config', () => {
         expect(resolved.id).toBe('work')
       } finally {
         process.cwd = originalCwd
-      }
-    })
-
-    it('should resolve from local .brain-config.json in cwd', async () => {
-      const brainPath = join(tmpHome, 'brain')
-      mkdirSync(brainPath, { recursive: true })
-      writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify({ id: 'mybrain' }))
-      const originalCwd = process.cwd
-      process.cwd = () => brainPath
-      try {
-        const resolved = resolveBrain()
-        expect(resolved.id).toBe('mybrain')
-      } finally {
-        process.cwd = originalCwd
-        rmSync(join(brainPath, '.brain-config.json'))
       }
     })
   })
@@ -159,9 +244,7 @@ describe('config', () => {
     it('should return defaults when file does not exist', async () => {
       const config = readBrainConfig(join(tmpHome, 'nonexistent'))
       expect(config.gitSync).toBe(false)
-      expect(config.extras).toEqual([])
       expect(config.obsidianDir).toBeNull()
-      expect(config.id).toBeNull()
     })
 
     it('should read existing brain config', async () => {
@@ -171,13 +254,11 @@ describe('config', () => {
         join(brainPath, '.brain-config.json'),
         JSON.stringify({
           gitSync: true,
-          extras: ['office'],
           obsidianDir: '/obsidian'
         })
       )
       const config = readBrainConfig(brainPath)
       expect(config.gitSync).toBe(true)
-      expect(config.extras).toEqual(['office'])
       expect(config.obsidianDir).toBe('/obsidian')
     })
 
@@ -187,9 +268,7 @@ describe('config', () => {
       writeFileSync(join(brainPath, '.brain-config.json'), 'invalid json {{{')
       const config = readBrainConfig(brainPath)
       expect(config.gitSync).toBe(false)
-      expect(config.extras).toEqual([])
       expect(config.obsidianDir).toBeNull()
-      expect(config.id).toBeNull()
     })
   })
 
@@ -250,24 +329,19 @@ describe('config', () => {
       }
     })
 
-    it('should resolve from local .brain-config.json', async () => {
-      const brainPath = join(tmpHome, 'brain')
-      mkdirSync(brainPath, { recursive: true })
-      writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify({ id: 'mybrain' }))
+    it('should throw when no brains configured', async () => {
+      writeConfig(emptyConfig)
 
-      const originalCwd = process.cwd
-      process.cwd = () => brainPath
-      try {
-        const result = getBrainPath([], {})
-        expect(result).toBe(brainPath)
-      } finally {
-        process.cwd = originalCwd
-        rmSync(join(brainPath, '.brain-config.json'))
-      }
+      expect(() => getBrainPath([], {})).toThrow('No brain configured')
     })
 
-    it('should throw when no brains configured', async () => {
-      writeConfig({ brains: {} })
+    it('should throw when brains is undefined in config', async () => {
+      const configPath = join(tmpHome, '.ai-brain-tool', 'config.json')
+      writeFileSync(
+        configPath,
+        JSON.stringify({ installationComplete: true, graphifyyExtras: [], aiTools: [] }),
+        'utf8'
+      )
 
       expect(() => getBrainPath([], {})).toThrow('No brain configured')
     })
@@ -283,7 +357,17 @@ describe('config', () => {
 
   describe('listBrains', () => {
     it('should return empty array when no brains configured', async () => {
-      writeConfig({ brains: {} })
+      writeConfig(emptyConfig)
+      expect(listBrains()).toEqual([])
+    })
+
+    it('should return empty array when brains is undefined', async () => {
+      const configPath = join(tmpHome, '.ai-brain-tool', 'config.json')
+      writeFileSync(
+        configPath,
+        JSON.stringify({ installationComplete: false, graphifyyExtras: [], aiTools: [] }),
+        'utf8'
+      )
       expect(listBrains()).toEqual([])
     })
   })
@@ -294,6 +378,18 @@ describe('config', () => {
       addBrain('newbrain', join(tmpHome, 'newbrain'))
       const config = readConfig()
       expect(config.brains.newbrain).toBeDefined()
+    })
+
+    it('should initialize brains when config exists but brains is undefined', async () => {
+      const configPath = join(tmpHome, '.ai-brain-tool', 'config.json')
+      writeFileSync(
+        configPath,
+        JSON.stringify({ installationComplete: true, graphifyyExtras: [], aiTools: [] }),
+        'utf8'
+      )
+      addBrain('testbrain', join(tmpHome, 'testbrain'))
+      const config = readConfig()
+      expect(config.brains.testbrain).toBeDefined()
     })
   })
 })

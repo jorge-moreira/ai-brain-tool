@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, mkdirSync, readFileSync, existsSync, readdirSync, 
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { createBrainFolder, writeBrainConfig, readLocalBrainConfig } from '@ai-brain/core/scaffold'
+import { BrainConfig } from '@ai-brain/core/config'
 
 describe('scaffold integration', () => {
   let tmpHome: PathLike
@@ -99,16 +100,14 @@ describe('scaffold integration', () => {
       writeBrainConfig({
         brainPath,
         gitSync: true,
-        extras: ['office', 'video'],
         obsidianDir: '/path/to/vault'
       })
 
       const configPath = join(brainPath, '.brain-config.json')
       expect(existsSync(configPath)).toBe(true)
 
-      const config = JSON.parse(readFileSync(configPath, 'utf8'))
+      const config = JSON.parse(readFileSync(configPath, 'utf8')) as BrainConfig
       expect(config.gitSync).toBe(true)
-      expect(config.extras).toEqual(['office', 'video'])
       expect(config.obsidianDir).toBe('/path/to/vault')
     })
 
@@ -118,9 +117,10 @@ describe('scaffold integration', () => {
 
       writeBrainConfig({ brainPath, gitSync: false })
 
-      const config = JSON.parse(readFileSync(join(brainPath, '.brain-config.json'), 'utf8'))
+      const config = JSON.parse(
+        readFileSync(join(brainPath, '.brain-config.json'), 'utf8')
+      ) as BrainConfig
       expect(config.gitSync).toBe(false)
-      expect(config.extras).toEqual([])
       expect(config.obsidianDir).toBeUndefined()
     })
   })
@@ -133,23 +133,20 @@ describe('scaffold integration', () => {
       writeBrainConfig({
         brainPath,
         gitSync: true,
-        extras: ['office'],
         obsidianDir: '/vault'
       })
 
       const config = readLocalBrainConfig(brainPath)
       expect(config.gitSync).toBe(true)
-      expect(config.extras).toEqual(['office'])
       expect(config.obsidianDir).toBe('/vault')
     })
 
     it('should return defaults for non-existent config', async () => {
       const brainPath = join(tmpHome.toString(), 'nonexistent')
 
-      const config = readLocalBrainConfig(brainPath)
+      const config = readLocalBrainConfig(brainPath) as BrainConfig
 
       expect(config.gitSync).toBe(false)
-      expect(config.extras).toEqual([])
       expect(config.obsidianDir).toBeNull()
     })
   })
@@ -162,7 +159,6 @@ describe('scaffold integration', () => {
       writeBrainConfig({
         brainPath,
         gitSync: true,
-        extras: ['office'],
         obsidianDir: brainPath
       })
 

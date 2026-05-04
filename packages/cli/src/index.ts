@@ -5,7 +5,9 @@ import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8'))
+const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8')) as {
+  version: string
+}
 
 program
   .name('ai-brain')
@@ -88,7 +90,7 @@ program
   .argument('[brain-id]', 'Brain identifier to use')
   .option('--brain-id <id>', 'Brain identifier to use')
   .option('-u, --update', 'update existing vault configuration')
-  .action(async (brainId, options) => {
+  .action(async (brainId, options: { brainId?: string; update?: boolean }) => {
     const { run } = await import('./commands/setup-obsidian.js')
     const args = [brainId].filter(Boolean)
     if (options.update) args.push('--update')

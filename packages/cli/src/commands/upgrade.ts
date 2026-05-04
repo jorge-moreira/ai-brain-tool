@@ -1,9 +1,9 @@
 import chalk from 'chalk'
 import ora from 'ora'
-import { cpSync, readFileSync } from 'fs'
+import { cpSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { getBrainPath } from '@ai-brain/core/config'
+import { getBrainPath, readConfig } from '@ai-brain/core/config'
 import { upgradeVenv } from '@ai-brain/core/graphify'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -18,10 +18,11 @@ export async function run(args: string[], options: Record<string, unknown> = {})
     process.exit(1)
   }
 
+  // Get extras from global config
   let extras: string[] = []
   try {
-    const brainCfg = JSON.parse(readFileSync(join(brainPath, '.brain-config.json'), 'utf8'))
-    extras = brainCfg.extras ?? []
+    const globalConfig = readConfig()
+    extras = globalConfig.graphifyyExtras ?? []
   } catch {
     /* ignore — use defaults */
   }

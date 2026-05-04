@@ -4,10 +4,15 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { select, checkbox, input, confirm } from '@inquirer/prompts'
 import { createBrainFolder } from '@ai-brain/core/scaffold'
-import { createVenv } from '@ai-brain/core/graphify'
+import {
+  configPath,
+  ensureConfigDir,
+  isBrainIdAvailable,
+  isInstallationComplete
+} from '@ai-brain/core/config'
+import { createVenv, globalVenvExists } from '@ai-brain/core/graphify'
 import { detectAll, type DetectedPlatform } from '@ai-brain/core/index'
 import { initRepo, writeGitignore } from '@ai-brain/core/git'
-import { configPath, ensureConfigDir, isBrainIdAvailable } from '@ai-brain/core/config'
 import { run } from '../../../src/commands/setup'
 
 vi.mock('chalk', () => {
@@ -48,7 +53,10 @@ vi.mock('@ai-brain/core/scaffold', () => ({
 
 vi.mock('@ai-brain/core/graphify', () => ({
   createVenv: vi.fn<typeof createVenv>(),
-  venvExists: vi.fn()
+  createGlobalVenv: vi.fn(),
+  venvExists: vi.fn(),
+  globalVenvExists: vi.fn(),
+  ensureUv: vi.fn()
 }))
 
 vi.mock('@ai-brain/core/index', () => ({
@@ -67,7 +75,16 @@ vi.mock('@ai-brain/core/config', () => ({
   addBrain: vi.fn(),
   ensureConfigDir: vi.fn(),
   configPath: vi.fn(),
-  isBrainIdAvailable: vi.fn()
+  isBrainIdAvailable: vi.fn(),
+  isInstallationComplete: vi.fn(),
+  setInstallationComplete: vi.fn(),
+  addGraphifyyExtra: vi.fn(),
+  createInitialConfig: vi.fn(() => ({
+    installationComplete: false,
+    graphifyyExtras: [],
+    aiTools: [],
+    brains: []
+  }))
 }))
 
 vi.mock('fs', () => ({
@@ -93,6 +110,8 @@ const mockedInitRepo = initRepo as Mock<typeof initRepo>
 const mockedWriteGitignore = writeGitignore as Mock<typeof writeGitignore>
 const mockedExistsSync = existsSync as Mock<typeof existsSync>
 const mockedWriteFileSync = writeFileSync as Mock<typeof writeFileSync>
+const mockedIsInstallationComplete = isInstallationComplete as Mock<typeof isInstallationComplete>
+const mockedGlobalVenvExists = globalVenvExists as Mock<typeof globalVenvExists>
 
 describe('commands/setup', () => {
   let consoleLogSpy: Mock<Console['log']>
@@ -141,11 +160,12 @@ describe('commands/setup', () => {
     mockedExistsSync.mockReturnValue(false)
     mockedWriteFileSync.mockImplementation(() => {})
 
+    mockedIsInstallationComplete.mockReturnValue(true)
+    mockedGlobalVenvExists.mockReturnValue(true)
+
     mockedInput.mockResolvedValueOnce('ai-brain')
     mockedSelect.mockResolvedValueOnce('current')
     mockedSelect.mockResolvedValueOnce('local')
-    mockedCheckbox.mockResolvedValueOnce([])
-    mockedCheckbox.mockResolvedValueOnce([])
     mockedSelect.mockResolvedValueOnce('skip')
 
     mockedDetectAll.mockResolvedValue([])
@@ -161,7 +181,6 @@ describe('commands/setup', () => {
 
     expect(mockedInput).toHaveBeenCalledTimes(2)
     expect(mockedSelect).toHaveBeenCalledTimes(3)
-    expect(mockedCheckbox).toHaveBeenCalledTimes(2)
   })
 
   it('should handle custom location choice', async () => {
@@ -228,11 +247,12 @@ describe('commands/setup', () => {
     mockedExistsSync.mockReturnValue(false)
     mockedWriteFileSync.mockImplementation(() => {})
 
+    mockedIsInstallationComplete.mockReturnValue(true)
+    mockedGlobalVenvExists.mockReturnValue(true)
+
     mockedInput.mockResolvedValueOnce('ai-brain')
     mockedSelect.mockResolvedValueOnce('current')
     mockedSelect.mockResolvedValueOnce('local')
-    mockedCheckbox.mockResolvedValueOnce(['office', 'video'])
-    mockedCheckbox.mockResolvedValueOnce([])
     mockedSelect.mockResolvedValueOnce('skip')
 
     mockedDetectAll.mockResolvedValue([])
@@ -246,10 +266,7 @@ describe('commands/setup', () => {
 
     await run()
 
-    const checkboxCall = mockedCheckbox.mock.calls[0] as unknown as [
-      { message: string; choices?: unknown[] }
-    ]
-    expect(checkboxCall?.[0].message).toContain('file types')
+    expect(mockedSelect).toHaveBeenCalledTimes(3)
   })
 
   it('should handle obsidian brain folder choice', async () => {
@@ -363,6 +380,9 @@ describe('commands/setup', () => {
   it('should print summary with git and obsidian details', async () => {
     mockedExistsSync.mockReturnValue(false)
     mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedIsInstallationComplete.mockReturnValue(true)
+    mockedGlobalVenvExists.mockReturnValue(true)
 
     mockedInput.mockResolvedValueOnce('ai-brain') // folder name
     mockedSelect.mockResolvedValueOnce('current') // location

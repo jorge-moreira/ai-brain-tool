@@ -6,8 +6,10 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./styles/globals.css": "./src/styles/globals.css",
     "./components/*": "./src/components/*.tsx",
-    "./lib/utils": "./src/lib/utils.ts"
+    "./lib/utils": "./src/lib/utils.ts",
+    "./hooks/*": "./src/hooks/*.ts"
   },
   "peerDependencies": {
     "react": "catalog:",

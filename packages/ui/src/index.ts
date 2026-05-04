@@ -1,6 +1,9 @@
 // Export utilities
 export { cn } from './lib/utils'
 
+// Export hooks
+export { useTheme, type Theme } from './hooks/useTheme'
+
 // Export components
 export { Button, buttonVariants } from './components/button'
 export {

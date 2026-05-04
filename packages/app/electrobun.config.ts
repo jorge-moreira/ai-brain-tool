@@ -1,33 +1,35 @@
-import type { ElectrobunConfig } from "electrobun";
+import type { ElectrobunConfig } from 'electrobun'
 
 export default {
   app: {
-    name: "AI Brain Tool",
-    identifier: "ai-brain.jorge-moreira.dev",
-    version: "1.0.0",
+    name: 'AI Brain Tool',
+    identifier: 'ai-brain.jorge-moreira.dev',
+    version: '1.0.0'
   },
-  main: "src/bun/index.ts",
   build: {
+    bun: {
+      entrypoint: 'src/bun/index.ts',
+      tsconfig: './tsconfig.json'
+    },
     copy: {
       // Copy @ai-brain/core resources needed at runtime
-      // Paths are relative to the config file location
-      "../core/package.json": "core/package.json",
-      "../core/requirements.txt": "core/requirements.txt",
-      "../core/src/templates": "core/src/templates",
-      "../core/src/platforms/brain-skills.md": "core/src/platforms/brain-skills.md",
+      '../core/package.json': 'core/package.json',
+      '../core/requirements.txt': 'core/requirements.txt',
+      '../core/src/templates': 'core/src/templates',
+      '../core/src/platforms/brain-skills.md': 'core/src/platforms/brain-skills.md',
       // UI for renderer (built by Vite)
-      "dist/index.html": "views/mainview/index.html",
-      "dist/assets": "views/mainview/assets",
+      'dist/index.html': 'views/mainview/index.html',
+      'dist/assets': 'views/mainview/assets'
     },
-    watchIgnore: ["dist/**", "views/**"],
+    watchIgnore: ['dist/**', 'views/**'],
     mac: {
-      bundleCEF: false,
+      bundleCEF: false
     },
     linux: {
-      bundleCEF: false,
+      bundleCEF: false
     },
     win: {
-      bundleCEF: false,
-    },
-  },
-} satisfies ElectrobunConfig;
+      bundleCEF: false
+    }
+  }
+} satisfies ElectrobunConfig

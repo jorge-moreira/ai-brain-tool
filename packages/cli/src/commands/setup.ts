@@ -1,19 +1,22 @@
-import { input, select, checkbox, confirm } from '@inquirer/prompts'
+import { input, select, confirm } from '@inquirer/prompts'
 import chalk from 'chalk'
 import ora from 'ora'
 import { join, resolve, basename } from 'path'
 import { existsSync, readFileSync } from 'fs'
+import { execSync } from 'child_process'
+import { homedir } from 'os'
 
 import { createBrainFolder, writeBrainConfig } from '@ai-brain/core/scaffold'
-import { createVenv } from '@ai-brain/core/graphify'
-import { detectAll, configureSelected, type DetectedPlatform } from '@ai-brain/core/index'
+import { createGlobalVenv, globalVenvExists, ensureUv } from '@ai-brain/core/graphify'
+import { detectAll, type DetectedPlatform } from '@ai-brain/core/index'
 import { initRepo, writeGitignore } from '@ai-brain/core/git'
 import {
   writeConfig,
   addBrain,
   ensureConfigDir,
-  configPath,
-  isBrainIdAvailable
+  isBrainIdAvailable,
+  isInstallationComplete,
+  createInitialConfig
 } from '@ai-brain/core/config'
 
 const BRAIN_MARKER = ['raw', '.graphifyignore', '.brain-config.json']
@@ -49,23 +52,98 @@ async function askBrainId(defaultId: string): Promise<string> {
 
 export async function run(): Promise<void> {
   ensureConfigDir()
-  if (!existsSync(configPath())) {
-    writeConfig({ brains: {} })
-  }
-
-  console.log(chalk.bold.cyan('\n  ai-brain') + chalk.bold(' setup wizard'))
-  console.log(chalk.dim('  Your personal AI memory, connected to all your AI tools.\n'))
 
   const cwd = process.cwd()
-  if (isExistingBrain(cwd)) {
+  const isBrain = isExistingBrain(cwd)
+
+  // Check if global installation is complete
+  const installationOk = isInstallationComplete() && globalVenvExists()
+
+  // Check uv specifically
+  let uvOk = false
+  try {
+    execSync('uv --version', { stdio: 'ignore' })
+    uvOk = true
+  } catch {
+    // uv not found
+  }
+
+  // If installation not complete, run it first
+  if (!installationOk || !uvOk) {
+    await runInstallation()
+  }
+
+  // If current folder is a brain, run new machine setup
+  if (isBrain) {
     await newMachineSetup(cwd)
     return
   }
 
+  // Otherwise run fresh setup (brain creation)
   await freshSetup()
 }
 
+async function runInstallation(): Promise<void> {
+  console.log(chalk.bold.cyan('\n  ai-brain') + chalk.bold(' installation'))
+  console.log(chalk.dim('  One-time setup of global dependencies.\n'))
+
+  // Step 1: Install uv
+  const spinnerUv = ora('Installing uv...').start()
+  try {
+    await ensureUv()
+    spinnerUv.succeed('uv installed')
+  } catch (error) {
+    spinnerUv.fail('Failed to install uv')
+    throw error
+  }
+
+  // Step 2: Prompt for extras
+  console.log(chalk.dim('\nSelect graphifyy extras to install:'))
+  const extras: string[] = []
+
+  const videoAnswer = await confirm({
+    message: 'Install video support? (mp4, mp3, YouTube)',
+    default: false
+  })
+  if (videoAnswer) extras.push('video')
+
+  const officeAnswer = await confirm({
+    message: 'Install office support? (Word, Excel)',
+    default: false
+  })
+  if (officeAnswer) extras.push('office')
+
+  // Step 3: Create global venv
+  const spinnerVenv = ora('Creating virtual environment...').start()
+  try {
+    await createGlobalVenv(extras)
+    spinnerVenv.succeed(`graphifyy installed${extras.length ? ` [${extras.join(', ')}]` : ''}`)
+  } catch (error) {
+    spinnerVenv.fail('Failed to create venv')
+    throw error
+  }
+
+  // Step 4: Detect AI tools
+  const spinnerDetect = ora('Detecting AI tools...').start()
+  const platforms = await detectAll()
+  const detectedTools = platforms.filter(p => p.detected)
+  const aiTools = detectedTools.map(p => p.key)
+  spinnerDetect.succeed(`Found: ${aiTools.join(', ') || 'none'}`)
+
+  // Step 5: Save config
+  const config = createInitialConfig()
+  config.installationComplete = true
+  config.graphifyyExtras = extras
+  config.aiTools = aiTools
+  writeConfig(config)
+
+  console.log(chalk.green('\n✅ Installation complete!\n'))
+}
+
 async function freshSetup(): Promise<void> {
+  console.log(chalk.bold('\n  Brain setup'))
+  console.log(chalk.dim('  Create and configure your brain.\n'))
+
   section('Brain location')
 
   const name = await input({
@@ -121,26 +199,13 @@ async function freshSetup(): Promise<void> {
     })
   }
 
-  section('Graphify extras')
-
-  const extras = await checkbox({
-    message: 'Which file types do you want graphify to process? (mcp is always included)',
-    choices: [
-      { name: 'Office documents  — Word, Excel (.docx, .xlsx)', value: 'office' },
-      {
-        name: 'Video / Audio     — mp4, mp3, YouTube URLs (requires faster-whisper + yt-dlp)',
-        value: 'video'
-      }
-    ]
-  })
-
   section('Scaffold')
 
   let obsidianDir: string | null = null
 
   const spinnerScaffold = ora('Creating brain folder...').start()
   await createBrainFolder({ brainPath, includeObsidian: false })
-  writeBrainConfig({ brainPath, gitSync, extras, obsidianDir })
+  writeBrainConfig({ brainPath, gitSync, obsidianDir })
   spinnerScaffold.succeed(`Created ${brainPath}`)
 
   if (gitMode === 'git') {
@@ -150,28 +215,27 @@ async function freshSetup(): Promise<void> {
     spinnerGit.succeed('Initialized git repo')
   }
 
-  const spinnerVenv = ora('Installing graphify...').start()
-  await createVenv(brainPath, extras)
-  spinnerVenv.succeed(`Installed graphify${extras.length ? ` [${extras.join(', ')}]` : ''}`)
-
   section('AI tools')
 
+  // Get pre-configured AI tools from installation
+  const configPath = join(homedir(), '.ai-brain-tool', 'config.json')
+  let aiTools: string[] = []
   const platforms = await detectAll()
-  const platformChoices: { name: string; value: DetectedPlatform; checked: boolean }[] =
-    platforms.map((p: DetectedPlatform) => ({
-      name: `${p.name.padEnd(22)} ${p.detected ? chalk.green('detected at ' + p.configHint) : chalk.dim('not detected (you can still enable it)')}`,
-      value: p,
-      checked: p.detected
-    }))
+  const selected = platforms.filter(p => p.detected)
+  try {
+    const config = JSON.parse(readFileSync(configPath, 'utf8')) as { aiTools?: string[] }
+    aiTools = config.aiTools || []
+  } catch {
+    // Fallback: use detected tools
+    aiTools = selected.map(p => p.key)
+  }
 
-  const selected = await checkbox({
-    message: 'Which AI tools do you use? (space to toggle, enter to confirm)',
-    choices: platformChoices
-  })
-
-  const spinnerPlatforms = ora('Configuring AI tools...').start()
-  await configureSelected({ selected, brainPath })
-  spinnerPlatforms.succeed(`Configured ${selected.length} AI tool(s)`)
+  if (aiTools.length === 0) {
+    console.log(chalk.yellow('\n  No AI tools detected during installation.'))
+    console.log(chalk.dim('  You can configure AI tools later with: ai-brain setup\n'))
+  } else {
+    console.log(chalk.green(`\n  Found AI tools: ${aiTools.join(', ')}\n`))
+  }
 
   section('Obsidian')
 
@@ -197,49 +261,64 @@ async function freshSetup(): Promise<void> {
     spinnerObs.succeed(`Configured Obsidian (vault at ${vaultPath})`)
   }
 
-  writeBrainConfig({ brainPath, gitSync, extras, obsidianDir })
+  writeBrainConfig({ brainPath, gitSync, obsidianDir })
 
   const brainId = await askBrainId(name)
 
   addBrain(brainId, brainPath)
 
-  printSummary({ brainPath, gitMode, remoteUrl, gitSync, extras, selected, obsidianChoice })
+  printSummary({
+    brainPath,
+    gitMode,
+    remoteUrl,
+    gitSync,
+    extras: [],
+    selected,
+    obsidianChoice: obsidianChoice ?? 'skip',
+    aiTools
+  })
+
+  console.log(chalk.green('\n  Installation complete!\n'))
 }
 
 async function newMachineSetup(brainPath: string): Promise<void> {
   console.log(chalk.yellow('\n  Existing brain detected — running new-machine setup.\n'))
 
-  let extras: string[] = []
+  // Check if installation is complete
+  const installationOk = isInstallationComplete() && globalVenvExists()
+  let uvOk = false
   try {
-    const cfg = JSON.parse(readFileSync(join(brainPath, '.brain-config.json'), 'utf8')) as {
-      extras?: string[]
-      obsidianDir?: string | null
-    }
-    extras = cfg.extras ?? []
+    execSync('uv --version', { stdio: 'ignore' })
+    uvOk = true
   } catch {
-    /* ignore — use defaults */
+    // uv not found
   }
 
-  const spinnerVenv = ora('Recreating Python environment...').start()
-  await createVenv(brainPath, extras)
-  spinnerVenv.succeed(`Installed graphify${extras.length ? ` [${extras.join(', ')}]` : ''}`)
+  // If installation not complete, run it first
+  if (!installationOk || !uvOk) {
+    await runInstallation()
+  }
 
-  const platforms = await detectAll()
-  const platformChoices2: { name: string; value: DetectedPlatform; checked: boolean }[] =
-    platforms.map((p: DetectedPlatform) => ({
-      name: `${p.name.padEnd(22)} ${p.detected ? chalk.green('detected') : chalk.dim('not detected')}`,
-      value: p,
-      checked: p.detected
-    }))
+  section('AI tools')
 
-  const selected = await checkbox({
-    message: 'Which AI tools do you want to configure on this machine?',
-    choices: platformChoices2
-  })
+  // Get pre-configured AI tools from installation
+  const configPath = join(homedir(), '.ai-brain-tool', 'config.json')
+  let aiTools: string[] = []
+  try {
+    const config = JSON.parse(readFileSync(configPath, 'utf8')) as { aiTools?: string[] }
+    aiTools = config.aiTools || []
+  } catch {
+    // Fallback: detect again
+    const platforms = await detectAll()
+    aiTools = platforms.filter(p => p.detected).map(p => p.key)
+  }
 
-  const spinnerPlatforms = ora('Configuring AI tools...').start()
-  await configureSelected({ selected, brainPath })
-  spinnerPlatforms.succeed(`Configured ${selected.length} AI tool(s)`)
+  if (aiTools.length === 0) {
+    console.log(chalk.yellow('\n  No AI tools detected during installation.'))
+    console.log(chalk.dim('  You can configure AI tools manually later.\n'))
+  } else {
+    console.log(chalk.green(`\n  Found AI tools: ${aiTools.join(', ')}\n`))
+  }
 
   const brainId = await askBrainId(basename(brainPath))
 
@@ -258,6 +337,7 @@ interface PrintSummaryOptions {
   extras: string[]
   selected: DetectedPlatform[]
   obsidianChoice: string
+  aiTools: string[]
 }
 
 function printSummary({

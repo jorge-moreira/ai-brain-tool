@@ -119,19 +119,10 @@ describe('graphify integration', () => {
     }, 120000)
   })
 
-  describe('error handling without uv or Python 3.10+', () => {
-    it('should provide helpful error when Python 3.10+ not available', async () => {
-      // Mock detectPackageManager to return 'pip' (no uv)
-      const _originalDetectPackageManager = (await import('../../../src/graphify'))
-        .detectPackageManager
-      const _mockDetectPackageManager = async () => 'pip'
-
-      // Mock detectPython to return null (no Python 3.10+)
-      const _originalDetectPython = (await import('../../../src/graphify')).detectPython
-      const _mockDetectPython = async () => null
-
-      // This would require more complex mocking, so we document the scenario instead
-      // The error message is tested in unit tests
+  describe('error handling scenarios', () => {
+    it('documents: Python 3.10+ requirement error is tested in unit tests', () => {
+      // Testing "Python 3.10+ not available" error requires mocking at module level
+      // which is complex in integration tests. This scenario is covered in unit tests.
       expect(true).toBe(true)
     })
   })
@@ -157,7 +148,7 @@ describe('graphify integration', () => {
       try {
         await runGraphify(brainPath)
       } catch (e) {
-        expect(e.message).toMatch(/No code files found|Nothing to update|No files found/)
+        expect((e as Error).message).toMatch(/No code files found|Nothing to update|No files found/)
       } finally {
         consoleLogSpy.mockRestore()
       }

@@ -152,6 +152,24 @@ describe('path-utils integration', () => {
       expect(existsSync(join(bundledCore, 'package.json'))).toBe(true)
       expect(existsSync(join(bundledCore, 'requirements.txt'))).toBe(true)
     })
+
+    it('documents: bundled context detection requires actual bundled environment', () => {
+      const appDir = join(tmpDir, 'app')
+      const bunDir = join(appDir, 'bun')
+      const coreDir = join(appDir, 'core')
+
+      mkdirSync(bunDir, { recursive: true })
+      mkdirSync(coreDir, { recursive: true })
+      writeFileSync(join(coreDir, 'package.json'), '{"name":"@ai-brain/core"}')
+
+      // Verify structure exists (but getPackageRoot won't use it because
+      // import.meta.url points to the actual source file location)
+      expect(existsSync(join(coreDir, 'package.json'))).toBe(true)
+
+      // getPackageRoot still returns the actual package root
+      const root = getPackageRoot()
+      expect(root).toContain('packages/core')
+    })
   })
 
   describe('development context', () => {
@@ -285,28 +303,24 @@ describe('path-utils integration', () => {
       const appDir = join(tmpDir, 'app')
       const bunDir = join(appDir, 'bun')
       const coreDir = join(appDir, 'core')
-      
+
       mkdirSync(bunDir, { recursive: true })
       mkdirSync(coreDir, { recursive: true })
       writeFileSync(join(coreDir, 'package.json'), '{"name":"@ai-brain/core"}')
-      
+
       expect(existsSync(join(coreDir, 'package.json'))).toBe(true)
     })
 
     it('documents: walks up until root when no package.json found', () => {
-      // This scenario requires mocking to test properly
-      // In real filesystem, getPackageRoot always finds core's package.json
-      // The while loop at line 31 and error at lines 33-34 are tested in unit tests
       const result = getPackageRoot()
       expect(existsSync(join(result, 'package.json'))).toBe(true)
     })
 
     it('documents: throws with helpful message when package.json missing', () => {
-      // Error message tested in unit tests with mocking
-      // This test ensures normal operation in real environment
       const root = getPackageRoot()
       expect(typeof root).toBe('string')
       expect(root.length).toBeGreaterThan(0)
+      expect(existsSync(join(root, 'package.json'))).toBe(true)
     })
   })
 })

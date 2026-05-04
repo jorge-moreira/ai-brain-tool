@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@ai-brain/ui/components/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@ai-brain/ui/components/card';
 import { Checkbox } from '@ai-brain/ui/components/checkbox';
@@ -52,7 +52,7 @@ export function AIToolsScreen({ onComplete, onBack }: AIToolsScreenProps) {
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md card-rounded">
       <CardHeader>
         <CardTitle>Configure AI Tools</CardTitle>
         <CardDescription>
@@ -63,7 +63,7 @@ export function AIToolsScreen({ onComplete, onBack }: AIToolsScreenProps) {
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Detecting AI tools...</p>
         ) : tools.length === 0 ? (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="alert-pill">
             <AlertDescription>
               No AI tools detected. Please install at least one supported AI tool.
             </AlertDescription>
@@ -91,10 +91,10 @@ export function AIToolsScreen({ onComplete, onBack }: AIToolsScreenProps) {
         )}
       </CardContent>
       <CardFooter className="flex gap-2">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={onBack} className="btn-pill">
           Back
         </Button>
-        <Button onClick={handleContinue} className="flex-1" disabled={selected.size === 0}>
+        <Button onClick={handleContinue} className="flex-1 btn-pill" disabled={selected.size === 0}>
           Continue
         </Button>
       </CardFooter>

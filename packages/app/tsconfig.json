@@ -11,9 +11,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
+    "types": ["vite/client", "bun"],
     "paths": {
+      "@ai-brain/core": ["../core/src/index.ts"],
       "@ai-brain/core/*": ["../core/src/*"],
-      "@ai-brain/ui": ["../ui/src"],
+      "@ai-brain/ui": ["../ui/src/index.ts"],
       "@ai-brain/ui/*": ["../ui/src/*"],
       "@/*": ["./src/mainview/*"]
     }

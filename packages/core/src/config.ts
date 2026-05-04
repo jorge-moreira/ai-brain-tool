@@ -9,6 +9,52 @@ export function configPath(): string {
   return join(_configDir(), 'config.json')
 }
 
+export function createInitialConfig(): Config {
+  return {
+    installationComplete: false,
+    graphifyyExtras: [],
+    aiTools: [],
+    brains: {}
+  }
+}
+
+export function isInstallationComplete(): boolean {
+  const path = configPath()
+  if (!existsSync(path)) return false
+  try {
+    const config = readConfig()
+    return config.installationComplete === true
+  } catch {
+    return false
+  }
+}
+
+export function setInstallationComplete(): void {
+  const path = configPath()
+  let config: Config
+  if (existsSync(path)) {
+    config = readConfig()
+  } else {
+    config = createInitialConfig()
+  }
+  config.installationComplete = true
+  writeConfig(config)
+}
+
+export function addGraphifyyExtra(extra: string): void {
+  const path = configPath()
+  let config: Config
+  if (existsSync(path)) {
+    config = readConfig()
+  } else {
+    config = createInitialConfig()
+  }
+  if (!config.graphifyyExtras.includes(extra)) {
+    config.graphifyyExtras.push(extra)
+  }
+  writeConfig(config)
+}
+
 export function ensureConfigDir(): void {
   const dir = _configDir()
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
@@ -16,12 +62,13 @@ export function ensureConfigDir(): void {
 
 export interface BrainConfig {
   gitSync: boolean
-  extras: string[]
-  obsidianDir: string | null
-  id: string | null
+  obsidianDir?: string | null
 }
 
 export interface Config {
+  installationComplete: boolean
+  graphifyyExtras: string[]
+  aiTools: string[]
   brains: Record<string, string>
 }
 
@@ -70,16 +117,6 @@ export function resolveBrain(brainId?: string): ResolvedBrain {
     }
   }
 
-  const localPath = join(cwd, '.brain-config.json')
-  if (existsSync(localPath)) {
-    try {
-      const localConfig = JSON.parse(readFileSync(localPath, 'utf8')) as BrainConfig
-      if (localConfig.id) {
-        return { id: localConfig.id, path: cwd, isLocal: true }
-      }
-    } catch {}
-  }
-
   if (Object.keys(brains).length === 0) {
     throw new Error('No brains configured. Run: ai-brain setup')
   }
@@ -105,7 +142,7 @@ export function addBrain(brainId: string, path: string): void {
   try {
     config = readConfig()
   } catch {
-    config = { brains: {} }
+    config = createInitialConfig()
   }
   if (!config.brains) config.brains = {}
   config.brains[brainId] = path.replace(/^~/, _home())
@@ -133,11 +170,11 @@ export function removeBrain(brainId: string): void {
 
 export function readBrainConfig(brainPath: string): BrainConfig {
   const configPath = join(brainPath, '.brain-config.json')
-  if (!existsSync(configPath)) return { gitSync: false, extras: [], obsidianDir: null, id: null }
+  if (!existsSync(configPath)) return { gitSync: false, obsidianDir: null }
   try {
     return JSON.parse(readFileSync(configPath, 'utf8')) as BrainConfig
   } catch {
-    return { gitSync: false, extras: [], obsidianDir: null, id: null }
+    return { gitSync: false, obsidianDir: null }
   }
 }
 
@@ -171,17 +208,6 @@ export function getBrainPath(args?: string[], options: GetBrainPathOptions = {})
     if (cwd.startsWith(normalizedPath) || cwd === normalizedPath) {
       return normalizedPath
     }
-  }
-
-  // Check for local .brain-config.json in cwd
-  const localPath = join(cwd, '.brain-config.json')
-  if (existsSync(localPath)) {
-    try {
-      const localConfig = JSON.parse(readFileSync(localPath, 'utf8')) as BrainConfig
-      if (localConfig.id) {
-        return cwd
-      }
-    } catch {}
   }
 
   // No brain detected — provide helpful error

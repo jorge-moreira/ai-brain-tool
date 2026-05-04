@@ -1,31 +1,18 @@
 import { BrowserWindow, BrowserView, Updater } from 'electrobun/bun'
-import { detectPython, ensureUv } from '../../../core/src/graphify'
-import { detectAll, configureSelected } from '../../../core/src/platforms'
+import { detectPython, ensureUv } from '@ai-brain/core/graphify'
+import { detectAll, configureSelected } from '@ai-brain/core/platforms'
 import { homedir } from 'os'
+import type { AppRPCType } from '../shared/rpc-types'
 
 const DEV_SERVER_PORT = 5173
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`
 const homeDir = homedir()
 
 // Window sizes
-const WIZARD_SIZE = { width: 700, height: 750 };
-const DASHBOARD_SIZE = { width: 1200, height: 800 };
+const WIZARD_SIZE = { width: 700, height: 750 }
+const DASHBOARD_SIZE = { width: 1200, height: 800 }
 
-let mainWindow: BrowserWindow | null = null;
-
-// Define RPC type for renderer↔bun communication
-type AppRPCType = {
-  bun: {
-    requests: {
-      'detect-python': { params: void; response: { detected: boolean; path: string | null } }
-      'ensure-uv': { params: void; response: { success: boolean; error?: string } }
-      'detect-ai-tools': { params: void; response: Array<{ key: string; name: string; detected: boolean; configHint: string }> }
-      'install-skills': { params: string[]; response: { success: boolean; error?: string } }
-      'resize-window': { params: { size: 'wizard' | 'dashboard' }; response: void }
-    }
-  }
-  webview: {}
-}
+let mainWindow: BrowserWindow | null = null
 
 // Create RPC instance with bun-side handlers
 const appRPC = BrowserView.defineRPC<AppRPCType>({
@@ -40,9 +27,9 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
           await ensureUv()
           return { success: true }
         } catch (error) {
-          return { 
-            success: false, 
-            error: error instanceof Error ? error.message : 'Unknown error' 
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
           }
         }
       },
@@ -67,9 +54,9 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
           await configureSelected({ selected, brainPath: homeDir, homeDir })
           return { success: true }
         } catch (error) {
-          return { 
-            success: false, 
-            error: error instanceof Error ? error.message : 'Unknown error' 
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
           }
         }
       },
@@ -78,74 +65,61 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
         if (mainWindow) {
           mainWindow.setSize(targetSize.width, targetSize.height)
         }
+        return null
+      },
+      'check-installation': async () => {
+        try {
+          const { isInstallationComplete } = await import('@ai-brain/core/config')
+          const { globalVenvExists } = await import('@ai-brain/core/graphify')
+          const { execSync } = await import('child_process')
+
+          // Check uv
+          try {
+            execSync('uv --version', { stdio: 'ignore' })
+          } catch {
+            return { installed: false }
+          }
+
+          // Check config flag and venv
+          const configOk = isInstallationComplete()
+          const venvOk = globalVenvExists()
+
+          return { installed: configOk && venvOk }
+        } catch {
+          return { installed: false }
+        }
+      },
+      'complete-installation': async ({ extras, aiTools }) => {
+        try {
+          const { setInstallationComplete, addGraphifyyExtra, writeConfig, createInitialConfig } =
+            await import('@ai-brain/core/config')
+
+          // Set installation complete
+          setInstallationComplete()
+
+          // Add extras
+          for (const extra of extras) {
+            addGraphifyyExtra(extra)
+          }
+
+          // Add AI tools
+          const config = createInitialConfig()
+          config.installationComplete = true
+          config.graphifyyExtras = extras
+          config.aiTools = aiTools
+          writeConfig(config)
+
+          return { success: true }
+        } catch (error) {
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
+        }
       }
     }
   }
 })
-
-// Handle raw RPC requests from renderer (for custom RPC client)
-function handleRpcRequest(view: BrowserView, message: string) {
-  try {
-    const request = JSON.parse(message);
-    if (request.type !== 'request') return;
-    
-    const { id, method, params } = request;
-    
-    Promise.resolve().then(async () => {
-      let result: any;
-      let error: string | undefined;
-      
-      try {
-        // Call the handler directly based on method name
-        switch (method) {
-          case 'detect-python':
-            const pythonPath = await detectPython()
-            result = { detected: pythonPath !== null, path: pythonPath }
-            break;
-          case 'ensure-uv':
-            await ensureUv()
-            result = { success: true }
-            break;
-          case 'detect-ai-tools':
-            const platforms = await detectAll(homeDir)
-            result = platforms.map(p => ({
-              key: p.key,
-              name: p.name,
-              detected: p.detected,
-              configHint: p.configHint
-            }))
-            break;
-          case 'install-skills':
-            const allPlatforms = await detectAll(homeDir)
-            const selected = allPlatforms.filter(p => params.includes(p.key))
-            await configureSelected({ selected, brainPath: homeDir, homeDir })
-            result = { success: true }
-            break;
-          case 'resize-window':
-            const targetSize = params.size === 'wizard' ? WIZARD_SIZE : DASHBOARD_SIZE
-            if (mainWindow) {
-              mainWindow.setSize(targetSize.width, targetSize.height)
-            }
-            result = undefined
-            break;
-          default:
-            error = `Unknown method: ${method}`
-        }
-      } catch (e) {
-        error = e instanceof Error ? e.message : 'Unknown error';
-      }
-      
-      // Send response back to renderer using ElectroBun's wire protocol
-      const response = error 
-        ? { type: 'response' as const, id, success: false as const, error }
-        : { type: 'response' as const, id, success: true as const, payload: result };
-      
-      view.webview.postMessage(JSON.stringify(response));
-    });
-  } catch (e) {
-    console.error('RPC handler Error:', e);
-  }
-}
 
 // Check if Vite dev server is running for HMR
 async function getMainViewUrl(): Promise<string> {
@@ -176,10 +150,5 @@ mainWindow = new BrowserWindow({
   },
   rpc: appRPC
 })
-
-// Set up message handler for custom RPC
-mainWindow.webview.on('message', (event: { message: string }) => {
-  handleRpcRequest(mainWindow.webview, event.message);
-});
 
 console.log('AI Brain Tool (ElectroBun) started!')

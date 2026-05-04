@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { detectAll, configureSelected, installSkills, connectBrain, type DetectedPlatform } from '@ai-brain/core/platforms/index'
+import {
+  detectAll,
+  configureSelected,
+  installSkills,
+  connectBrain,
+  type DetectedPlatform
+} from '@ai-brain/core/platforms/index'
 
 vi.mock('execa', () => ({
   execa: vi.fn()
@@ -140,7 +146,11 @@ describe('platforms/index', () => {
         }
       }
 
-      await connectBrain({ selected: [mockPlatform], brainPath: '/tmp/brain', homeDir: '/tmp/home' })
+      await connectBrain({
+        selected: [mockPlatform],
+        brainPath: '/tmp/brain',
+        homeDir: '/tmp/home'
+      })
 
       expect(mockPlatform.module.patch).toHaveBeenCalledWith({
         brainPath: '/tmp/brain',
@@ -179,7 +189,11 @@ describe('platforms/index', () => {
         }
       }
 
-      await connectBrain({ selected: [platform1, platform2], brainPath: '/tmp/brain', homeDir: '/tmp/home' })
+      await connectBrain({
+        selected: [platform1, platform2],
+        brainPath: '/tmp/brain',
+        homeDir: '/tmp/home'
+      })
 
       expect(platform1.module.patch).toHaveBeenCalled()
       expect(platform1.module.installAlwaysOn).toHaveBeenCalled()

@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@ai-brain/ui/components/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@ai-brain/ui/components/card';
 import { Alert, AlertDescription } from '@ai-brain/ui/components/alert';
@@ -11,19 +11,19 @@ interface CompleteScreenProps {
 }
 
 export function CompleteScreen({ selectedTools, onFinish }: CompleteScreenProps) {
-  const [status, setStatus] = React.useState<'installing' | 'done' | 'error'>('installing');
-  const [errorMessage, setErrorMessage] = React.useState<string>('');
+  const [status, setStatus] = useState<'installing' | 'done' | 'error'>('installing');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
-  React.useEffect(() => {
-    async function installSkills() {
+  useEffect(() => {
+    async function completeInstallation() {
       try {
-        const result = await rpc.installSkills(selectedTools);
+        const result = await rpc.completeInstallation([], selectedTools);
         if (result.success) {
           setStatus('done');
           setTimeout(onFinish, 1500);
         } else {
           setStatus('error');
-          setErrorMessage(result.error || 'Failed to install skills');
+          setErrorMessage(result.error || 'Failed to complete installation');
         }
       } catch (error) {
         setStatus('error');
@@ -31,11 +31,11 @@ export function CompleteScreen({ selectedTools, onFinish }: CompleteScreenProps)
       }
     }
 
-    installSkills();
+    completeInstallation();
   }, [selectedTools, onFinish]);
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md card-rounded">
       <CardHeader>
         <CardTitle>Finalizing Setup</CardTitle>
         <CardDescription>
@@ -51,7 +51,7 @@ export function CompleteScreen({ selectedTools, onFinish }: CompleteScreenProps)
         )}
         
         {status === 'done' && (
-          <Alert>
+          <Alert className="alert-pill">
             <AlertDescription>
               Setup complete! AI Brain is ready to use.
             </AlertDescription>
@@ -59,7 +59,7 @@ export function CompleteScreen({ selectedTools, onFinish }: CompleteScreenProps)
         )}
         
         {status === 'error' && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="alert-pill">
             <AlertDescription>
               {errorMessage}
             </AlertDescription>
@@ -68,7 +68,7 @@ export function CompleteScreen({ selectedTools, onFinish }: CompleteScreenProps)
       </CardContent>
       <CardFooter>
         {status === 'error' && (
-          <Button onClick={onFinish} variant="outline">
+          <Button onClick={onFinish} variant="outline" className="btn-pill">
             Continue Anyway
           </Button>
         )}
