@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest'
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
@@ -278,6 +278,111 @@ describe('graphify', () => {
       writeFileSync(join(tmp, '.venv', 'bin', 'python3'), '')
       await expect(runGraphify(tmp)).rejects.toThrow('Some other error')
       rmSync(tmp, { recursive: true, force: true })
+    })
+  })
+
+  describe('ensureUv PATH update', () => {
+    const originalHome = process.env.HOME
+    const originalPath = process.env.PATH
+
+    afterEach(() => {
+      process.env.HOME = originalHome
+      process.env.PATH = originalPath
+    })
+
+    it('should add uv bin dir to PATH after installing uv', async () => {
+      process.env.PATH = '/usr/bin:/bin'
+      mockedExeca
+        .mockImplementationOnce(() => Promise.reject(new Error('not found')))
+        .mockImplementationOnce(() => Promise.resolve({ stdout: '', stderr: '' }))
+        .mockImplementationOnce(() => Promise.resolve({ stdout: 'uv 1.0.0', stderr: '' }))
+
+      await ensureUv()
+      expect(process.env.PATH).toContain('.local/bin')
+    })
+
+    it('should skip PATH update when uv is already installed', async () => {
+      const savedPath = process.env.PATH
+      mockedExeca.mockResolvedValueOnce({ stdout: 'uv 1.0.0', stderr: '' })
+
+      await ensureUv()
+      expect(process.env.PATH).toBe(savedPath)
+    })
+  })
+
+  describe('createVenv with detected python', () => {
+    it('should use detected python when available', async () => {
+      mockedExeca
+        .mockResolvedValueOnce({ stdout: 'uv 0.5.0', stderr: '' })
+        .mockResolvedValueOnce({ stdout: 'Python 3.11.0', stderr: '' })
+
+      const tmp = mkdtempSync(join(tmpdir(), 'createVenv-detected-'))
+      mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
+      writeFileSync(join(tmp, '.venv', 'bin', 'python3'), '')
+
+      await createVenv(tmp, [])
+
+      const venvCall = mockedExeca.mock.calls.find(c => {
+        const args = c[1] as unknown as string[] | undefined
+        return args?.includes('venv')
+      })
+      expect(venvCall?.[1]).toEqual(expect.arrayContaining(['--python', 'python3']))
+      rmSync(tmp, { recursive: true, force: true })
+    })
+
+    it('should use python 3.10 fallback when no python detected', async () => {
+      mockedExeca
+        .mockResolvedValueOnce({ stdout: 'uv 0.5.0', stderr: '' })
+        .mockRejectedValueOnce(new Error('not found'))
+        .mockResolvedValueOnce({ stdout: '', stderr: '' })
+        .mockResolvedValueOnce({ stdout: '', stderr: '' })
+
+      const tmp = mkdtempSync(join(tmpdir(), 'createVenv-fallback-'))
+      mkdirSync(join(tmp, '.venv', 'bin'), { recursive: true })
+      writeFileSync(join(tmp, '.venv', 'bin', 'python3'), '')
+
+      await createVenv(tmp, [])
+
+      const venvCall = mockedExeca.mock.calls.find(c => {
+        const args = c[1] as unknown as string[] | undefined
+        return args?.includes('venv')
+      })
+      expect(venvCall?.[1]).toEqual(expect.arrayContaining(['--python', '3.10']))
+      rmSync(tmp, { recursive: true, force: true })
+    })
+  })
+
+  describe('createGlobalVenv with detected python', () => {
+    it('should use detected python when available', async () => {
+      mockedExeca
+        .mockResolvedValueOnce({ stdout: 'uv 0.5.0', stderr: '' })
+        .mockResolvedValueOnce({ stdout: 'Python 3.12.0', stderr: '' })
+        .mockResolvedValueOnce({ stdout: '', stderr: '' })
+        .mockResolvedValueOnce({ stdout: '', stderr: '' })
+
+      await createGlobalVenv([])
+
+      const venvCall = mockedExeca.mock.calls.find(c => {
+        const args = c[1] as unknown as string[] | undefined
+        return args?.includes('venv')
+      })
+      expect(venvCall?.[1]).toEqual(expect.arrayContaining(['--python', 'python3']))
+    })
+
+    it('should use python 3.10 fallback when no python detected', async () => {
+      mockedExeca
+        .mockResolvedValueOnce({ stdout: 'uv 0.5.0', stderr: '' })
+        .mockRejectedValueOnce(new Error('not found'))
+        .mockResolvedValueOnce({ stdout: '', stderr: '' })
+        .mockResolvedValueOnce({ stdout: '', stderr: '' })
+
+      await createGlobalVenv([])
+
+      const venvCall = mockedExeca.mock.calls.find(c => {
+        const args = c[1] as unknown as string[] | undefined
+        return args?.includes('venv')
+      })
+      expect(venvCall?.[1]).toEqual(expect.arrayContaining(['--python', '3.10']))
     })
   })
 

@@ -87,6 +87,13 @@ vi.mock('@ai-brain/core/config', () => ({
   }))
 }))
 
+vi.mock('child_process', () => ({
+  execSync: vi.fn().mockImplementation((cmd: string) => {
+    if (cmd === 'uv --version') return ''
+    throw new Error(`execSync not mocked for: ${cmd}`)
+  })
+}))
+
 vi.mock('fs', () => ({
   existsSync: vi.fn(),
   mkdirSync: vi.fn(),

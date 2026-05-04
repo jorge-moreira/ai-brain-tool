@@ -102,8 +102,11 @@ describe('setup integration', () => {
     })
     mockAddBrain.mockImplementation((id: string, path: string) => {
       const configPath = join(tmpHome, '.ai-brain-tool', 'config.json')
-      const config = JSON.parse(readFileSync(configPath, 'utf8')) as {
-        brains: Record<string, string>
+      let config: { brains: Record<string, string> }
+      try {
+        config = JSON.parse(readFileSync(configPath, 'utf8')) as { brains: Record<string, string> }
+      } catch {
+        config = { brains: {} }
       }
       config.brains[id] = path
       writeFileSync(configPath, JSON.stringify(config), 'utf8')
@@ -490,5 +493,76 @@ describe('setup integration', () => {
       readFileSync(join(brainPath, '.brain-config.json'), 'utf8')
     ) as { obsidianDir: string }
     expect(configContent.obsidianDir).toBe(separateVault)
+  })
+
+  it('should handle corrupted global config in new machine setup', async () => {
+    mkdirSync(join(tmpCwd, 'raw'), { recursive: true })
+    writeFileSync(join(tmpCwd, '.graphifyignore'), '', 'utf8')
+    writeFileSync(
+      join(tmpCwd, '.brain-config.json'),
+      JSON.stringify({ gitSync: false, extras: [], obsidianDir: null }),
+      'utf8'
+    )
+
+    // Corrupt the global config to trigger catch fallback in newMachineSetup
+    writeFileSync(join(tmpHome, '.ai-brain-tool', 'config.json'), 'not-valid-json{{{', 'utf8')
+
+    const { input, select, checkbox } = await import('@inquirer/prompts')
+
+    vi.mocked(input).mockImplementation(async ({ message, default: defaultValue }) => {
+      if (message.includes('Brain identifier')) return 'corrupted-brain'
+      return defaultValue || 'default'
+    })
+
+    vi.mocked(select).mockImplementation(async ({ choices }) => {
+      return (choices[0] as { value: unknown }).value as string
+    })
+
+    vi.mocked(checkbox).mockImplementation(async () => [])
+
+    const { run } = await import('../../../src/commands/setup')
+    await run()
+
+    const configContent = JSON.parse(
+      readFileSync(join(tmpHome, '.ai-brain-tool', 'config.json'), 'utf8')
+    ) as { brains: Record<string, string> }
+    expect(configContent.brains['corrupted-brain']).toBeDefined()
+  })
+
+  it('should handle existing brain setup (new machine) with detected AI tools', async () => {
+    mkdirSync(join(tmpCwd, 'raw'), { recursive: true })
+    writeFileSync(join(tmpCwd, '.graphifyignore'), '', 'utf8')
+    writeFileSync(
+      join(tmpCwd, '.brain-config.json'),
+      JSON.stringify({ gitSync: false, extras: [], obsidianDir: null }),
+      'utf8'
+    )
+
+    const { detectAll } = await import('@ai-brain/core/index')
+    vi.mocked(detectAll).mockResolvedValue([
+      { name: 'Claude Code', detected: true, key: 'claude', configHint: '~/.claude' },
+      { name: 'Codex', detected: true, key: 'codex', configHint: '~/.codex' }
+    ] as never)
+
+    const { input, select, checkbox } = await import('@inquirer/prompts')
+
+    vi.mocked(input).mockImplementation(async ({ message, default: defaultValue }) => {
+      if (message.includes('Brain identifier')) return 'detected-tools-brain'
+      return defaultValue || 'default'
+    })
+
+    vi.mocked(select).mockImplementation(async ({ choices }) => {
+      return (choices[0] as { value: unknown }).value as string
+    })
+
+    vi.mocked(checkbox).mockImplementation(async () => [])
+
+    const { run } = await import('../../../src/commands/setup')
+    await run()
+
+    const configContent = JSON.parse(
+      readFileSync(join(tmpHome, '.ai-brain-tool', 'config.json'), 'utf8')
+    ) as { brains: Record<string, string> }
+    expect(configContent.brains['detected-tools-brain']).toBeDefined()
   })
 })
