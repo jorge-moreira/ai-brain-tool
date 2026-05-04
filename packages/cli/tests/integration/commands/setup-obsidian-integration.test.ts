@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync, existsSync, readFileSync } from 'fs'
-import { tmpdir } from 'os'
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { run } from '../../../src/commands/setup-obsidian'
+import { createBrainWithConfig, cleanupBrain } from '../../helpers'
 
 vi.mock('inquirer', () => ({
   default: {
@@ -11,63 +11,34 @@ vi.mock('inquirer', () => ({
 }))
 
 describe('setup-obsidian integration', () => {
-  let tmpHome: string
-  let originalHome: string | undefined
   let consoleLogSpy: ReturnType<typeof vi.spyOn>
 
-  beforeEach(async () => {
-    tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-obsidian-test-'))
-    originalHome = process.env.HOME
-    process.env.HOME = tmpHome
-    process.env.__HOME__ = tmpHome
-
-    mkdirSync(join(tmpHome, '.ai-brain-tool'), { recursive: true })
+  beforeEach(() => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 
   afterEach(() => {
-    process.env.HOME = originalHome
-    delete process.env.__HOME__
-    rmSync(tmpHome, { recursive: true, force: true })
     vi.restoreAllMocks()
   })
 
-  function createBrainWithConfig(brainName: string, config = {}) {
-    const brainPath = join(tmpHome, brainName)
-    mkdirSync(brainPath, { recursive: true })
-
-    writeFileSync(
-      join(brainPath, '.brain-config.json'),
-      JSON.stringify({ gitSync: false, extras: [], obsidianDir: null, ...config }),
-      'utf8'
-    )
-
-    writeFileSync(
-      join(tmpHome, '.ai-brain-tool', 'config.json'),
-      JSON.stringify({ brains: { [brainName]: brainPath } }),
-      'utf8'
-    )
-
-    return { brainPath }
-  }
-
   it('should configure obsidian vault at brain path', async () => {
-    const { brainPath } = createBrainWithConfig('test-brain')
+    const result = createBrainWithConfig('test-brain')
     const inquirer = await import('inquirer')
-    vi.mocked(inquirer.default.prompt).mockResolvedValue({ vaultPath: brainPath })
+    vi.mocked(inquirer.default.prompt).mockResolvedValue({ vaultPath: result.brainPath })
 
     await run(['test-brain'], { brainId: 'test-brain' })
 
     const configContent = JSON.parse(
-      readFileSync(join(brainPath, '.brain-config.json'), 'utf8')
+      readFileSync(join(result.brainPath, '.brain-config.json'), 'utf8')
     ) as { obsidianDir: string }
-    expect(configContent.obsidianDir).toBe(brainPath)
-    expect(existsSync(join(brainPath, '.obsidian'))).toBe(true)
+    expect(configContent.obsidianDir).toBe(result.brainPath)
+    expect(existsSync(join(result.brainPath, '.obsidian'))).toBe(true)
+    cleanupBrain(result)
   })
 
   it('should configure obsidian vault at custom path', async () => {
-    const { brainPath } = createBrainWithConfig('test-brain')
-    const customVaultPath = join(tmpHome, 'custom-vault')
+    const result = createBrainWithConfig('test-brain')
+    const customVaultPath = join(result.tmpHome, 'custom-vault')
     mkdirSync(customVaultPath, { recursive: true })
 
     const inquirer = await import('inquirer')
@@ -76,28 +47,38 @@ describe('setup-obsidian integration', () => {
     await run(['test-brain'], { brainId: 'test-brain' })
 
     const configContent = JSON.parse(
-      readFileSync(join(brainPath, '.brain-config.json'), 'utf8')
+      readFileSync(join(result.brainPath, '.brain-config.json'), 'utf8')
     ) as { obsidianDir: string }
     expect(configContent.obsidianDir).toBe(customVaultPath)
     expect(existsSync(join(customVaultPath, '.obsidian'))).toBe(true)
+    cleanupBrain(result)
   })
 
   it('should show existing vault configuration without update flag', async () => {
-    createBrainWithConfig('test-brain', {
-      obsidianDir: join(tmpHome, 'existing-vault')
-    })
-    mkdirSync(join(tmpHome, 'existing-vault'), { recursive: true })
+    const result = createBrainWithConfig('test-brain')
+    const existingVault = join(result.tmpHome, 'existing-vault')
+    mkdirSync(existingVault, { recursive: true })
+    writeFileSync(
+      join(result.brainPath, '.brain-config.json'),
+      JSON.stringify({ gitSync: false, extras: [], obsidianDir: existingVault }),
+      'utf8'
+    )
 
     await run(['test-brain'], { brainId: 'test-brain' })
 
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Vault already configured'))
+    cleanupBrain(result)
   })
 
   it('should update vault configuration with --update flag', async () => {
-    const { brainPath } = createBrainWithConfig('test-brain', {
-      obsidianDir: join(tmpHome, 'old-vault')
-    })
-    const newVaultPath = join(tmpHome, 'new-vault')
+    const result = createBrainWithConfig('test-brain')
+    const oldVault = join(result.tmpHome, 'old-vault')
+    writeFileSync(
+      join(result.brainPath, '.brain-config.json'),
+      JSON.stringify({ gitSync: false, extras: [], obsidianDir: oldVault }),
+      'utf8'
+    )
+    const newVaultPath = join(result.tmpHome, 'new-vault')
     mkdirSync(newVaultPath, { recursive: true })
 
     const inquirer = await import('inquirer')
@@ -106,16 +87,21 @@ describe('setup-obsidian integration', () => {
     await run(['test-brain', '--update'], { brainId: 'test-brain' })
 
     const configContent = JSON.parse(
-      readFileSync(join(brainPath, '.brain-config.json'), 'utf8')
+      readFileSync(join(result.brainPath, '.brain-config.json'), 'utf8')
     ) as { obsidianDir: string }
     expect(configContent.obsidianDir).toBe(newVaultPath)
+    cleanupBrain(result)
   })
 
   it('should update vault configuration with -u flag', async () => {
-    const { brainPath } = createBrainWithConfig('test-brain', {
-      obsidianDir: join(tmpHome, 'old-vault')
-    })
-    const newVaultPath = join(tmpHome, 'new-vault-short')
+    const result = createBrainWithConfig('test-brain')
+    const oldVault = join(result.tmpHome, 'old-vault')
+    writeFileSync(
+      join(result.brainPath, '.brain-config.json'),
+      JSON.stringify({ gitSync: false, extras: [], obsidianDir: oldVault }),
+      'utf8'
+    )
+    const newVaultPath = join(result.tmpHome, 'new-vault-short')
     mkdirSync(newVaultPath, { recursive: true })
 
     const inquirer = await import('inquirer')
@@ -124,14 +110,15 @@ describe('setup-obsidian integration', () => {
     await run(['test-brain', '-u'], { brainId: 'test-brain' })
 
     const configContent = JSON.parse(
-      readFileSync(join(brainPath, '.brain-config.json'), 'utf8')
+      readFileSync(join(result.brainPath, '.brain-config.json'), 'utf8')
     ) as { obsidianDir: string }
     expect(configContent.obsidianDir).toBe(newVaultPath)
+    cleanupBrain(result)
   })
 
   it('should create vault directory if it does not exist', async () => {
-    createBrainWithConfig('test-brain')
-    const newVaultPath = join(tmpHome, 'nonexistent-vault')
+    const result = createBrainWithConfig('test-brain')
+    const newVaultPath = join(result.tmpHome, 'nonexistent-vault')
 
     const inquirer = await import('inquirer')
     vi.mocked(inquirer.default.prompt).mockResolvedValue({ vaultPath: newVaultPath })
@@ -140,27 +127,31 @@ describe('setup-obsidian integration', () => {
 
     expect(existsSync(newVaultPath)).toBe(true)
     expect(existsSync(join(newVaultPath, '.obsidian'))).toBe(true)
+    cleanupBrain(result)
   })
 
   it('should not overwrite existing .obsidian directory', async () => {
-    createBrainWithConfig('test-brain')
-    const vaultPath = join(tmpHome, 'existing-obsidian-vault')
+    const result = createBrainWithConfig('test-brain')
+    const vaultPath = join(result.tmpHome, 'existing-obsidian-vault')
     const obsidianDir = join(vaultPath, '.obsidian')
     mkdirSync(obsidianDir, { recursive: true })
     writeFileSync(join(obsidianDir, 'custom.json'), 'custom content', 'utf8')
 
     const inquirer = await import('inquirer')
-    vi.mocked(inquirer.default.prompt).mockResolvedValue({ vaultPath: vaultPath })
+    vi.mocked(inquirer.default.prompt).mockResolvedValue({ vaultPath })
 
     await run(['test-brain'], { brainId: 'test-brain' })
 
     const customContent = readFileSync(join(obsidianDir, 'custom.json'), 'utf8')
     expect(customContent).toBe('custom content')
+    cleanupBrain(result)
   })
 
   it('should throw error when brain is not configured', async () => {
+    const result = createBrainWithConfig('empty')
+    // clear brains from config
     writeFileSync(
-      join(tmpHome, '.ai-brain-tool', 'config.json'),
+      join(result.tmpHome, '.ai-brain-tool', 'config.json'),
       JSON.stringify({ brains: {} }),
       'utf8'
     )
@@ -168,5 +159,6 @@ describe('setup-obsidian integration', () => {
     await expect(run(['nonexistent-brain'], { brainId: 'nonexistent-brain' })).rejects.toThrow(
       'BRAIN_NOT_RESOLVED'
     )
+    cleanupBrain(result)
   })
 })

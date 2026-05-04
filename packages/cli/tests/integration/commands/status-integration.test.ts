@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest'
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs'
-import { tmpdir } from 'os'
+import { rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { execa } from 'execa'
 import { run } from '../../../src/commands/status'
+import { createBrainWithConfig, cleanupBrain } from '../../helpers'
 
 describe('commands/status integration', () => {
   let consoleLogSpy: Mock<Console['log']>
@@ -16,69 +16,38 @@ describe('commands/status integration', () => {
     vi.restoreAllMocks()
   })
 
-  function createBrainWithConfig(brainName: string) {
-    const tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-status-test-'))
-    const originalHome = process.env.HOME
-    process.env.HOME = tmpHome
-    process.env.__HOME__ = tmpHome
-
-    mkdirSync(join(tmpHome, '.ai-brain-tool'), { recursive: true })
-
-    const brainPath = join(tmpHome, brainName)
-    mkdirSync(brainPath, { recursive: true })
-    mkdirSync(join(brainPath, 'graphify-out'), { recursive: true })
-
-    writeFileSync(
-      join(brainPath, '.brain-config.json'),
-      JSON.stringify({ gitSync: false, extras: [], obsidianDir: null }),
-      'utf8'
-    )
-
-    writeFileSync(
-      join(tmpHome, '.ai-brain-tool', 'config.json'),
-      JSON.stringify({ brains: { [brainName]: brainPath } }),
-      'utf8'
-    )
-
-    return { brainPath, tmpHome, originalHome }
-  }
-
   it('should show tool version and brain path', async () => {
-    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('test-brain')
+    const result = createBrainWithConfig('test-brain', {}, ['graphify-out'])
 
     await run(['test-brain'], { brainId: 'test-brain' })
 
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Tool version:'))
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Brain path:'))
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining(brainPath))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining(result.brainPath))
 
-    process.env.HOME = originalHome
-    delete process.env.__HOME__
-    rmSync(tmpHome, { recursive: true, force: true })
+    cleanupBrain(result)
   })
 
   it('should show git status when git repo exists', async () => {
-    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('git-brain')
+    const result = createBrainWithConfig('git-brain', {}, ['graphify-out'])
 
-    await execa('git', ['init'], { cwd: brainPath })
-    await execa('git', ['config', 'user.email', 'test@test.com'], { cwd: brainPath })
-    await execa('git', ['config', 'user.name', 'Test'], { cwd: brainPath })
+    await execa('git', ['init'], { cwd: result.brainPath })
+    await execa('git', ['config', 'user.email', 'test@test.com'], { cwd: result.brainPath })
+    await execa('git', ['config', 'user.name', 'Test'], { cwd: result.brainPath })
 
     await run(['git-brain'], { brainId: 'git-brain' })
 
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Tool version:'))
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Brain path:'))
 
-    process.env.HOME = originalHome
-    delete process.env.__HOME__
-    rmSync(tmpHome, { recursive: true, force: true })
+    cleanupBrain(result)
   })
 
   it('should show graph statistics when graph exists', async () => {
-    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('graph-brain')
+    const result = createBrainWithConfig('graph-brain', {}, ['graphify-out'])
 
     writeFileSync(
-      join(brainPath, 'graphify-out', 'graph.json'),
+      join(result.brainPath, 'graphify-out', 'graph.json'),
       JSON.stringify({
         nodes: [{ id: '1', label: 'Test' }],
         edges: [{ source: '1', target: '2' }]
@@ -92,37 +61,31 @@ describe('commands/status integration', () => {
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('nodes'))
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('edges'))
 
-    process.env.HOME = originalHome
-    delete process.env.__HOME__
-    rmSync(tmpHome, { recursive: true, force: true })
+    cleanupBrain(result)
   })
 
   it('should show message when graph not built', async () => {
-    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('no-graph-brain')
+    const result = createBrainWithConfig('no-graph-brain', {}, ['graphify-out'])
 
-    rmSync(join(brainPath, 'graphify-out'), { recursive: true, force: true })
+    rmSync(join(result.brainPath, 'graphify-out'), { recursive: true, force: true })
 
     await run(['no-graph-brain'], { brainId: 'no-graph-brain' })
 
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('not built yet'))
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('ai-brain update'))
 
-    process.env.HOME = originalHome
-    delete process.env.__HOME__
-    rmSync(tmpHome, { recursive: true, force: true })
+    cleanupBrain(result)
   })
 
   it('should show error message when graph.json is invalid', async () => {
-    const { brainPath, tmpHome, originalHome } = createBrainWithConfig('invalid-graph-brain')
+    const result = createBrainWithConfig('invalid-graph-brain', {}, ['graphify-out'])
 
-    writeFileSync(join(brainPath, 'graphify-out', 'graph.json'), 'not valid json', 'utf8')
+    writeFileSync(join(result.brainPath, 'graphify-out', 'graph.json'), 'not valid json', 'utf8')
 
     await run(['invalid-graph-brain'], { brainId: 'invalid-graph-brain' })
 
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('could not read graph.json'))
 
-    process.env.HOME = originalHome
-    delete process.env.__HOME__
-    rmSync(tmpHome, { recursive: true, force: true })
+    cleanupBrain(result)
   })
 })

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest'
 import * as fs from 'fs'
-import { getBrainPath, readConfig, type Config } from '@ai-brain/core/config'
+import { getBrainPath, readConfig } from '@ai-brain/core/config'
 import { upgradeVenv } from '@ai-brain/core/graphify'
 import { run } from '../../../src/commands/upgrade'
 

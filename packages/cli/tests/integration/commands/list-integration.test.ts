@@ -1,94 +1,56 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs'
-import { tmpdir } from 'os'
+import { mkdirSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { run } from '../../../src/commands/list'
+import { createBrainWithConfig, cleanupBrain, addBrainToConfig } from '../../helpers'
 
 describe('list command integration', () => {
-  let tmpHome: string
-  let originalHome: string | undefined
+  let consoleLogSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
-    tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-list-test-'))
-    originalHome = process.env.HOME
-    process.env.HOME = tmpHome
-    process.env.__HOME__ = tmpHome
-
-    mkdirSync(join(tmpHome, '.ai-brain-tool'), { recursive: true })
-    writeFileSync(
-      join(tmpHome, '.ai-brain-tool', 'config.json'),
-      JSON.stringify({ brains: {} }),
-      'utf8'
-    )
+    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 
   afterEach(() => {
-    process.env.HOME = originalHome
-    delete process.env.__HOME__
-    rmSync(tmpHome, { recursive: true, force: true })
+    vi.restoreAllMocks()
   })
 
   it('should show empty list when no brains configured', async () => {
-    const consoleSpy = vi.spyOn(console, 'log')
+    const result = createBrainWithConfig('empty', {}, [])
+    // clear brains from config
+    writeFileSync(
+      join(result.tmpHome, '.ai-brain-tool', 'config.json'),
+      JSON.stringify({ brains: {} }),
+      'utf8'
+    )
 
     await run()
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No brains configured'))
-    consoleSpy.mockRestore()
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No brains configured'))
+    cleanupBrain(result)
   })
 
   it('should list configured brains', async () => {
-    const brain1Path = join(tmpHome, 'brain1')
-    const brain2Path = join(tmpHome, 'brain2')
-    mkdirSync(brain1Path, { recursive: true })
-    mkdirSync(brain2Path, { recursive: true })
-
-    writeFileSync(
-      join(tmpHome, '.ai-brain-tool', 'config.json'),
-      JSON.stringify({
-        brains: {
-          work: brain1Path,
-          personal: brain2Path
-        }
-      }),
-      'utf8'
-    )
-
-    const consoleSpy = vi.spyOn(console, 'log')
+    const result = createBrainWithConfig('brain1', {}, [])
+    addBrainToConfig(result.tmpHome, 'personal', join(result.tmpHome, 'brain2'))
+    mkdirSync(join(result.tmpHome, 'brain2'), { recursive: true })
 
     await run()
 
-    const output = consoleSpy.mock.calls.map(call => call.join(' ')).join('\n')
-    expect(output).toContain('work')
+    const output = consoleLogSpy.mock.calls.map(call => call.join(' ')).join('\n')
+    expect(output).toContain('brain1')
     expect(output).toContain('personal')
-    expect(output).toContain(brain1Path)
-    expect(output).toContain(brain2Path)
-
-    consoleSpy.mockRestore()
+    expect(output).toContain(result.brainPath)
+    cleanupBrain(result)
   })
 
   it('should show brain with local indicator when in brain folder', async () => {
-    const brainPath = join(tmpHome, 'mybrain')
-    mkdirSync(brainPath, { recursive: true })
-    writeFileSync(join(brainPath, '.brain-config.json'), JSON.stringify({ id: 'mybrain' }), 'utf8')
-
-    writeFileSync(
-      join(tmpHome, '.ai-brain-tool', 'config.json'),
-      JSON.stringify({
-        brains: {
-          mybrain: brainPath
-        }
-      }),
-      'utf8'
-    )
-
-    const consoleSpy = vi.spyOn(console, 'log')
+    const result = createBrainWithConfig('mybrain', {}, [])
 
     await run()
 
-    const output = consoleSpy.mock.calls.map(call => call.join(' ')).join('\n')
+    const output = consoleLogSpy.mock.calls.map(call => call.join(' ')).join('\n')
     expect(output).toContain('mybrain')
-
-    consoleSpy.mockRestore()
+    cleanupBrain(result)
   })
 })
