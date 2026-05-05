@@ -39,6 +39,10 @@ vi.mock('@ai-brain/core/config', () => ({
 }))
 
 vi.mock('@ai-brain/core/path-utils', () => ({
+  getPackageResource: vi.fn(() => '/fake/templates')
+}))
+
+vi.mock('@ai-brain/core/path-utils', () => ({
   getPackageResource: vi.fn((path: string) => `/fake/templates/${path}`)
 }))
 

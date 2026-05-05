@@ -20,13 +20,12 @@ describe('config integration', () => {
 
   beforeEach(() => {
     tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-config-test-'))
+    process.env.HOME = tmpHome as string
     originalCwd = process.cwd
-    process.env.__HOME__ = tmpHome
   })
 
   afterEach(() => {
     process.cwd = originalCwd
-    delete process.env.__HOME__
     rmSync(tmpHome, { recursive: true, force: true })
   })
 

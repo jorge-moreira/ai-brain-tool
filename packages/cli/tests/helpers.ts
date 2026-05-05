@@ -21,7 +21,6 @@ export interface CreateBrainResult {
  *
  * Caller must restore HOME and clean up:
  *   process.env.HOME = result.originalHome
- *   delete process.env.__HOME__
  *   rmSync(result.tmpHome, { recursive: true, force: true })
  */
 export function createBrainWithConfig(
@@ -32,7 +31,6 @@ export function createBrainWithConfig(
   const tmpHome = mkdtempSync(join(tmpdir(), `ai-brain-${brainName}-`))
   const originalHome = process.env.HOME
   process.env.HOME = tmpHome
-  process.env.__HOME__ = tmpHome
 
   mkdirSync(join(tmpHome, '.ai-brain-tool'), { recursive: true })
 
@@ -63,7 +61,6 @@ export function createBrainWithConfig(
  */
 export function cleanupBrain({ tmpHome, originalHome }: CreateBrainResult): void {
   process.env.HOME = originalHome
-  delete process.env.__HOME__
   rmSync(tmpHome, { recursive: true, force: true })
 }
 

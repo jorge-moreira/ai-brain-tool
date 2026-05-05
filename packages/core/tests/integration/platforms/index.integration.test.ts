@@ -47,12 +47,10 @@ describe('platforms integration', () => {
 
   beforeEach(() => {
     tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-platforms-test-'))
-    process.env.__HOME__ = tmpHome
   })
 
   afterEach(() => {
     rmSync(tmpHome, { recursive: true, force: true })
-    delete process.env.__HOME__
   })
 
   describe('claude platform', () => {

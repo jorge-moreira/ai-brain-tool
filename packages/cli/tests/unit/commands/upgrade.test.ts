@@ -39,7 +39,7 @@ vi.mock('@ai-brain/core/graphify', () => ({
 }))
 
 vi.mock('@ai-brain/core/path-utils', () => ({
-  getPackageResource: vi.fn((path: string) => `/fake/templates/${path}`)
+  getPackageResource: vi.fn(() => '/fake/templates')
 }))
 
 const mockedGetBrainPath = getBrainPath as Mock<typeof getBrainPath>

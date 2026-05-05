@@ -8,7 +8,8 @@ import {
   configPath,
   ensureConfigDir,
   isBrainIdAvailable,
-  isInstallationComplete
+  isInstallationComplete,
+  readConfig
 } from '@ai-brain/core/config'
 import { createVenv, globalVenvExists, ensureUv, createGlobalVenv } from '@ai-brain/core/graphify'
 import { detectAll, type DetectedPlatform } from '@ai-brain/core/index'
@@ -119,6 +120,7 @@ const mockedWriteGitignore = writeGitignore as Mock<typeof writeGitignore>
 const mockedExistsSync = existsSync as Mock<typeof existsSync>
 const mockedWriteFileSync = writeFileSync as Mock<typeof writeFileSync>
 const mockedIsInstallationComplete = isInstallationComplete as Mock<typeof isInstallationComplete>
+const mockedReadConfig = readConfig as Mock<typeof readConfig>
 const mockedGlobalVenvExists = globalVenvExists as Mock<typeof globalVenvExists>
 const mockedEnsureUv = ensureUv as Mock<typeof ensureUv>
 const mockedCreateGlobalVenv = createGlobalVenv as Mock<typeof createGlobalVenv>
@@ -532,5 +534,65 @@ describe('commands/setup', () => {
     mockedEnsureConfigDir.mockImplementation(() => {})
 
     await expect(run()).rejects.toThrow('venv creation failed')
+  })
+
+  it('should fall back to detected tools when readConfig fails in freshSetup', async () => {
+    mockedExistsSync.mockReturnValue(false)
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedIsInstallationComplete.mockReturnValue(true)
+    mockedGlobalVenvExists.mockReturnValue(true)
+
+    mockedReadConfig.mockImplementationOnce(() => {
+      throw new Error('Config parse error')
+    })
+
+    mockedInput.mockResolvedValueOnce('ai-brain')
+    mockedSelect.mockResolvedValueOnce('current')
+    mockedSelect.mockResolvedValueOnce('local')
+    mockedSelect.mockResolvedValueOnce('skip')
+
+    mockedDetectAll.mockResolvedValue([
+      { name: 'Claude', detected: true, configHint: '~/.claude' }
+    ] as DetectedPlatform[])
+
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+    mockedIsBrainIdAvailable.mockReturnValue(true)
+    mockedCreateVenv.mockResolvedValue()
+    mockedCreateBrainFolder.mockResolvedValue()
+
+    await run()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Found AI tools'))
+  })
+
+  it('should fall back to detected tools when readConfig fails in newMachineSetup', async () => {
+    mockedExistsSync.mockImplementation((path: PathLike) => {
+      const markers = ['raw', '.graphifyignore', '.brain-config.json']
+      return markers.some(m => path.toString().includes(m))
+    })
+
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedReadConfig.mockImplementation(() => {
+      throw new Error('Config parse error')
+    })
+
+    mockedDetectAll.mockResolvedValue([
+      { name: 'Codex', detected: true, configHint: '~/.codex' }
+    ] as DetectedPlatform[])
+
+    mockedSelect.mockResolvedValue('brain')
+    mockedCheckbox.mockResolvedValue([])
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+    mockedIsBrainIdAvailable.mockReturnValue(true)
+    mockedCreateVenv.mockResolvedValue()
+    mockedCreateBrainFolder.mockResolvedValue()
+
+    await run()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Found AI tools'))
   })
 })

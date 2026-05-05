@@ -5,8 +5,10 @@ import { join } from 'path'
 import { input } from '@inquirer/prompts'
 import { getPackageResource } from '@ai-brain/core/path-utils'
 
-function getTemplatesDir(): string {
-  return getPackageResource('src/templates')
+let _templatesDir: string
+function templatesDir(): string {
+  if (!_templatesDir) _templatesDir = getPackageResource('src/templates')
+  return _templatesDir
 }
 
 export async function run(
@@ -71,7 +73,7 @@ export async function run(
   const vaultObsidianDir = join(vaultDir, '.obsidian')
   if (!existsSync(vaultObsidianDir)) {
     mkdirSync(vaultObsidianDir, { recursive: true })
-    cpSync(join(getTemplatesDir(), 'obsidian'), vaultObsidianDir, { recursive: true })
+    cpSync(join(templatesDir(), 'obsidian'), vaultObsidianDir, { recursive: true })
     console.log(`  Copied scaffold to: ${vaultObsidianDir}`)
   } else {
     console.log(chalk.yellow(`  .obsidian/ already exists, skipping scaffold copy`))

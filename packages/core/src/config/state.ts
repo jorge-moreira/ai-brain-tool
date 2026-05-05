@@ -3,7 +3,7 @@ import { join } from 'path'
 import { homedir } from 'os'
 import type { Config } from './types'
 
-const home = () => process.env.__HOME__ || homedir()
+const home = () => process.env.HOME || homedir()
 const configDir = () => join(home(), '.ai-brain-tool')
 
 export function configPath(): string {

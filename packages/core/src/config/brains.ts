@@ -4,7 +4,7 @@ import { homedir } from 'os'
 import { readConfig, writeConfig, createInitialConfig } from './state'
 import type { BrainConfig, BrainInfo, ResolvedBrain, GetBrainPathOptions } from './types'
 
-const home = () => process.env.__HOME__ || homedir()
+const home = () => process.env.HOME || homedir()
 
 export function resolveBrain(brainId?: string): ResolvedBrain {
   const config = readConfig()

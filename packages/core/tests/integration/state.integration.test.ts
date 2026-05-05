@@ -22,12 +22,10 @@ describe('config/state integration', () => {
     tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-state-'))
     originalHome = process.env.HOME
     process.env.HOME = tmpHome
-    process.env.__HOME__ = tmpHome
   })
 
   afterEach(() => {
     process.env.HOME = originalHome
-    delete process.env.__HOME__
     rmSync(tmpHome, { recursive: true, force: true })
   })
 

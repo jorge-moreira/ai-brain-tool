@@ -5,8 +5,10 @@ import { readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { getPackageResource } from '@ai-brain/core/path-utils'
 
-function getStartersDir(): string {
-  return getPackageResource('src/templates')
+let _startersDir: string
+function startersDir(): string {
+  if (!_startersDir) _startersDir = getPackageResource('src/templates')
+  return _startersDir
 }
 
 interface AddTemplateOptions {
@@ -22,7 +24,7 @@ export function addTemplate({ brainPath, type, name }: AddTemplateOptions): stri
   const starterFile = isMarkdown ? '_starter.md' : '_starter.json'
   const destName = `${name}-template${ext}`
   const destPath = join(brainPath, 'raw', 'templates', subdir, '_custom', destName)
-  const starter = readFileSync(join(getStartersDir(), subdir, starterFile), 'utf8')
+  const starter = readFileSync(join(startersDir(), subdir, starterFile), 'utf8')
   writeFileSync(destPath, starter, 'utf8')
   return destPath
 }

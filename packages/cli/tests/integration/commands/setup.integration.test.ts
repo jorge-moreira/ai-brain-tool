@@ -74,7 +74,6 @@ describe('setup integration', () => {
     originalHome = process.env.HOME
     originalCwd = process.cwd()
     process.env.HOME = tmpHome
-    process.env.__HOME__ = tmpHome
     process.chdir(tmpCwd)
 
     mkdirSync(join(tmpHome, '.ai-brain-tool'), { recursive: true })
@@ -128,7 +127,6 @@ describe('setup integration', () => {
 
   afterEach(() => {
     process.env.HOME = originalHome
-    delete process.env.__HOME__
     process.chdir(originalCwd)
     rmSync(tmpHome, { recursive: true, force: true })
     rmSync(tmpCwd, { recursive: true, force: true })

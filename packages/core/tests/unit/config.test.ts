@@ -40,7 +40,7 @@ describe('config', () => {
 
   beforeEach(async () => {
     tmpHome = mkdtempSync(join(tmpdir(), 'ai-brain-test-'))
-    process.env.__HOME__ = tmpHome
+    process.env.HOME = tmpHome
 
     ensureConfigDir()
     writeConfig(emptyConfig)
@@ -48,7 +48,6 @@ describe('config', () => {
 
   afterEach(() => {
     rmSync(tmpHome, { recursive: true, force: true })
-    delete process.env.__HOME__
   })
 
   describe('isInstallationComplete', () => {
