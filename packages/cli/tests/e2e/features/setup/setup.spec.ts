@@ -1,25 +1,14 @@
+import { E2EContext } from '../../types/e2e-context'
 import { loadFeature, describeFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
 import { execa } from 'execa'
 import { join } from 'path'
 import { mkdirSync, writeFileSync, existsSync, rmSync } from 'fs'
 
-interface E2EContext {
-  tempDir: string
-  brainPath: string
-  lastOutput: string
-  lastExitCode: number
-}
-
 const feature = await loadFeature('./setup.feature')
 
 describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
-  const ctx: E2EContext = {
-    tempDir: '',
-    brainPath: '',
-    lastOutput: '',
-    lastExitCode: 0
-  }
+  const ctx: E2EContext = { tempDir: '', brainPath: '', lastOutput: '', lastExitCode: 0 }
 
   AfterEachScenario(async () => {
     // Save output to file for debugging failures (mounted volume)
@@ -149,7 +138,6 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
         reject: false,
         all: true
       })
-
       ctx.lastOutput = result.all ?? result.stdout ?? ''
       ctx.lastExitCode = result.exitCode ?? 0
     })

@@ -1,3 +1,4 @@
+import { E2EContext } from '../../types/e2e-context'
 import { loadFeature, describeFeature } from '@amiceli/vitest-cucumber'
 import { expect } from 'vitest'
 import { execa } from 'execa'
@@ -5,22 +6,10 @@ import { join } from 'path'
 import { readFileSync, mkdirSync, writeFileSync, existsSync, rmSync } from 'fs'
 import { Config } from '@ai-brain/core/config'
 
-interface E2EContext {
-  tempDir: string
-  brainPath: string
-  lastOutput: string
-  lastExitCode: number
-}
-
 const feature = await loadFeature('./multi-brain.feature')
 
 describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
-  const ctx: E2EContext = {
-    tempDir: '',
-    brainPath: '',
-    lastOutput: '',
-    lastExitCode: 0
-  }
+  const ctx: E2EContext = { tempDir: '', brainPath: '', lastOutput: '', lastExitCode: 0 }
 
   AfterEachScenario(async () => {
     // Save output to file for debugging failures
@@ -44,7 +33,12 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
     mkdirSync(join(brainPath, 'raw', 'notes'), { recursive: true })
     mkdirSync(join(ctx.tempDir, '.ai-brain-tool'), { recursive: true })
 
-    let config: Config = { brains: {} }
+    let config: Config = {
+      brains: {},
+      installationComplete: false,
+      graphifyyExtras: [],
+      aiTools: []
+    }
     const configPath = join(ctx.tempDir, '.ai-brain-tool', 'config.json')
     if (existsSync(configPath)) {
       config = JSON.parse(readFileSync(configPath, 'utf8')) as Config
@@ -129,7 +123,6 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
         reject: false,
         all: true
       })
-
       ctx.lastOutput = result.all ?? result.stdout ?? ''
       ctx.lastExitCode = result.exitCode ?? 0
     })
@@ -171,7 +164,6 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
         reject: false,
         all: true
       })
-
       ctx.lastOutput = result.all ?? result.stdout ?? ''
       ctx.lastExitCode = result.exitCode ?? 0
     })
@@ -214,7 +206,6 @@ describeFeature(feature, ({ Scenario, AfterEachScenario }) => {
         reject: false,
         all: true
       })
-
       ctx.lastOutput = result.all ?? result.stdout ?? ''
       ctx.lastExitCode = result.exitCode ?? 0
     })
