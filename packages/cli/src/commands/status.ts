@@ -4,12 +4,13 @@ import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { execa } from 'execa'
 import { venvPythonPath } from '@ai-brain/core/graphify'
-import { readFileSync as rf } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const pkg = JSON.parse(rf(join(__dirname, '../../package.json'), 'utf8')) as { version: string }
+const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf8')) as {
+  version: string
+}
 
 export async function run(args: string[], options: { brainId?: string } = {}): Promise<void> {
   const brainPath = getBrainPath(args, options)

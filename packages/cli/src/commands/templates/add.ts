@@ -2,11 +2,12 @@ import { select, input } from '@inquirer/prompts'
 import chalk from 'chalk'
 import { getBrainPath } from '@ai-brain/core/config'
 import { readFileSync, writeFileSync } from 'fs'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { join } from 'path'
+import { getPackageResource } from '@ai-brain/core/path-utils'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const STARTERS_DIR = join(__dirname, '..', '..', 'templates')
+function getStartersDir(): string {
+  return getPackageResource('src/templates')
+}
 
 interface AddTemplateOptions {
   brainPath: string
@@ -21,7 +22,7 @@ export function addTemplate({ brainPath, type, name }: AddTemplateOptions): stri
   const starterFile = isMarkdown ? '_starter.md' : '_starter.json'
   const destName = `${name}-template${ext}`
   const destPath = join(brainPath, 'raw', 'templates', subdir, '_custom', destName)
-  const starter = readFileSync(join(STARTERS_DIR, subdir, starterFile), 'utf8')
+  const starter = readFileSync(join(getStartersDir(), subdir, starterFile), 'utf8')
   writeFileSync(destPath, starter, 'utf8')
   return destPath
 }

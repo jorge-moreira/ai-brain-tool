@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest'
 import * as fs from 'fs'
 import { join } from 'path'
-import * as inquirer from 'inquirer'
+import { input } from '@inquirer/prompts'
 import * as config from '@ai-brain/core/config'
 import type { BrainConfig, ResolvedBrain } from '@ai-brain/core/config'
 import { run } from '../../../src/commands/setup-obsidian'
@@ -27,10 +27,8 @@ vi.mock('fs', () => ({
   rmSync: vi.fn()
 }))
 
-vi.mock('inquirer', () => ({
-  default: {
-    prompt: vi.fn()
-  }
+vi.mock('@inquirer/prompts', () => ({
+  input: vi.fn()
 }))
 
 vi.mock('@ai-brain/core/config', () => ({
@@ -40,9 +38,13 @@ vi.mock('@ai-brain/core/config', () => ({
   readConfig: vi.fn()
 }))
 
+vi.mock('@ai-brain/core/path-utils', () => ({
+  getPackageResource: vi.fn((path: string) => `/fake/templates/${path}`)
+}))
+
 const mockedResolveBrain = config.resolveBrain as Mock<typeof config.resolveBrain>
 const mockedReadBrainConfig = config.readBrainConfig as Mock<typeof config.readBrainConfig>
-const mockedInquirerPrompt = inquirer.default.prompt as Mock<typeof inquirer.default.prompt>
+const mockedInput = input as Mock<typeof input>
 const mockedExistsSync = fs.existsSync as unknown as Mock<typeof fs.existsSync>
 const mockedMkdirSync = fs.mkdirSync as unknown as Mock<typeof fs.mkdirSync>
 const mockedCpSync = fs.cpSync as unknown as Mock<typeof fs.cpSync>
@@ -95,7 +97,7 @@ describe('commands/setup-obsidian', () => {
     mockedResolveBrain.mockImplementation(() => ({ id: 'test', path: tmp }) as ResolvedBrain)
     mockedReadBrainConfig.mockImplementation(() => ({ obsidianDir: vaultPath }) as BrainConfig)
 
-    mockedInquirerPrompt.mockResolvedValue({ vaultPath })
+    mockedInput.mockResolvedValue(vaultPath)
 
     await run(['--update'])
 
@@ -109,7 +111,7 @@ describe('commands/setup-obsidian', () => {
     mockedResolveBrain.mockImplementation(() => ({ id: 'test', path: tmp }) as ResolvedBrain)
     mockedReadBrainConfig.mockImplementation(() => ({ obsidianDir: tmp }) as BrainConfig)
 
-    mockedInquirerPrompt.mockResolvedValue({ vaultPath: tmp })
+    mockedInput.mockResolvedValue(tmp)
 
     await run(['--update'])
 
@@ -123,19 +125,14 @@ describe('commands/setup-obsidian', () => {
     mockedResolveBrain.mockImplementation(() => ({ id: 'test', path: tmp }) as ResolvedBrain)
     mockedReadBrainConfig.mockImplementation(() => ({}) as BrainConfig)
 
-    mockedInquirerPrompt.mockResolvedValue({ vaultPath: tmp })
+    mockedInput.mockResolvedValue(tmp)
 
     await run([])
 
-    expect(mockedInquirerPrompt).toHaveBeenCalled()
-
-    const promptArgs = mockedInquirerPrompt.mock.calls[0][0] as unknown as Array<{
-      name: string
-      filter?: (value: string) => string
-    }>
-    const vaultPathPrompt = promptArgs.find(p => p.name === 'vaultPath')
-    expect(vaultPathPrompt?.filter).toBeDefined()
-    expect(vaultPathPrompt?.filter?.('  /path/with/spaces  ')).toBe('/path/with/spaces')
+    expect(mockedInput).toHaveBeenCalled()
+    const inputOpts = mockedInput.mock.calls[0][0] as { message: string; default: string }
+    expect(inputOpts.message).toContain('Path to your Obsidian vault')
+    expect(inputOpts.default).toBe(tmp)
   })
 
   it('should use vaultPath from options when provided', async () => {
@@ -145,11 +142,11 @@ describe('commands/setup-obsidian', () => {
     mockedResolveBrain.mockImplementation(() => ({ id: 'test', path: tmp }) as ResolvedBrain)
     mockedReadBrainConfig.mockImplementation(() => ({}) as BrainConfig)
 
-    mockedInquirerPrompt.mockResolvedValue({ vaultPath: tmp })
+    mockedInput.mockResolvedValue(tmp)
 
     await run([], { vaultPath: tmp })
 
-    expect(mockedInquirerPrompt).not.toHaveBeenCalled()
+    expect(mockedInput).not.toHaveBeenCalled()
   })
 
   it('should create vault directory if it does not exist', async () => {
@@ -160,7 +157,7 @@ describe('commands/setup-obsidian', () => {
     mockedResolveBrain.mockImplementation(() => ({ id: 'test', path: tmp }) as ResolvedBrain)
     mockedReadBrainConfig.mockImplementation(() => ({}) as BrainConfig)
 
-    mockedInquirerPrompt.mockResolvedValue({ vaultPath })
+    mockedInput.mockResolvedValue(vaultPath)
 
     await run([])
 
@@ -178,7 +175,7 @@ describe('commands/setup-obsidian', () => {
     mockedResolveBrain.mockImplementation(() => ({ id: 'test', path: tmp }) as ResolvedBrain)
     mockedReadBrainConfig.mockImplementation(() => ({}) as BrainConfig)
 
-    mockedInquirerPrompt.mockResolvedValue({ vaultPath })
+    mockedInput.mockResolvedValue(vaultPath)
 
     await run([])
 
@@ -196,7 +193,7 @@ describe('commands/setup-obsidian', () => {
     mockedResolveBrain.mockImplementation(() => ({ id: 'test', path: tmp }) as ResolvedBrain)
     mockedReadBrainConfig.mockImplementation(() => ({}) as BrainConfig)
 
-    mockedInquirerPrompt.mockResolvedValue({ vaultPath })
+    mockedInput.mockResolvedValue(vaultPath)
 
     await run([])
 
@@ -213,7 +210,7 @@ describe('commands/setup-obsidian', () => {
       () => ({ existing: 'config' }) as unknown as BrainConfig
     )
 
-    mockedInquirerPrompt.mockResolvedValue({ vaultPath })
+    mockedInput.mockResolvedValue(vaultPath)
 
     await run([])
 

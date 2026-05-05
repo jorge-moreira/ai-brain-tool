@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import { run, listTemplates } from '../../../src/commands/templates/list'
-import { createBrainWithConfig, cleanupBrain } from '../../helpers'
+import { run, listTemplates } from '../../../../src/commands/templates/list'
+import { createBrainWithConfig, cleanupBrain } from '../../../helpers'
 
 describe('templates/list integration', () => {
   let consoleLogSpy: ReturnType<typeof vi.spyOn>

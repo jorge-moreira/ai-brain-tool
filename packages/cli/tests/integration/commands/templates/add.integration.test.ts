@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { writeFileSync, existsSync, readFileSync } from 'fs'
 import { join } from 'path'
-import { run, addTemplate } from '../../../src/commands/templates/add'
-import { createBrainWithConfig, cleanupBrain } from '../../helpers'
+import { run, addTemplate } from '../../../../src/commands/templates/add'
+import { createBrainWithConfig, cleanupBrain } from '../../../helpers'
 
 vi.mock('@inquirer/prompts', () => ({
   select: vi.fn(),

@@ -2,15 +2,15 @@ import { input, select, confirm } from '@inquirer/prompts'
 import chalk from 'chalk'
 import ora from 'ora'
 import { join, resolve, basename } from 'path'
-import { existsSync, readFileSync } from 'fs'
+import { existsSync } from 'fs'
 import { execSync } from 'child_process'
-import { homedir } from 'os'
 
 import { createBrainFolder, writeBrainConfig } from '@ai-brain/core/scaffold'
 import { createGlobalVenv, globalVenvExists, ensureUv } from '@ai-brain/core/graphify'
 import { detectAll, type DetectedPlatform } from '@ai-brain/core/index'
 import { initRepo, writeGitignore } from '@ai-brain/core/git'
 import {
+  readConfig,
   writeConfig,
   addBrain,
   ensureConfigDir,
@@ -218,12 +218,11 @@ async function freshSetup(): Promise<void> {
   section('AI tools')
 
   // Get pre-configured AI tools from installation
-  const configPath = join(homedir(), '.ai-brain-tool', 'config.json')
   let aiTools: string[] = []
   const platforms = await detectAll()
   const selected = platforms.filter(p => p.detected)
   try {
-    const config = JSON.parse(readFileSync(configPath, 'utf8')) as { aiTools?: string[] }
+    const config = readConfig()
     aiTools = config.aiTools || []
   } catch {
     // Fallback: use detected tools
@@ -267,12 +266,14 @@ async function freshSetup(): Promise<void> {
 
   addBrain(brainId, brainPath)
 
+  const globalExtras = readConfig().graphifyyExtras || []
+
   printSummary({
     brainPath,
     gitMode,
     remoteUrl,
     gitSync,
-    extras: [],
+    extras: globalExtras,
     selected,
     obsidianChoice: obsidianChoice ?? 'skip',
     aiTools
@@ -302,10 +303,9 @@ async function newMachineSetup(brainPath: string): Promise<void> {
   section('AI tools')
 
   // Get pre-configured AI tools from installation
-  const configPath = join(homedir(), '.ai-brain-tool', 'config.json')
   let aiTools: string[] = []
   try {
-    const config = JSON.parse(readFileSync(configPath, 'utf8')) as { aiTools?: string[] }
+    const config = readConfig()
     aiTools = config.aiTools || []
   } catch {
     // Fallback: detect again

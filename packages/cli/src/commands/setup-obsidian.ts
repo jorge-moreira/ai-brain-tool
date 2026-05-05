@@ -1,11 +1,13 @@
 import chalk from 'chalk'
 import { resolveBrain, readBrainConfig } from '@ai-brain/core/config'
 import { existsSync, mkdirSync, cpSync, writeFileSync } from 'fs'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { join } from 'path'
+import { input } from '@inquirer/prompts'
+import { getPackageResource } from '@ai-brain/core/path-utils'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const TEMPLATES_DIR = join(__dirname, '..', 'templates')
+function getTemplatesDir(): string {
+  return getPackageResource('src/templates')
+}
 
 export async function run(
   args: string[],
@@ -51,17 +53,12 @@ export async function run(
 
   let vaultPath: string | null = options.vaultPath ?? null
   if (vaultPath === null) {
-    const { default: inquirer } = await import('inquirer')
-    const result = await inquirer.prompt<{ vaultPath: string }>([
-      {
-        type: 'input',
-        name: 'vaultPath',
+    vaultPath = (
+      await input({
         message: 'Path to your Obsidian vault:',
-        default: currentObsidianDir || brainPath,
-        filter: (input: string) => input.trim()
-      }
-    ])
-    vaultPath = result.vaultPath
+        default: currentObsidianDir || brainPath
+      })
+    ).trim()
   }
 
   const vaultDir = vaultPath || brainPath
@@ -74,7 +71,7 @@ export async function run(
   const vaultObsidianDir = join(vaultDir, '.obsidian')
   if (!existsSync(vaultObsidianDir)) {
     mkdirSync(vaultObsidianDir, { recursive: true })
-    cpSync(join(TEMPLATES_DIR, 'obsidian'), vaultObsidianDir, { recursive: true })
+    cpSync(join(getTemplatesDir(), 'obsidian'), vaultObsidianDir, { recursive: true })
     console.log(`  Copied scaffold to: ${vaultObsidianDir}`)
   } else {
     console.log(chalk.yellow(`  .obsidian/ already exists, skipping scaffold copy`))

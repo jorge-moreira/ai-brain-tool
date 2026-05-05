@@ -7,7 +7,7 @@
     "ai-brain": "./dist/index.js"
   },
   "scripts": {
-    "build": "bun build ./src/index.ts --outfile ./dist/index.js --target bun && cp ../core/requirements.txt ./dist/ && cp -r ../core/src/templates ./dist/templates && cp ../core/src/platforms/brain-skills.md ./dist/",
+    "build": "bun build ./src/index.ts --outfile ./dist/index.js --target bun && cp ../core/requirements.txt ./dist/ && cp -r ../core/src/templates ./dist/src/templates && cp ../core/src/platforms/brain-skills.md ./dist/",
     "start": "bun run src/index.ts",
     "test": "vitest run",
     "test:coverage": "bun run test --coverage",

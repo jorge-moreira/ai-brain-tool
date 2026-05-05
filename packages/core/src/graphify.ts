@@ -147,21 +147,30 @@ export async function ensureUv(): Promise<void> {
   }
 }
 
-// Create .venv and install graphifyy with requested extras (always includes mcp)
-export async function createVenv(brainPath: string, extras: string[] = []): Promise<void> {
+async function createVenvAtPath(
+  venvPath: string,
+  pipTarget: string,
+  extras: string[]
+): Promise<void> {
   await ensureUv()
 
   const pkg = buildPkg(extras)
-  // Check for available Python 3.10+, let uv install if needed
   const python = await detectPython()
+
   if (python) {
-    await execa('uv', ['venv', '--python', python, join(brainPath, '.venv')], { stdio: 'inherit' })
+    await execa('uv', ['venv', '--python', python, venvPath], { stdio: 'inherit' })
   } else {
-    await execa('uv', ['venv', '--python', '3.10', join(brainPath, '.venv')], { stdio: 'inherit' })
+    await execa('uv', ['venv', '--python', '3.10', venvPath], { stdio: 'inherit' })
   }
-  await execa('uv', ['pip', 'install', pkg, '--python', venvPythonPath(brainPath)], {
+
+  await execa('uv', ['pip', 'install', pkg, '--python', pipTarget], {
     stdio: 'inherit'
   })
+}
+
+// Create .venv and install graphifyy with requested extras (always includes mcp)
+export async function createVenv(brainPath: string, extras: string[] = []): Promise<void> {
+  await createVenvAtPath(join(brainPath, '.venv'), venvPythonPath(brainPath), extras)
 }
 
 // Upgrade graphifyy in existing .venv, preserving the configured extras
@@ -176,22 +185,7 @@ export async function upgradeVenv(brainPath: string, extras: string[] = []): Pro
 
 // Create global .venv and install graphifyy with extras
 export async function createGlobalVenv(extras: string[] = []): Promise<void> {
-  await ensureUv()
-
-  const pkg = buildPkg(extras)
-  const python = await detectPython()
-
-  // Create venv at global path
-  if (python) {
-    await execa('uv', ['venv', '--python', python, GLOBAL_VENV_PATH], { stdio: 'inherit' })
-  } else {
-    await execa('uv', ['venv', '--python', '3.10', GLOBAL_VENV_PATH], { stdio: 'inherit' })
-  }
-
-  // Install graphifyy in global venv
-  await execa('uv', ['pip', 'install', pkg, '--python', globalVenvPythonPath()], {
-    stdio: 'inherit'
-  })
+  await createVenvAtPath(GLOBAL_VENV_PATH, globalVenvPythonPath(), extras)
 }
 
 // Upgrade global graphifyy

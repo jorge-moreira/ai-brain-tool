@@ -4,10 +4,12 @@ import { join } from 'path'
 import { run } from '../../../src/commands/setup-obsidian'
 import { createBrainWithConfig, cleanupBrain } from '../../helpers'
 
-vi.mock('inquirer', () => ({
-  default: {
-    prompt: vi.fn().mockResolvedValue({ vaultPath: '/default-vault' })
-  }
+const { input: mockedInput } = vi.hoisted(() => ({
+  input: vi.fn().mockResolvedValue('/default-vault')
+}))
+
+vi.mock('@inquirer/prompts', () => ({
+  input: mockedInput
 }))
 
 describe('setup-obsidian integration', () => {
@@ -23,8 +25,7 @@ describe('setup-obsidian integration', () => {
 
   it('should configure obsidian vault at brain path', async () => {
     const result = createBrainWithConfig('test-brain')
-    const inquirer = await import('inquirer')
-    vi.mocked(inquirer.default.prompt).mockResolvedValue({ vaultPath: result.brainPath })
+    mockedInput.mockResolvedValue(result.brainPath)
 
     await run(['test-brain'], { brainId: 'test-brain' })
 
@@ -40,9 +41,7 @@ describe('setup-obsidian integration', () => {
     const result = createBrainWithConfig('test-brain')
     const customVaultPath = join(result.tmpHome, 'custom-vault')
     mkdirSync(customVaultPath, { recursive: true })
-
-    const inquirer = await import('inquirer')
-    vi.mocked(inquirer.default.prompt).mockResolvedValue({ vaultPath: customVaultPath })
+    mockedInput.mockResolvedValue(customVaultPath)
 
     await run(['test-brain'], { brainId: 'test-brain' })
 
@@ -80,9 +79,7 @@ describe('setup-obsidian integration', () => {
     )
     const newVaultPath = join(result.tmpHome, 'new-vault')
     mkdirSync(newVaultPath, { recursive: true })
-
-    const inquirer = await import('inquirer')
-    vi.mocked(inquirer.default.prompt).mockResolvedValue({ vaultPath: newVaultPath })
+    mockedInput.mockResolvedValue(newVaultPath)
 
     await run(['test-brain', '--update'], { brainId: 'test-brain' })
 
@@ -103,9 +100,7 @@ describe('setup-obsidian integration', () => {
     )
     const newVaultPath = join(result.tmpHome, 'new-vault-short')
     mkdirSync(newVaultPath, { recursive: true })
-
-    const inquirer = await import('inquirer')
-    vi.mocked(inquirer.default.prompt).mockResolvedValue({ vaultPath: newVaultPath })
+    mockedInput.mockResolvedValue(newVaultPath)
 
     await run(['test-brain', '-u'], { brainId: 'test-brain' })
 
@@ -119,9 +114,7 @@ describe('setup-obsidian integration', () => {
   it('should create vault directory if it does not exist', async () => {
     const result = createBrainWithConfig('test-brain')
     const newVaultPath = join(result.tmpHome, 'nonexistent-vault')
-
-    const inquirer = await import('inquirer')
-    vi.mocked(inquirer.default.prompt).mockResolvedValue({ vaultPath: newVaultPath })
+    mockedInput.mockResolvedValue(newVaultPath)
 
     await run(['test-brain'], { brainId: 'test-brain' })
 
@@ -136,9 +129,7 @@ describe('setup-obsidian integration', () => {
     const obsidianDir = join(vaultPath, '.obsidian')
     mkdirSync(obsidianDir, { recursive: true })
     writeFileSync(join(obsidianDir, 'custom.json'), 'custom content', 'utf8')
-
-    const inquirer = await import('inquirer')
-    vi.mocked(inquirer.default.prompt).mockResolvedValue({ vaultPath })
+    mockedInput.mockResolvedValue(vaultPath)
 
     await run(['test-brain'], { brainId: 'test-brain' })
 
@@ -149,7 +140,6 @@ describe('setup-obsidian integration', () => {
 
   it('should throw error when brain is not configured', async () => {
     const result = createBrainWithConfig('empty')
-    // clear brains from config
     writeFileSync(
       join(result.tmpHome, '.ai-brain-tool', 'config.json'),
       JSON.stringify({ brains: {} }),

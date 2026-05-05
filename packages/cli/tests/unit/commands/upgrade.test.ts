@@ -38,6 +38,10 @@ vi.mock('@ai-brain/core/graphify', () => ({
   upgradeVenv: vi.fn<typeof upgradeVenv>()
 }))
 
+vi.mock('@ai-brain/core/path-utils', () => ({
+  getPackageResource: vi.fn((path: string) => `/fake/templates/${path}`)
+}))
+
 const mockedGetBrainPath = getBrainPath as Mock<typeof getBrainPath>
 const mockedReadConfig = readConfig as Mock<typeof readConfig>
 const mockedUpgradeVenv = upgradeVenv as Mock<typeof upgradeVenv>

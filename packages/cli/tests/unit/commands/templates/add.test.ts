@@ -20,6 +20,10 @@ vi.mock('@ai-brain/core/config', () => ({
   getBrainPath: vi.fn<typeof getBrainPath>()
 }))
 
+vi.mock('@ai-brain/core/path-utils', () => ({
+  getPackageResource: vi.fn((path: string) => `/fake/templates/${path}`)
+}))
+
 vi.mock('fs', () => ({
   existsSync: vi.fn(),
   mkdirSync: vi.fn(),

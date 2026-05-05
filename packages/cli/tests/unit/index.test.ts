@@ -1,129 +1,107 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
+import type { Command } from 'commander'
 
-vi.mock('../../src/commands/setup.js', () => ({
-  run: vi.fn().mockResolvedValue(undefined)
-}))
+const mockSetupRun = vi.fn().mockResolvedValue(undefined)
+const mockUpdateRun = vi.fn().mockResolvedValue(undefined)
+const mockStatusRun = vi.fn().mockResolvedValue(undefined)
+const mockUpgradeRun = vi.fn().mockResolvedValue(undefined)
+const mockListRun = vi.fn().mockResolvedValue(undefined)
+const mockSetupObsidianRun = vi.fn().mockResolvedValue(undefined)
+const mockTemplatesAddRun = vi.fn().mockResolvedValue(undefined)
+const mockTemplatesListRun = vi.fn().mockResolvedValue(undefined)
 
-vi.mock('../../src/commands/update.js', () => ({
-  run: vi.fn().mockResolvedValue(undefined)
-}))
-
-vi.mock('../../src/commands/status.js', () => ({
-  run: vi.fn().mockResolvedValue(undefined)
-}))
-
-vi.mock('../../src/commands/upgrade.js', () => ({
-  run: vi.fn().mockResolvedValue(undefined)
-}))
-
-vi.mock('../../src/commands/list.js', () => ({
-  run: vi.fn().mockResolvedValue(undefined)
-}))
-
-vi.mock('../../src/commands/setup-obsidian.js', () => ({
-  run: vi.fn().mockResolvedValue(undefined)
-}))
-
-vi.mock('../../src/commands/templates/add.js', () => ({
-  run: vi.fn().mockResolvedValue(undefined)
-}))
-
-vi.mock('../../src/commands/templates/list.js', () => ({
-  run: vi.fn().mockResolvedValue(undefined)
-}))
+vi.mock('../../src/commands/setup.js', () => ({ run: mockSetupRun }))
+vi.mock('../../src/commands/update.js', () => ({ run: mockUpdateRun }))
+vi.mock('../../src/commands/status.js', () => ({ run: mockStatusRun }))
+vi.mock('../../src/commands/upgrade.js', () => ({ run: mockUpgradeRun }))
+vi.mock('../../src/commands/list.js', () => ({ run: mockListRun }))
+vi.mock('../../src/commands/setup-obsidian.js', () => ({ run: mockSetupObsidianRun }))
+vi.mock('../../src/commands/templates/add.js', () => ({ run: mockTemplatesAddRun }))
+vi.mock('../../src/commands/templates/list.js', () => ({ run: mockTemplatesListRun }))
 
 describe('cli entry point (src/index.ts)', () => {
-  beforeEach(async () => {
-    vi.clearAllMocks()
-    const { program } = await import('commander')
-    vi.spyOn(program, 'parse').mockImplementation(() => program as never)
+  let program: Command
+  let exitSpy: ReturnType<typeof vi.spyOn>
+
+  beforeAll(async () => {
+    exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
+    await import('../../src/index')
+    const { program: p } = await import('commander')
+    program = p
   })
 
-  it('should register setup command', async () => {
-    await import('../../src/index')
-
-    const { program } = await import('commander')
-    const commands = program.commands.map(c => c.name())
-    expect(commands).toContain('setup')
+  afterAll(() => {
+    exitSpy.mockRestore()
   })
 
-  it('should register update command', async () => {
-    await import('../../src/index')
-
-    const { program } = await import('commander')
-    const commands = program.commands.map(c => c.name())
-    expect(commands).toContain('update')
-  })
-
-  it('should register status command', async () => {
-    await import('../../src/index')
-
-    const { program } = await import('commander')
-    const commands = program.commands.map(c => c.name())
-    expect(commands).toContain('status')
-  })
-
-  it('should register list command', async () => {
-    await import('../../src/index')
-
-    const { program } = await import('commander')
-    const commands = program.commands.map(c => c.name())
-    expect(commands).toContain('list')
-  })
-
-  it('should register upgrade command', async () => {
-    await import('../../src/index')
-
-    const { program } = await import('commander')
-    const commands = program.commands.map(c => c.name())
-    expect(commands).toContain('upgrade')
-  })
-
-  it('should register setup-obsidian command', async () => {
-    await import('../../src/index')
-
-    const { program } = await import('commander')
-    const commands = program.commands.map(c => c.name())
-    expect(commands).toContain('setup-obsidian')
-  })
-
-  it('should register templates as a parent command with add and list subcommands', async () => {
-    await import('../../src/index')
-
-    const { program } = await import('commander')
-    const templates = program.commands.find(c => c.name() === 'templates')
-    expect(templates).toBeDefined()
-
-    if (templates) {
-      const subCommands = templates.commands.map(c => c.name())
-      expect(subCommands).toContain('list')
-      expect(subCommands).toContain('add')
-    }
-  })
-
-  it('should set correct program name and description', async () => {
-    await import('../../src/index')
-
-    const { program } = await import('commander')
+  it('should have correct name, description, version', () => {
     expect(program.name()).toBe('ai-brain')
     expect(program.description()).toContain('AI memory')
+    expect(program.version()).toMatch(/^\d+\.\d+\.\d+/)
   })
 
-  it('should configure commands with correct arguments and options', async () => {
-    await import('../../src/index')
+  it('should register all commands', () => {
+    const names = program.commands.map(c => c.name())
+    expect(names).toContain('setup')
+    expect(names).toContain('update')
+    expect(names).toContain('status')
+    expect(names).toContain('upgrade')
+    expect(names).toContain('list')
+    expect(names).toContain('setup-obsidian')
+    expect(names).toContain('templates')
+  })
 
-    const { program } = await import('commander')
+  it('should register templates subcommands', () => {
+    const templates = program.commands.find(c => c.name() === 'templates')
+    expect(templates).toBeDefined()
+    if (!templates) return
+    const subNames = templates.commands.map(c => c.name())
+    expect(subNames).toContain('list')
+    expect(subNames).toContain('add')
+  })
 
-    const updateCmd = program.commands.find(c => c.name() === 'update')
-    expect(updateCmd).toBeDefined()
+  it('should invoke setup action via parseAsync', async () => {
+    await program.parseAsync(['setup'], { from: 'user' })
+    expect(mockSetupRun).toHaveBeenCalled()
+  })
 
-    const statusCmd = program.commands.find(c => c.name() === 'status')
-    expect(statusCmd).toBeDefined()
+  it('should invoke update action via parseAsync', async () => {
+    await program.parseAsync(['update', 'my-brain'], { from: 'user' })
+    expect(mockUpdateRun).toHaveBeenCalledWith(['my-brain'], expect.any(Object))
+  })
 
-    // verify commander parses without throwing for non-help args
-    const processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
-    program.parse(['node', 'ai-brain'], { from: 'user' })
-    expect(processExitSpy).not.toHaveBeenCalled()
-    processExitSpy.mockRestore()
+  it('should invoke status action via parseAsync', async () => {
+    await program.parseAsync(['status', 'my-brain'], { from: 'user' })
+    expect(mockStatusRun).toHaveBeenCalledWith(['my-brain'], expect.any(Object))
+  })
+
+  it('should invoke list action via parseAsync', async () => {
+    await program.parseAsync(['list'], { from: 'user' })
+    expect(mockListRun).toHaveBeenCalled()
+  })
+
+  it('should invoke templates list action via parseAsync', async () => {
+    await program.parseAsync(['templates', 'list', 'my-brain'], { from: 'user' })
+    expect(mockTemplatesListRun).toHaveBeenCalledWith(['my-brain'], expect.any(Object))
+  })
+
+  it('should invoke templates add action via parseAsync', async () => {
+    await program.parseAsync(['templates', 'add', 'my-brain'], { from: 'user' })
+    expect(mockTemplatesAddRun).toHaveBeenCalledWith(['my-brain'], expect.any(Object))
+  })
+
+  it('should invoke upgrade action via parseAsync', async () => {
+    await program.parseAsync(['upgrade', 'my-brain'], { from: 'user' })
+    expect(mockUpgradeRun).toHaveBeenCalledWith(['my-brain'], expect.any(Object))
+  })
+
+  it('should invoke setup-obsidian action via parseAsync', async () => {
+    await program.parseAsync(['setup-obsidian', 'my-brain'], { from: 'user' })
+    expect(mockSetupObsidianRun).toHaveBeenCalledWith(['my-brain'], expect.any(Object))
+  })
+
+  it('should invoke setup-obsidian with --update via parseAsync', async () => {
+    await program.parseAsync(['setup-obsidian', 'my-brain', '--update'], { from: 'user' })
+    expect(mockSetupObsidianRun).toHaveBeenCalledWith(['my-brain', '--update'], expect.any(Object))
   })
 })

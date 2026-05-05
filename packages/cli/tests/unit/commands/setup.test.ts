@@ -71,7 +71,7 @@ vi.mock('@ai-brain/core/git', () => ({
 }))
 
 vi.mock('@ai-brain/core/config', () => ({
-  readConfig: vi.fn(),
+  readConfig: vi.fn(() => ({ graphifyyExtras: [], aiTools: [], brains: {} })),
   writeConfig: vi.fn(),
   addBrain: vi.fn(),
   ensureConfigDir: vi.fn(),

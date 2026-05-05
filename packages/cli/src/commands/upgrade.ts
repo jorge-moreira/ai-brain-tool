@@ -1,13 +1,14 @@
 import chalk from 'chalk'
 import ora from 'ora'
 import { cpSync } from 'fs'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { join } from 'path'
 import { getBrainPath, readConfig } from '@ai-brain/core/config'
 import { upgradeVenv } from '@ai-brain/core/graphify'
+import { getPackageResource } from '@ai-brain/core/path-utils'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const TEMPLATES_DIR = join(__dirname, '..', 'templates')
+function getTemplatesDir(): string {
+  return getPackageResource('src/templates')
+}
 
 export async function run(args: string[], options: Record<string, unknown> = {}): Promise<void> {
   let brainPath
@@ -34,12 +35,12 @@ export async function run(args: string[], options: Record<string, unknown> = {})
   const spinnerTmpl = ora('Refreshing bundled templates...').start()
 
   cpSync(
-    join(TEMPLATES_DIR, 'markdown', '_bundled'),
+    join(getTemplatesDir(), 'markdown', '_bundled'),
     join(brainPath, 'raw', 'templates', 'markdown', '_bundled'),
     { recursive: true, force: true }
   )
   cpSync(
-    join(TEMPLATES_DIR, 'web-clipper', '_bundled'),
+    join(getTemplatesDir(), 'web-clipper', '_bundled'),
     join(brainPath, 'raw', 'templates', 'web-clipper', '_bundled'),
     { recursive: true, force: true }
   )
