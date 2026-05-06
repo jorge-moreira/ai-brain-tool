@@ -19,14 +19,14 @@ const pkg = JSON.parse(
 export async function run(args: string[], options: { brainId?: string } = {}): Promise<void> {
   const brainPath = getBrainPath(args, options)
 
-  console.log('\n  ai-brain status\n')
+  console.log()
   console.log(`  Tool version:   ${pkg.version}`)
-  console.log(`  Brain path:     ${brainPath}`)
+  console.log(`  Brain path:    ${brainPath}`)
 
-  const python = venvPythonPath(brainPath)
-  if (existsSync(python)) {
+  const pythonPath = venvPythonPath(brainPath)
+  if (existsSync(pythonPath)) {
     try {
-      const { stdout } = await execa(python, ['-m', 'graphify', '--version'])
+      const { stdout } = await execa(pythonPath, ['-m', 'graphify', '--version'])
       console.log(`  Graphify:       ${stdout.trim()}`)
     } catch {
       console.log(`  Graphify:       ${chalk.yellow('error reading version')}`)
