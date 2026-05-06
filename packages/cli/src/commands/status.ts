@@ -7,14 +7,15 @@ import { venvPythonPath } from '@ai-brain/core/graphify'
 import { fileURLToPath } from 'url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const pkg = JSON.parse(
-  readFileSync(
-    existsSync(join(__dirname, '../package.json'))
-      ? join(__dirname, '../package.json')
-      : join(__dirname, '../../package.json'),
-    'utf8'
-  )
-) as { version: string }
+
+function tryReadPkg(path: string): { version: string } | null {
+  if (!existsSync(path)) return null
+  return JSON.parse(readFileSync(path, 'utf8')) as { version: string }
+}
+
+const pkg =
+  tryReadPkg(join(__dirname, '../package.json')) ??
+  tryReadPkg(join(__dirname, '../../package.json'))
 
 export async function run(args: string[], options: { brainId?: string } = {}): Promise<void> {
   const brainPath = getBrainPath(args, options)
