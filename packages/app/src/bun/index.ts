@@ -8,8 +8,8 @@ const DEV_SERVER_PORT = 5173
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`
 const homeDir = homedir()
 
-// Window sizes
-const WIZARD_SIZE = { width: 700, height: 750 }
+// Window sizes - smaller for wizard
+const WIZARD_SIZE = { width: 600, height: 650 }
 const DASHBOARD_SIZE = { width: 1200, height: 800 }
 
 let mainWindow: BrowserWindow | null = null
@@ -64,6 +64,12 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
         const targetSize = size === 'wizard' ? WIZARD_SIZE : DASHBOARD_SIZE
         if (mainWindow) {
           mainWindow.setSize(targetSize.width, targetSize.height)
+        }
+        return null
+      },
+      'close-window': async () => {
+        if (mainWindow) {
+          mainWindow.close()
         }
         return null
       },
@@ -144,9 +150,7 @@ mainWindow = new BrowserWindow({
   url,
   frame: {
     width: WIZARD_SIZE.width,
-    height: WIZARD_SIZE.height,
-    x: 200,
-    y: 200
+    height: WIZARD_SIZE.height
   },
   rpc: appRPC
 })

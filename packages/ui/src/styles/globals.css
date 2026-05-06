@@ -1,67 +1,80 @@
 @import "tailwindcss";
 
 /* Neural Localist - Design Tokens */
+/* Based on logo colors + Notion design principles */
+
 /* Default: Dark Theme */
 @theme {
-  /* Dark Theme (default) */
-  --color-background: 204 6% 10%;
-  --color-foreground: 204 6% 88%;
-  --color-card: 204 6% 12%;
-  --color-card-foreground: 204 6% 88%;
-  --color-popover: 204 6% 10%;
-  --color-popover-foreground: 204 6% 88%;
-  --color-primary: 222 100% 86%;
-  --color-primary-foreground: 222 100% 27%;
-  --color-primary-container: 222 100% 59%;
-  --color-on-primary-container: 0 0% 100%;
-  --color-secondary: 270 100% 87%;
-  --color-secondary-foreground: 270 100% 27%;
-  --color-secondary-container: 270 97% 44%;
-  --color-muted: 204 6% 15%;
-  --color-muted-foreground: 204 6% 66%;
-  --color-accent: 222 100% 86%;
-  --color-accent-foreground: 222 100% 27%;
-  --color-destructive: 0 100% 73%;
-  --color-destructive-foreground: 0 100% 27%;
-  --color-border: 204 6% 20%;
-  --color-input: 204 6% 20%;
-  --color-ring: 222 100% 86%;
-  --color-surface-container: 204 6% 13%;
-  --color-surface-container-high: 204 6% 16%;
-  --color-outline: 222 6% 59%;
-  --color-outline-variant: 222 6% 30%;
+  /* Dark Theme - From logo.svg */
+  /* Background: deep navy from logo */
+  --color-background: rgb(2 13 31);
+  --color-foreground: rgb(248 248 248);
+  --color-card: rgb(11 19 33);
+  --color-card-foreground: rgb(248 248 248);
+  --color-popover: rgb(2 13 31);
+  --color-popover-foreground: rgb(248 248 248);
+  /* Primary: purple from brain logo */
+  --color-primary: rgb(161 135 227);
+  --color-primary-foreground: rgb(2 13 31);
+  --color-primary-container: rgb(176 138 232);
+  --color-on-primary-container: rgb(2 13 31);
+  /* Secondary: light blue from brain logo */
+  --color-secondary: rgb(37 144 249);
+  --color-secondary-foreground: rgb(2 13 31);
+  --color-secondary-container: rgb(18 154 246);
+  --color-muted: rgb(11 19 33);
+  --color-muted-foreground: rgb(160 170 190);
+  --color-accent: rgb(161 135 227);
+  --color-accent-foreground: rgb(2 13 31);
+  --color-destructive: rgb(255 180 171);
+  --color-destructive-foreground: rgb(105 0 5);
+  --color-border: rgb(30 45 80);
+  --color-input: rgb(30 45 80);
+  --color-ring: rgb(161 135 227);
+  --color-surface-container: rgb(11 19 33);
+  --color-surface-container-high: rgb(20 35 65);
+  --color-outline: rgb(80 95 125);
+  --color-outline-variant: rgb(40 55 90);
   
   /* Light Theme */
-  --color-background-light: 204 7% 97%;
-  --color-foreground-light: 204 7% 10%;
-  --color-card-light: 0 0% 100%;
-  --color-card-foreground-light: 204 7% 10%;
-  --color-popover-light: 0 0% 100%;
-  --color-popover-foreground-light: 204 7% 10%;
-  --color-primary-light: 222 100% 44%;
-  --color-primary-foreground-light: 0 0% 100%;
-  --color-primary-container-light: 222 100% 59%;
-  --color-on-primary-container-light: 0 0% 100%;
-  --color-secondary-light: 270 97% 50%;
-  --color-secondary-foreground-light: 0 0% 100%;
-  --color-secondary-container-light: 270 89% 63%;
-  --color-muted-light: 204 7% 94%;
-  --color-muted-foreground-light: 204 6% 35%;
-  --color-accent-light: 222 100% 44%;
-  --color-accent-foreground-light: 0 0% 100%;
-  --color-destructive-light: 0 84% 41%;
-  --color-destructive-foreground-light: 0 0% 100%;
-  --color-border-light: 204 7% 87%;
-  --color-input-light: 204 7% 87%;
-  --color-ring-light: 222 100% 44%;
-  --color-surface-container-light: 204 6% 94%;
-  --color-surface-container-high-light: 204 6% 91%;
-  --color-outline-light: 222 6% 49%;
-  --color-outline-variant-light: 222 6% 81%;
+  --color-background-light: rgb(255 255 255);
+  --color-foreground-light: rgb(2 13 31);
+  --color-card-light: rgb(248 250 255);
+  --color-card-foreground-light: rgb(2 13 31);
+  --color-popover-light: rgb(255 255 255);
+  --color-popover-foreground-light: rgb(2 13 31);
+  --color-primary-light: rgb(120 90 200);
+  --color-primary-foreground-light: rgb(255 255 255);
+  --color-primary-container-light: rgb(161 135 227);
+  --color-on-primary-container-light: rgb(2 13 31);
+  --color-secondary-light: rgb(30 120 220);
+  --color-secondary-foreground-light: rgb(255 255 255);
+  --color-secondary-container-light: rgb(37 144 249);
+  --color-muted-light: rgb(240 243 250);
+  --color-muted-foreground-light: rgb(60 70 95);
+  --color-accent-light: rgb(120 90 200);
+  --color-accent-foreground-light: rgb(255 255 255);
+  --color-destructive-light: rgb(186 26 26);
+  --color-destructive-foreground-light: rgb(255 255 255);
+  --color-border-light: rgb(220 225 235);
+  --color-input-light: rgb(220 225 235);
+  --color-ring-light: rgb(120 90 200);
+  --color-surface-container-light: rgb(248 250 255);
+  --color-surface-container-high-light: rgb(240 243 250);
+  --color-outline-light: rgb(140 150 175);
+  --color-outline-variant-light: rgb(200 205 220);
   
-  /* Shared */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* Shared - System Fonts */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SF Mono', 'Segoe UI Mono', 'Roboto Mono', 'Menlo', 'Courier New', monospace;
+  
+  /* Border Radius - Notion-inspired (0.5rem buttons, 0.75rem cards) */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-full: 9999px;
 }
 
 /* Theme switching via data attribute */
@@ -98,40 +111,274 @@
   * {
     @apply border-border;
   }
+  html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
+    /* Prevent overscroll and ensure proper containment */
+    overflow: hidden;
+  }
+  #root {
+    height: 100%;
+    width: 100%;
   }
   .font-mono {
     font-family: var(--font-mono);
   }
 }
 
-/* DESIGN.md Shape Language - Pill-shaped components */
-/* Override shadcn components via CSS, not component files */
+/* DESIGN.md Shape Language - Notion-inspired geometry */
 @layer components {
-  /* Buttons: pill-shaped */
-  .btn-pill {
-    @apply rounded-full;
+  /* Buttons: 0.5rem rounded (Notion style, NOT pills) */
+  .btn-rounded {
+    @apply rounded-md;
   }
   
-  /* Cards: larger radius */
+  /* Primary button */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary-container font-medium;
+  }
+  
+  /* Cards: no border, clean look */
   .card-rounded {
-    @apply rounded-xl;
+    @apply rounded-lg;
   }
   
-  /* Inputs: pill-shaped */
-  .input-pill {
-    @apply rounded-full;
+  /* Wizard card - compact padding */
+  .wizard-card {
+    @apply w-full px-8 py-6;
   }
   
-  /* Alerts: pill-shaped */
-  .alert-pill {
-    @apply rounded-full;
+  .card-header {
+    @apply text-center mb-5;
   }
   
-  /* Dialogs: larger radius */
+  .card-title {
+    @apply text-2xl font-semibold text-foreground mb-2;
+  }
+  
+  .card-description {
+    @apply text-base text-muted-foreground;
+  }
+  
+  .card-content {
+    @apply mb-6;
+  }
+  
+  .logo-container {
+    @apply w-16 h-16 rounded-lg flex items-center justify-center mx-auto mb-5 overflow-hidden;
+    background-color: rgba(161, 135, 227, 0.1);
+  }
+  
+  [data-theme="light"] .logo-container {
+    background-color: rgba(120, 90, 200, 0.1);
+  }
+  
+  .logo {
+    @apply w-10 h-10;
+  }
+  
+  .card-header {
+    @apply text-center mb-8;
+  }
+  
+  .card-title {
+    @apply text-3xl font-semibold text-foreground mb-2;
+  }
+  
+  .card-description {
+    @apply text-base text-muted-foreground;
+  }
+  
+  .card-content {
+    @apply mb-8;
+  }
+  
+  /* Logo container */
+  .logo-container {
+    @apply w-20 h-20 rounded-lg flex items-center justify-center mx-auto mb-6 overflow-hidden;
+    background-color: rgba(161, 135, 227, 0.1);
+  }
+  
+  [data-theme="light"] .logo-container {
+    background-color: rgba(120, 90, 200, 0.1);
+  }
+  
+  .logo {
+    @apply w-15 h-15;
+  }
+  
+  /* Feature list */
+  .feature-list {
+    @apply space-y-3;
+  }
+  
+  .feature-item {
+    @apply flex items-center gap-3 text-muted-foreground text-base;
+  }
+  
+  .feature-dot {
+    @apply w-2 h-2 rounded-full bg-primary flex-shrink-0;
+  }
+  
+  /* Checkbox - Round */
+  .checkbox {
+    @apply w-[22px] h-[22px] border-2 border-border rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer transition-all;
+  }
+  
+  .checkbox[data-state='checked'] {
+    @apply bg-primary border-primary;
+  }
+  
+  /* Tools list */
+  .tools-list {
+    @apply flex flex-col gap-3 max-h-60 overflow-y-auto pr-2;
+  }
+  
+  .tool-item {
+    @apply flex items-center gap-4 p-4 rounded-lg bg-muted transition-colors cursor-pointer;
+  }
+  
+  .tool-item:hover {
+    @apply border-primary/50;
+  }
+  
+  .tool-item.disabled {
+    @apply opacity-60;
+  }
+  
+  .tool-name {
+    @apply flex-1 font-medium text-foreground cursor-pointer;
+  }
+  
+  .tool-status {
+    @apply text-xs text-muted-foreground;
+  }
+  
+  /* Extras list */
+  .extras-list {
+    @apply flex flex-col gap-3;
+  }
+  
+  .extra-item {
+    @apply flex items-center gap-4 p-4 rounded-lg bg-muted transition-colors cursor-pointer;
+  }
+  
+  .extra-item:hover {
+    @apply border-primary/50;
+  }
+  
+  .extra-name {
+    @apply font-medium text-foreground;
+  }
+  
+  .extra-description {
+    @apply text-sm text-muted-foreground mt-1;
+  }
+  
+  /* Summary list */
+  .summary-list {
+    @apply space-y-3;
+  }
+  
+  .summary-item {
+    @apply flex items-start gap-3 py-4 text-muted-foreground text-base;
+  }
+  
+  .summary-check {
+    @apply text-secondary;
+  }
+  
+  .summary-skip {
+    @apply text-muted-foreground;
+  }
+  
+  .summary-content {
+    @apply flex-1;
+  }
+  
+  .summary-title {
+    @apply text-foreground font-medium mb-1 flex items-center;
+  }
+  
+  .summary-details {
+    @apply text-sm;
+  }
+  
+  /* Tooltip */
+  .tooltip-container {
+    @apply relative inline-block;
+  }
+  
+  .tooltip {
+    @apply absolute bottom-full left-1/2 -translate-x-1/2 bg-card border border-border rounded-md p-3 min-w-[200px] text-sm text-muted-foreground z-10 shadow-lg;
+  }
+  
+  .tooltip-title {
+    @apply font-semibold text-foreground mb-2 text-xs uppercase;
+  }
+  
+  .tooltip-list {
+    @apply list-none;
+  }
+  
+  .tooltip-item {
+    @apply py-1 flex items-center gap-2;
+  }
+  
+  .tooltip-item::before {
+    content: '•';
+    color: var(--primary);
+  }
+  
+  /* Progress */
+  .progress-container {
+    @apply text-center;
+  }
+  
+  .status-icon {
+    @apply w-20 h-20 mx-auto mb-6 flex items-center justify-center;
+  }
+  
+  .status-text {
+    @apply text-muted-foreground text-base mt-4;
+  }
+  
+  /* Button row */
+  .button-row {
+    @apply flex gap-3;
+  }
+  
+  /* Inputs: 0.5rem rounded */
+  .input-rounded {
+    @apply rounded-md;
+  }
+  
+  /* Alerts: 0.5rem rounded */
+  .alert-rounded {
+    @apply rounded-md;
+  }
+  
+  /* Dialogs: 0.75rem rounded */
   .dialog-rounded {
-    @apply rounded-2xl;
+    @apply rounded-lg;
+  }
+  
+  /* Glassmorphism effect for overlays */
+  .glass {
+    background-color: rgba(29, 32, 34, 0.7);
+    backdrop-filter: blur(20px);
+  }
+  
+  /* Technical log styling */
+  .technical-log {
+    @apply font-mono text-sm;
+    background-color: rgb(11, 15, 16);
+    border: 1px solid rgba(67, 70, 86, 0.3);
   }
 }

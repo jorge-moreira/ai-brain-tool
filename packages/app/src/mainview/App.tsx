@@ -4,10 +4,15 @@ import { rpc } from './lib/rpc';
 
 function Dashboard() {
   return (
-    <div className="flex items-center justify-center w-full h-full">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">AI Brain Dashboard</h1>
-        <p className="text-muted-foreground">Your brain is ready to use!</p>
+    <div className="flex flex-col items-center justify-center w-full h-full bg-background">
+      <div className="text-center space-y-4">
+        <div className="w-24 h-24 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
+          <svg className="w-12 h-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h1 className="text-4xl font-semibold text-foreground">AI Brain Dashboard</h1>
+        <p className="text-muted-foreground text-lg">Your brain is ready to use!</p>
       </div>
     </div>
   );

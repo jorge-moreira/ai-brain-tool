@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@ai-brain/ui/components/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@ai-brain/ui/components/card';
 import { Checkbox } from '@ai-brain/ui/components/checkbox';
 import { Label } from '@ai-brain/ui/components/label';
-import { Alert, AlertDescription } from '@ai-brain/ui/components/alert';
+import { Wrench } from 'lucide-react';
 import type { AITool } from '../types';
 import { rpc } from '../lib/rpc';
 
 interface AIToolsScreenProps {
   onComplete: (selectedTools: string[]) => void;
-  onBack: () => void;
+  onSkip: () => void;
 }
 
-export function AIToolsScreen({ onComplete, onBack }: AIToolsScreenProps) {
+export function AIToolsScreen({ onComplete, onSkip }: AIToolsScreenProps) {
   const [tools, setTools] = useState<AITool[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
@@ -22,9 +21,11 @@ export function AIToolsScreen({ onComplete, onBack }: AIToolsScreenProps) {
       setIsLoading(true);
       try {
         const detectedTools = await rpc.detectAiTools();
-        setTools(detectedTools);
-        const preselected = new Set(detectedTools.filter(t => t.detected).map(t => t.key));
-        setSelected(preselected);
+        // Only show installed tools
+        const installedTools = detectedTools.filter(t => t.detected);
+        setTools(installedTools);
+        // Start with none selected
+        setSelected(new Set());
       } catch (error) {
         console.error('Failed to detect AI tools:', error);
       } finally {
@@ -47,57 +48,64 @@ export function AIToolsScreen({ onComplete, onBack }: AIToolsScreenProps) {
     });
   };
 
-  const handleContinue = () => {
+  const handleConfirm = () => {
     onComplete(Array.from(selected));
   };
 
+  const handleSkip = () => {
+    onComplete([]);
+  };
+
   return (
-    <Card className="w-full max-w-md card-rounded">
-      <CardHeader>
-        <CardTitle>Configure AI Tools</CardTitle>
-        <CardDescription>
-          Select which AI tools to integrate with AI Brain
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="wizard-card">
+      <div className="card-header">
+        <div className="logo-container">
+          <Wrench className="w-10 h-10 text-primary" />
+        </div>
+        <h2 className="card-title">Configure AI Tools</h2>
+        <p className="card-description">Select tools to install brain skills for</p>
+      </div>
+      
+      <div className="card-content">
         {isLoading ? (
-          <p className="text-sm text-muted-foreground">Detecting AI tools...</p>
+          <p className="text-muted-foreground text-center">Detecting AI tools...</p>
         ) : tools.length === 0 ? (
-          <Alert variant="destructive" className="alert-pill">
-            <AlertDescription>
-              No AI tools detected. Please install at least one supported AI tool.
-            </AlertDescription>
-          </Alert>
+          <p className="text-muted-foreground text-center">No AI tools detected</p>
         ) : (
-          <div className="space-y-3">
-            {tools.map(tool => (
-              <div key={tool.key} className="flex items-center space-x-3">
-                <Checkbox
-                  id={tool.key}
-                  checked={selected.has(tool.key)}
-                  onCheckedChange={() => toggleTool(tool.key)}
-                  disabled={!tool.detected}
-                />
-                <Label 
-                  htmlFor={tool.key}
-                  className={`flex-1 ${!tool.detected ? 'text-muted-foreground' : ''}`}
+          <>
+            <p className="text-muted-foreground mb-4 text-sm">
+              Detected AI tools (select to install brain skills):
+            </p>
+            <div className="tools-list">
+              {tools.map(tool => (
+                <div 
+                  key={tool.key} 
+                  className="tool-item"
+                  onClick={() => toggleTool(tool.key)}
                 >
-                  {tool.name}
-                  {!tool.detected && ' (not installed)'}
-                </Label>
-              </div>
-            ))}
-          </div>
+                  <Checkbox
+                    checked={selected.has(tool.key)}
+                    onCheckedChange={() => toggleTool(tool.key)}
+                  />
+                  <div className="flex-1">
+                    <div className="tool-name">{tool.name}</div>
+                    <div className="tool-status">Installed</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
-      </CardContent>
-      <CardFooter className="flex gap-2">
-        <Button variant="outline" onClick={onBack} className="btn-pill">
-          Back
+      </div>
+      
+      <div className="button-row">
+        <Button onClick={handleConfirm} className="btn-primary flex-1">
+          Confirm
         </Button>
-        <Button onClick={handleContinue} className="flex-1 btn-pill" disabled={selected.size === 0}>
-          Continue
+        <Button onClick={handleSkip} variant="outline" className="flex-1">
+          Skip
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

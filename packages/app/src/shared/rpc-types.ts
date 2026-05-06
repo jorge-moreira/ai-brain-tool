@@ -6,6 +6,7 @@ export type AppRPCType = {
       'ensure-uv': { params: null; response: { success: boolean; error?: string } }
       'install-skills': { params: string[]; response: { success: boolean; error?: string } }
       'resize-window': { params: { size: 'wizard' | 'dashboard' }; response: null }
+      'close-window': { params: null; response: null }
       'check-installation': { params: null; response: { installed: boolean } }
       'complete-installation': {
         params: { extras: string[]; aiTools: string[] }

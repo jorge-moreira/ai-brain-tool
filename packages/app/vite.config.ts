@@ -6,6 +6,7 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   root: 'src/mainview',
+  publicDir: 'src/mainview/public',
   resolve: {
     alias: {
       '@ai-brain/core': resolve(__dirname, '../core/src'),
