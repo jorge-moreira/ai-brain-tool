@@ -1,6 +1,6 @@
 import { BrowserWindow, BrowserView, Updater, Screen } from 'electrobun/bun'
 import { detectPython, ensureUv } from '@ai-brain/core/graphify'
-import { detectAll, configureSelected } from '@ai-brain/core/platforms'
+import { detectAll, installSkills } from '@ai-brain/core/platforms'
 import { homedir } from 'os'
 import type { AppRPCType } from '../shared/rpc-types'
 
@@ -124,7 +124,7 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
         try {
           const platforms = await detectAll(homeDir)
           const selected = platforms.filter(p => selectedTools.includes(p.key))
-          await configureSelected({ selected, brainPath: homeDir, homeDir })
+          await installSkills({ selected, homeDir })
           return { success: true }
         } catch (error) {
           return {

@@ -47,13 +47,15 @@ export function AIToolsScreen({ onComplete, onSkip }: AIToolsScreenProps) {
     detectTools();
   }, []);
 
-  const toggleTool = (key: string) => {
+  const toggleTool = (key: string, checked?: boolean) => {
     setSelected(prev => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
+      // Use provided checked state, or toggle if not provided
+      const shouldBeChecked = checked !== undefined ? checked : !next.has(key);
+      if (shouldBeChecked) {
         next.add(key);
+      } else {
+        next.delete(key);
       }
       return next;
     });
@@ -72,11 +74,11 @@ export function AIToolsScreen({ onComplete, onSkip }: AIToolsScreenProps) {
     try {
       const selectedArray = Array.from(selected);
       
-      // Install brain skills for selected tools
+      // Install skill files for selected tools
       const installResult = await rpc.installSkills(selectedArray);
       
       if (!installResult.success) {
-        throw new Error(installResult.error || 'Failed to install brain skills');
+        throw new Error(installResult.error || 'Failed to install skills');
       }
       
       // Save AI tools to config
@@ -124,7 +126,7 @@ export function AIToolsScreen({ onComplete, onSkip }: AIToolsScreenProps) {
                 >
                   <Checkbox
                     checked={selected.has(tool.key)}
-                    onCheckedChange={() => toggleTool(tool.key)}
+                    onCheckedChange={(checked) => toggleTool(tool.key, checked)}
                   />
                   <div className="flex-1">
                     <div className="tool-name">{tool.name}</div>
@@ -145,7 +147,7 @@ export function AIToolsScreen({ onComplete, onSkip }: AIToolsScreenProps) {
               <div className="mt-4 p-4 rounded-md bg-primary/10 border border-primary text-primary flex items-center gap-3">
                 <Wrench className="w-4 h-4 animate-spin flex-shrink-0" />
                 <span className="text-sm">
-                  Installing brain skills...
+                  Installing skills...
                 </span>
               </div>
             )}

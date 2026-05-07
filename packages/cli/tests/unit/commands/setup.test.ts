@@ -63,7 +63,7 @@ vi.mock('@ai-brain/core/graphify', () => ({
 
 vi.mock('@ai-brain/core/index', () => ({
   detectAll: vi.fn().mockResolvedValue([]),
-  configureSelected: vi.fn()
+  connectBrain: vi.fn()
 }))
 
 vi.mock('@ai-brain/core/git', () => ({

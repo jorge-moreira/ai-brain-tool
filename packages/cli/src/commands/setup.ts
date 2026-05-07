@@ -4,10 +4,11 @@ import ora from 'ora'
 import { join, resolve, basename } from 'path'
 import { existsSync } from 'fs'
 import { execSync } from 'child_process'
+import { homedir } from 'os'
 
 import { createBrainFolder, writeBrainConfig } from '@ai-brain/core/scaffold'
 import { createGlobalVenv, globalVenvExists, ensureUv } from '@ai-brain/core/graphify'
-import { detectAll, type DetectedPlatform } from '@ai-brain/core/index'
+import { detectAll, connectBrain, type DetectedPlatform } from '@ai-brain/core/index'
 import { initRepo, writeGitignore } from '@ai-brain/core/git'
 import {
   readConfig,
@@ -266,6 +267,18 @@ async function freshSetup(): Promise<void> {
 
   addBrain(brainId, brainPath)
 
+  // Configure MCP for selected AI tools (connect brain - skills already installed)
+  if (selected.length > 0) {
+    const spinnerMcp = ora('Configuring AI tools...').start()
+    try {
+      await connectBrain({ selected, brainPath, homeDir: homedir() })
+      spinnerMcp.succeed(`Configured: ${aiTools.join(', ')}`)
+    } catch (error) {
+      spinnerMcp.fail('Failed to configure AI tools')
+      throw error
+    }
+  }
+
   const globalExtras = readConfig().graphifyyExtras || []
 
   printSummary({
@@ -323,6 +336,22 @@ async function newMachineSetup(brainPath: string): Promise<void> {
   const brainId = await askBrainId(basename(brainPath))
 
   addBrain(brainId, brainPath)
+
+  // Configure MCP for AI tools on new machine (connect brain - skills already installed)
+  if (aiTools.length > 0) {
+    const platforms = await detectAll()
+    const selected = platforms.filter(p => aiTools.includes(p.key))
+    if (selected.length > 0) {
+      const spinnerMcp = ora('Configuring AI tools...').start()
+      try {
+        await connectBrain({ selected, brainPath, homeDir: homedir() })
+        spinnerMcp.succeed(`Configured: ${aiTools.join(', ')}`)
+      } catch (error) {
+        spinnerMcp.fail('Failed to configure AI tools')
+        throw error
+      }
+    }
+  }
 
   console.log(chalk.green('\n  Setup complete!'))
   item('Brain', brainPath)
