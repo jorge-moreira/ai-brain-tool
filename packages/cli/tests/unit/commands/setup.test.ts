@@ -12,7 +12,7 @@ import {
   readConfig
 } from '@ai-brain/core/config'
 import { createVenv, globalVenvExists, ensureUv, createGlobalVenv } from '@ai-brain/core/graphify'
-import { detectAll, type DetectedPlatform } from '@ai-brain/core/index'
+import { detectAll, connectBrain, type DetectedPlatform } from '@ai-brain/core/index'
 import { initRepo, writeGitignore } from '@ai-brain/core/git'
 import { run } from '../../../src/commands/setup'
 
@@ -112,6 +112,7 @@ const mockedConfirm = confirm as Mock<typeof confirm>
 const mockedCreateBrainFolder = createBrainFolder as Mock<typeof createBrainFolder>
 const mockedCreateVenv = createVenv as Mock<typeof createVenv>
 const mockedDetectAll = detectAll as unknown as Mock<typeof detectAll>
+const mockedConnectBrain = connectBrain as Mock<typeof connectBrain>
 const mockedConfigPath = configPath as Mock<typeof configPath>
 const mockedEnsureConfigDir = ensureConfigDir as Mock<typeof ensureConfigDir>
 const mockedIsBrainIdAvailable = isBrainIdAvailable as Mock<typeof isBrainIdAvailable>
@@ -594,5 +595,63 @@ describe('commands/setup', () => {
     await run()
 
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Found AI tools'))
+  })
+
+  it('should propagate error when connectBrain fails in freshSetup', async () => {
+    mockedExistsSync.mockReturnValue(false)
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedInput.mockResolvedValueOnce('ai-brain')
+    mockedSelect.mockResolvedValueOnce('current')
+    mockedSelect.mockResolvedValueOnce('git')
+    mockedInput.mockResolvedValueOnce('')
+    mockedConfirm.mockResolvedValueOnce(false)
+    mockedConfirm.mockResolvedValueOnce(false)
+    mockedCheckbox.mockResolvedValueOnce([])
+    mockedDetectAll.mockResolvedValue([
+      { name: 'Claude', detected: true, key: 'claude', module: { patch: vi.fn(), installAlwaysOn: vi.fn() }, configHint: '~/.claude' }
+    ] as unknown as DetectedPlatform[])
+    mockedCheckbox.mockResolvedValueOnce([
+      { name: 'Claude', detected: true, key: 'claude', module: { patch: vi.fn(), installAlwaysOn: vi.fn() }, configHint: '~/.claude' }
+    ] as unknown as DetectedPlatform[])
+    mockedSelect.mockResolvedValueOnce('skip')
+
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+    mockedIsBrainIdAvailable.mockReturnValue(true)
+    mockedCreateVenv.mockResolvedValue()
+    mockedCreateBrainFolder.mockResolvedValue()
+
+    const testError = new Error('MCP config failed')
+    mockedConnectBrain.mockRejectedValueOnce(testError)
+
+    await expect(run()).rejects.toThrow('MCP config failed')
+  })
+
+  it('should propagate error when connectBrain fails in newMachineSetup', async () => {
+    mockedExistsSync.mockImplementation((path: PathLike) => {
+      const markers = ['raw', '.graphifyignore', '.brain-config.json']
+      return markers.some(m => path.toString().includes(m))
+    })
+
+    mockedWriteFileSync.mockImplementation(() => {})
+    mockedReadConfig.mockReturnValue({ aiTools: ['claude'] })
+
+    mockedDetectAll.mockResolvedValue([
+      { name: 'Claude', detected: true, key: 'claude', module: { patch: vi.fn(), installAlwaysOn: vi.fn() }, configHint: '~/.claude' }
+    ] as unknown as DetectedPlatform[])
+
+    mockedSelect.mockResolvedValue('brain')
+    mockedCheckbox.mockResolvedValue([])
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+    mockedIsBrainIdAvailable.mockReturnValue(true)
+    mockedCreateVenv.mockResolvedValue()
+    mockedCreateBrainFolder.mockResolvedValue()
+
+    const testError = new Error('MCP config failed')
+    mockedConnectBrain.mockRejectedValueOnce(testError)
+
+    await expect(run()).rejects.toThrow('MCP config failed')
   })
 })
