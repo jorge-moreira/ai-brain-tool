@@ -8,10 +8,10 @@ export type AppRPCType = {
       'resize-window': { params: { size: 'wizard' | 'dashboard' }; response: null }
       'close-window': { params: null; response: null }
       'check-installation': { params: null; response: { installed: boolean } }
-      'complete-installation': {
-        params: { extras: string[]; aiTools: string[] }
-        response: { success: boolean; error?: string }
-      }
+      'start-global-venv': { params: { extras: string[] }; response: { jobId: string } }
+      'get-venv-status': { params: { jobId: string }; response: { status: 'running' | 'done' | 'error'; progress?: number; error?: string } }
+      'save-extras': { params: { extras: string[] }; response: { success: boolean; error?: string } }
+      'save-ai-tools': { params: { aiTools: string[] }; response: { success: boolean; error?: string } }
       'detect-ai-tools': {
         params: null
         response: Array<{ key: string; name: string; detected: boolean; configHint: string }>

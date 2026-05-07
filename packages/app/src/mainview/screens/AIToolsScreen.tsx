@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@ai-brain/ui/components/button';
 import { Checkbox } from '@ai-brain/ui/components/checkbox';
 import { Label } from '@ai-brain/ui/components/label';
-import { Wrench } from 'lucide-react';
+import { Wrench, AlertCircle } from 'lucide-react';
 import type { AITool } from '../types';
 import { rpc } from '../lib/rpc';
 
@@ -15,6 +15,17 @@ export function AIToolsScreen({ onComplete, onSkip }: AIToolsScreenProps) {
   const [tools, setTools] = useState<AITool[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const [showAlert, setShowAlert] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
+
+  useEffect(() => {
+    if (showAlert) {
+      const timer = setTimeout(() => {
+        setShowAlert(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showAlert]);
 
   useEffect(() => {
     async function detectTools() {
@@ -46,13 +57,41 @@ export function AIToolsScreen({ onComplete, onSkip }: AIToolsScreenProps) {
       }
       return next;
     });
+    setShowAlert(false);
   };
 
-  const handleConfirm = () => {
-    onComplete(Array.from(selected));
+  const handleConfirm = async () => {
+    if (selected.size === 0) {
+      setShowAlert(true);
+      return;
+    }
+    
+    setShowAlert(false);
+    setIsInstalling(true);
+    
+    try {
+      const selectedArray = Array.from(selected);
+      
+      // Install brain skills for selected tools
+      const installResult = await rpc.installSkills(selectedArray);
+      
+      if (!installResult.success) {
+        throw new Error(installResult.error || 'Failed to install brain skills');
+      }
+      
+      // Save AI tools to config
+      await rpc.saveAiTools(selectedArray);
+      onComplete(selectedArray);
+    } catch (error) {
+      console.error('Failed to install skills:', error);
+      setIsInstalling(false);
+      setShowAlert(true);
+    }
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
+    // Save empty AI tools list to config
+    await rpc.saveAiTools([]);
     onComplete([]);
   };
 
@@ -94,15 +133,31 @@ export function AIToolsScreen({ onComplete, onSkip }: AIToolsScreenProps) {
                 </div>
               ))}
             </div>
+            {showAlert && (
+              <div className="mt-4 p-4 rounded-md bg-destructive/10 border border-destructive text-destructive flex items-center gap-3">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span className="text-sm">
+                  Please select at least one AI tool to continue, or click Skip.
+                </span>
+              </div>
+            )}
+            {isInstalling && (
+              <div className="mt-4 p-4 rounded-md bg-primary/10 border border-primary text-primary flex items-center gap-3">
+                <Wrench className="w-4 h-4 animate-spin flex-shrink-0" />
+                <span className="text-sm">
+                  Installing brain skills...
+                </span>
+              </div>
+            )}
           </>
         )}
       </div>
       
       <div className="button-row">
-        <Button onClick={handleConfirm} className="btn-primary flex-1">
-          Confirm
+        <Button onClick={handleConfirm} className="btn-primary flex-1" disabled={isInstalling}>
+          {isInstalling ? 'Installing...' : 'Confirm'}
         </Button>
-        <Button onClick={handleSkip} variant="outline" className="flex-1">
+        <Button onClick={handleSkip} variant="outline" className="flex-1" disabled={isInstalling}>
           Skip
         </Button>
       </div>

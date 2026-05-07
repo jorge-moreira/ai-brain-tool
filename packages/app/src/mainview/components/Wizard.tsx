@@ -53,6 +53,11 @@ export function Wizard({ onComplete }: WizardProps) {
     goToStep('summary');
   };
 
+  const handleAIToolsSkip = () => {
+    setSelectedTools([]);
+    goToStep('summary');
+  };
+
   const handleSummaryClose = () => {
     window.close();
   };
@@ -110,7 +115,7 @@ export function Wizard({ onComplete }: WizardProps) {
         />
       )}
       {step === 'ai-tools' && (
-        <AIToolsScreen onComplete={handleAIToolsComplete} onSkip={handleAIToolsComplete} />
+        <AIToolsScreen onComplete={handleAIToolsComplete} onSkip={handleAIToolsSkip} />
       )}
       {step === 'summary' && (
         <SummaryScreen 

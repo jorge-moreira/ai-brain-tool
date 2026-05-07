@@ -1,4 +1,4 @@
-import { BrowserWindow, BrowserView, Updater } from 'electrobun/bun'
+import { BrowserWindow, BrowserView, Updater, Screen } from 'electrobun/bun'
 import { detectPython, ensureUv } from '@ai-brain/core/graphify'
 import { detectAll, configureSelected } from '@ai-brain/core/platforms'
 import { homedir } from 'os'
@@ -14,6 +14,21 @@ const DASHBOARD_SIZE = { width: 1200, height: 800 }
 
 let mainWindow: BrowserWindow | null = null
 
+// Job tracking for long-running operations
+const venvJobs = new Map<
+  string,
+  { status: 'running' | 'done' | 'error'; progress: number; error?: string }
+>()
+
+// Helper function to center the window on screen
+function centerWindow(window: BrowserWindow, size: { width: number; height: number }) {
+  const mainScreen = Screen.getPrimaryDisplay()
+  const { width: screenWidth, height: screenHeight } = mainScreen.bounds
+  const x = Math.floor((screenWidth - size.width) / 2)
+  const y = Math.floor((screenHeight - size.height) / 2)
+  window.setPosition(x, y)
+}
+
 // Create RPC instance with bun-side handlers
 const appRPC = BrowserView.defineRPC<AppRPCType>({
   handlers: {
@@ -25,6 +40,64 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
       'ensure-uv': async () => {
         try {
           await ensureUv()
+          return { success: true }
+        } catch (error) {
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
+        }
+      },
+      'start-global-venv': async ({ extras }) => {
+        const jobId = `venv-${Date.now()}`
+        venvJobs.set(jobId, { status: 'running', progress: 0 })
+
+        // Run in background
+        ;(async () => {
+          try {
+            const { createGlobalVenv } = await import('@ai-brain/core/graphify')
+            venvJobs.set(jobId, { status: 'running', progress: 30 })
+            await createGlobalVenv(extras)
+            venvJobs.set(jobId, { status: 'done', progress: 100 })
+          } catch (error) {
+            venvJobs.set(jobId, {
+              status: 'error',
+              progress: 0,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            })
+          }
+        })()
+
+        return { jobId }
+      },
+      'get-venv-status': async ({ jobId }) => {
+        const job = venvJobs.get(jobId)
+        if (!job) {
+          return { status: 'error' as const, error: 'Job not found' }
+        }
+        return { status: job.status, progress: job.progress, error: job.error }
+      },
+      'save-extras': async ({ extras }) => {
+        try {
+          const { updateConfig } = await import('@ai-brain/core/config')
+          updateConfig(config => {
+            config.graphifyyExtras = extras
+          })
+          return { success: true }
+        } catch (error) {
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          }
+        }
+      },
+      'save-ai-tools': async ({ aiTools }) => {
+        try {
+          const { updateConfig } = await import('@ai-brain/core/config')
+          updateConfig(config => {
+            config.aiTools = aiTools
+            config.installationComplete = true
+          })
           return { success: true }
         } catch (error) {
           return {
@@ -64,6 +137,7 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
         const targetSize = size === 'wizard' ? WIZARD_SIZE : DASHBOARD_SIZE
         if (mainWindow) {
           mainWindow.setSize(targetSize.width, targetSize.height)
+          centerWindow(mainWindow, targetSize)
         }
         return null
       },
@@ -94,34 +168,6 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
         } catch {
           return { installed: false }
         }
-      },
-      'complete-installation': async ({ extras, aiTools }) => {
-        try {
-          const { setInstallationComplete, addGraphifyyExtra, writeConfig, createInitialConfig } =
-            await import('@ai-brain/core/config')
-
-          // Set installation complete
-          setInstallationComplete()
-
-          // Add extras
-          for (const extra of extras) {
-            addGraphifyyExtra(extra)
-          }
-
-          // Add AI tools
-          const config = createInitialConfig()
-          config.installationComplete = true
-          config.graphifyyExtras = extras
-          config.aiTools = aiTools
-          writeConfig(config)
-
-          return { success: true }
-        } catch (error) {
-          return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          }
-        }
       }
     }
   }
@@ -142,15 +188,29 @@ async function getMainViewUrl(): Promise<string> {
   return 'views://mainview/index.html'
 }
 
+// Check if installation is complete to determine initial window size
+async function isInstallationComplete(): Promise<boolean> {
+  try {
+    const { isInstallationComplete: checkInstall } = await import('@ai-brain/core/config')
+    return checkInstall()
+  } catch {
+    return false
+  }
+}
+
 // Create the main application window with RPC
 const url = await getMainViewUrl()
+const installationComplete = await isInstallationComplete()
+const initialSize = installationComplete ? DASHBOARD_SIZE : WIZARD_SIZE
 
 mainWindow = new BrowserWindow({
   title: 'AI Brain Tool',
   url,
   frame: {
-    width: WIZARD_SIZE.width,
-    height: WIZARD_SIZE.height
+    x: Math.floor((Screen.getPrimaryDisplay().bounds.width - initialSize.width) / 2),
+    y: Math.floor((Screen.getPrimaryDisplay().bounds.height - initialSize.height) / 2),
+    width: initialSize.width,
+    height: initialSize.height
   },
   rpc: appRPC
 })

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@ai-brain/ui/components/button';
 import { Progress } from '@ai-brain/ui/components/progress';
 import { Loader2, CheckCircle2 } from 'lucide-react';
+import { rpc } from '../lib/rpc';
 
 interface GraphifyInstallScreenProps {
   selectedExtras: string[];
@@ -11,27 +12,39 @@ interface GraphifyInstallScreenProps {
 export function GraphifyInstallScreen({ selectedExtras, onComplete }: GraphifyInstallScreenProps) {
   const [status, setStatus] = useState<'installing' | 'done'>('installing');
   const [progress, setProgress] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     async function installGraphify() {
       try {
         setProgress(30);
         
-        // Simulate Graphify installation with extras
-        // TODO: Replace with actual Graphify installation logic
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Start venv creation job
+        const { jobId } = await rpc.startGlobalVenv(selectedExtras);
         
-        setProgress(60);
-        
-        // Install selected extras
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        setProgress(100);
-        setStatus('done');
-        
-        setTimeout(onComplete, 1000);
+        // Poll for completion
+        const pollInterval = setInterval(async () => {
+          const status = await rpc.getVenvStatus(jobId);
+          
+          if (status.status === 'running') {
+            setProgress(status.progress ?? 30);
+          } else if (status.status === 'done') {
+            clearInterval(pollInterval);
+            setProgress(100);
+            setStatus('done');
+            
+            // Save extras to config
+            await rpc.saveExtras(selectedExtras);
+            
+            setTimeout(onComplete, 1000);
+          } else if (status.status === 'error') {
+            clearInterval(pollInterval);
+            setErrorMessage(status.error || 'Failed to install Graphify');
+          }
+        }, 1000);
       } catch (error) {
         console.error('Failed to install Graphify:', error);
+        setErrorMessage(error instanceof Error ? error.message : 'Unknown error');
       }
     }
 
@@ -48,6 +61,8 @@ export function GraphifyInstallScreen({ selectedExtras, onComplete }: GraphifyIn
         <div className="status-icon">
           {status === 'installing' ? (
             <Loader2 className="w-10 h-10 text-secondary animate-spin" />
+          ) : errorMessage ? (
+            <CheckCircle2 className="w-10 h-10 text-destructive" />
           ) : (
             <CheckCircle2 className="w-10 h-10 text-secondary" />
           )}
@@ -61,6 +76,9 @@ export function GraphifyInstallScreen({ selectedExtras, onComplete }: GraphifyIn
           <Progress value={progress} className="h-3" />
           <p className="status-text">{extrasText}</p>
         </div>
+        {errorMessage && (
+          <p className="text-destructive text-sm mt-4">{errorMessage}</p>
+        )}
       </div>
       
       {status === 'done' && (

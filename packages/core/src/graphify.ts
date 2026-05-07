@@ -150,21 +150,23 @@ export async function ensureUv(): Promise<void> {
 async function createVenvAtPath(
   venvPath: string,
   pipTarget: string,
-  extras: string[]
+  extras: string[],
+  options: { stdio?: 'inherit' | 'pipe' } = {}
 ): Promise<void> {
+  const stdioMode = options.stdio ?? 'inherit'
   await ensureUv()
 
   const pkg = buildPkg(extras)
   const python = await detectPython()
 
   if (python) {
-    await execa('uv', ['venv', '--python', python, venvPath], { stdio: 'inherit' })
+    await execa('uv', ['venv', '--python', python, venvPath], { stdio: stdioMode })
   } else {
-    await execa('uv', ['venv', '--python', '3.10', venvPath], { stdio: 'inherit' })
+    await execa('uv', ['venv', '--python', '3.10', venvPath], { stdio: stdioMode })
   }
 
   await execa('uv', ['pip', 'install', pkg, '--python', pipTarget], {
-    stdio: 'inherit'
+    stdio: stdioMode
   })
 }
 
