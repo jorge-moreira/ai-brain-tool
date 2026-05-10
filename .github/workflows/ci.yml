@@ -5,7 +5,7 @@ on:
     branches: [main, feature/app]
     types: [opened, synchronize, reopened, labeled]
   push:
-    branches: [main, feature/app]
+    branches: [main]
 
 jobs:
   core-test:
