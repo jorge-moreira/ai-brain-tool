@@ -8,7 +8,7 @@
   <h3>Tu memoria de IA personal, conectada a todas tus herramientas de IA</h3><!--es-->
   <br>
 
-[![Test](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/test.yml/badge.svg)](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/test.yml)
+[![CI](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/jorge-moreira/ai-brain-tool/graph/badge.svg)](https://codecov.io/gh/jorge-moreira/ai-brain-tool)
 [![npm version](https://img.shields.io/npm/v/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
 [![npm downloads](https://img.shields.io/npm/dm/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
@@ -22,7 +22,7 @@
 
 <a href="https://graphifylabs.ai"><img src="https://raw.githubusercontent.com/safishamsi/graphify/v4/docs/logo-text.svg" width="260" height="64" alt="Graphify"/></a>
 
-> The knowledge graph engine that turns folders of notes,  code, papers, and media into a queryable graph your AI tools can traverse.<!--en-->
+> The knowledge graph engine that turns folders of notes, code, papers, and media into a queryable graph your AI tools can traverse.<!--en-->
 > El motor de grafos de conocimiento que convierte carpetas de notas, código, artículos y multimedia en un grafo consultable que tus herramientas de IA pueden recorrer.<!--es-->
 
 [Install](#install) · [Quick Start](#quick-start) · [Multiple Brains](#multiple-brains) · [Commands](#commands) · [Template Ownership](#template-ownership) · [Inside AI Tools](#inside-ai-tools) · [New Machine Setup](#new-machine-setup) · [Options](#options) · [Credits](#credits)<!--en-->
@@ -52,6 +52,7 @@ ai-brain <command>
 > [!NOTE]
 > You can also opt to use the tool portable using:<!--en-->
 > También puedes usar la herramienta de forma portable con:<!--es-->
+> 
 > ```bash
 > npx @jorge-moreira.dev/ai-brain-tool <command>
 > ```
@@ -119,6 +120,7 @@ Ejecuta el asistente interactivo de configuración.<!--es-->
 
 What the wizard configures per selected AI tool:<!--en-->
 Lo que el asistente configura para cada herramienta de IA seleccionada:<!--es-->
+
 - MCP server entry pointing to the brain's `graph.json`<!--en-->
 - `/brain` skill installed globally in the tool<!--en-->
 - Always-on context file written into the brain folder (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/ai-brain.mdc`, or `.github/copilot-instructions.md`)<!--en-->
@@ -128,6 +130,7 @@ Lo que el asistente configura para cada herramienta de IA seleccionada:<!--es-->
 
 Git options asked during setup:<!--en-->
 Opciones de Git que se preguntan durante la configuración:<!--es-->
+
 - Git repository or local folder only<!--en-->
 - Optional remote URL<!--en-->
 - Whether to commit the extraction cache (saves tokens on new machines)<!--en-->
