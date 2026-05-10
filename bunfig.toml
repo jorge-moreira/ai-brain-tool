@@ -1,2 +1,2 @@
-[test]
-args = ["tests/*.test.js"]
+[install]
+node-linker = "hoisted"

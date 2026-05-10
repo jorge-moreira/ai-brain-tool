@@ -1,0 +1,40 @@
+{
+  "name": "@jorge-moreira.dev/ai-brain-tool",
+  "version": "2.1.0",
+  "description": "Your personal AI memory, connected to all your AI tools",
+  "type": "module",
+  "bin": {
+    "ai-brain": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --outfile ./dist/index.js --target node && cp ../core/requirements.txt ./dist/ && mkdir -p ./dist/src && cp -r ../core/src/templates ./dist/src/templates && mkdir -p ./dist/src/platforms && cp ../core/src/platforms/brain-skills.md ./dist/src/platforms/brain-skills.md",
+    "start": "bun run src/index.ts",
+    "test": "vitest run",
+    "test:coverage": "bun run test --coverage",
+    "test:unit": "vitest run tests/unit",
+    "test:unit:ci": "bun run test:unit --coverage --coverage.reportsDirectory=coverage/unit --outputFile=coverage/unit/junit.xml",
+    "test:integration": "vitest run tests/integration",
+    "test:integration:ci": "bun run test:integration --coverage --coverage.reportsDirectory=coverage/integration --outputFile.junit=coverage/integration/junit.xml",
+    "test:e2e": "vitest run --config tests/e2e/e2e.test.config.js",
+    "test:e2e:local": "vitest run tests/e2e/run-e2e-docker.test.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@ai-brain/core": "*",
+    "@inquirer/prompts": "^8.4.2",
+    "chalk": "^5.0.0",
+    "commander": "^14.0.3",
+    "execa": "^9.0.0",
+    "inquirer": "^13.4.2",
+    "ora": "^9.4.0"
+  },
+  "devDependencies": {
+    "@amiceli/vitest-cucumber": "^6.3.0",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

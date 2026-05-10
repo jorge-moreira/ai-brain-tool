@@ -1,0 +1,34 @@
+{
+  "name": "@ai-brain/app",
+  "version": "1.0.0",
+  "description": "AI Brain Tool - ElectroBun Desktop App",
+  "type": "module",
+  "scripts": {
+    "dev": "electrobun dev --watch",
+    "dev:hmr": "concurrently \"bun run hmr\" \"bun run dev\"",
+    "hmr": "vite --port 5173",
+    "build": "vite build && electrobun build",
+    "build:canary": "vite build && electrobun build --env=canary"
+  },
+  "dependencies": {
+    "@ai-brain/core": "*",
+    "@ai-brain/ui": "*",
+    "electrobun": "latest",
+    "lucide-react": "^1.14.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-icons": "^5.6.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.2.4",
+    "typescript": "catalog:",
+    "vite": "^8.0.10"
+  }
+}

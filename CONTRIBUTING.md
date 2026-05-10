@@ -56,12 +56,12 @@ bun run test:coverage
 
 Tests are organized by category:
 
-| Category | Location | CI Job | Runs on |
-|----------|----------|--------|---------|
-| Unit | `tests/**/*.test.js` | `unit` | All PRs + main |
-| Smoke | `tests/commands/*.test.js` | `smoke` | All PRs + main |
-| Integration | `tests/platforms/*.test.js` | `integration` | All PRs + main |
-| E2E | `scripts/e2e-test.sh` | `e2e` | Main + PRs with `e2e` label |
+| Category    | Location                    | CI Job        | Runs on                     |
+| ----------- | --------------------------- | ------------- | --------------------------- |
+| Unit        | `tests/**/*.test.js`        | `unit`        | All PRs + main              |
+| Smoke       | `tests/commands/*.test.js`  | `smoke`       | All PRs + main              |
+| Integration | `tests/platforms/*.test.js` | `integration` | All PRs + main              |
+| E2E         | `scripts/e2e-test.sh`       | `e2e`         | Main + PRs with `e2e` label |
 
 **To run e2e tests on a PR:** Add the `e2e` label and push a new commit (or manually re-run the workflow).
 
@@ -117,6 +117,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/). 
 ```
 
 **Types:**
+
 - `feat` — new feature or functionality
 - `fix` — bug fix
 - `docs` — documentation or README changes
@@ -126,6 +127,7 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/). 
 - `style` — code style changes (formatting, semicolons, etc.)
 
 **Examples:**
+
 ```
 feat: add bun support for faster installs
 fix: resolve gitSync being ignored in /brain update

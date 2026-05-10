@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2025",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["vite/client", "bun"],
+    "paths": {
+      "@ai-brain/core": ["../core/src/index.ts"],
+      "@ai-brain/core/*": ["../core/src/*"],
+      "@ai-brain/ui": ["../ui/src/index.ts"],
+      "@ai-brain/ui/components/*": ["../ui/src/components/*", "../ui/src/components/ui/*"],
+      "@ai-brain/ui/*": ["../ui/src/*"],
+      "@/components/*": ["./src/mainview/components/*", "../ui/src/components/*"],
+      "@/views/*": ["./src/mainview/views/*"],
+      "@/screens/*": ["./src/mainview/screens/*"],
+      "@/lib/*": ["./src/mainview/lib/*", "../ui/src/lib/*"],
+      "@/types/*": ["./src/mainview/types/*"],
+      "@/shared/*": ["./src/shared/*"]
+    }
+  },
+  "include": ["src/**/*", "electrobun.config.ts", "vite.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

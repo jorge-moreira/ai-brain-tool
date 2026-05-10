@@ -4,18 +4,17 @@
   <h3>Your personal AI memory, connected to all your AI tools</h3>
   <br>
 
-[![Test](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/test.yml/badge.svg)](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/test.yml)
+[![Test](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/jorge-moreira/ai-brain-tool/graph/badge.svg)](https://codecov.io/gh/jorge-moreira/ai-brain-tool)
 [![npm version](https://img.shields.io/npm/v/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
 [![npm downloads](https://img.shields.io/npm/dm/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/jorge-moreira)
 
-
-*Powered by* **[graphify](https://github.com/safishamsi/graphify)**
+_Powered by_ **[graphify](https://github.com/safishamsi/graphify)**
 
 <a href="https://graphifylabs.ai"><img src="https://raw.githubusercontent.com/safishamsi/graphify/v4/docs/logo-text.svg" width="260" height="64" alt="Graphify"/></a>
 
-> The knowledge graph engine that turns folders of notes,  code, papers, and media into a queryable graph your AI tools can traverse.
+> The knowledge graph engine that turns folders of notes, code, papers, and media into a queryable graph your AI tools can traverse.
 
 [Install](#install) · [Quick Start](#quick-start) · [Multiple Brains](#multiple-brains) · [Commands](#commands) · [Template Ownership](#template-ownership) · [Inside AI Tools](#inside-ai-tools) · [New Machine Setup](#new-machine-setup) · [Options](#options) · [Credits](#credits)
 
@@ -39,6 +38,7 @@ ai-brain <command>
 
 > [!NOTE]
 > You can also opt to use the tool portable using:
+>
 > ```bash
 > npx @jorge-moreira.dev/ai-brain-tool <command>
 > ```
@@ -92,11 +92,13 @@ Run the interactive setup wizard.
 - **Inside an existing brain folder** (e.g. after `git clone`): new-machine mode — only recreates `.venv`, patches local AI tool configs, prompts for brain identifier (defaults to folder name).
 
 What the wizard configures per selected AI tool:
+
 - MCP server entry pointing to the brain's `graph.json`
 - `/brain` skill installed globally in the tool
 - Always-on context file written into the brain folder (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/ai-brain.mdc`, or `.github/copilot-instructions.md`)
 
 Git options asked during setup:
+
 - Git repository or local folder only
 - Optional remote URL
 - Whether to commit the extraction cache (saves tokens on new machines)

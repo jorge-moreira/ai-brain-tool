@@ -1,0 +1,7 @@
+[install]
+# Enable workspace resolution
+workspace = true
+
+[resolve]
+# Use tsconfig.json paths for module resolution
+tsconfig = "./tsconfig.json"
