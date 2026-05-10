@@ -56,9 +56,11 @@ Professional desktop app design following **Notion's design principles** (8px ro
 
 | Token | Value | Usage |
 |-------|-------|-------|
+| `radius-sm` | 0.375rem (6px) | Small elements |
 | `radius-md` | 0.5rem (8px) | **Buttons**, inputs |
 | `radius-lg` | 0.75rem (12px) | **Cards**, containers |
 | `radius-xl` | 1rem (16px) | Icon containers |
+| `radius-2xl` | 1.25rem (20px) | Large containers |
 | `radius-full` | 9999px | Pills, badges only |
 
 **Key distinction from typical designs**: Buttons use **8px rounded rectangles**, NOT pills. This creates a sober, professional aesthetic.
@@ -68,10 +70,10 @@ Professional desktop app design following **Notion's design principles** (8px ro
 ## Layout & Spacing
 
 ### Wizard Dimensions
-- **Window size**: 700×750px (wizard), 1200×800px (dashboard)
+- **Window size**: 600×650 (wizard), 1200×800 (dashboard)
 - **Card max-width**: 672px (`max-w-2xl`)
 - **Card padding**: 2.5rem (40px)
-- **Icon size**: 80×80px container, 40×40px icon
+- **Icon size**: 4rem (64px) container in dark theme, 5rem (80px) container in light theme
 
 ### Spacing Scale
 - Base unit: 4px
@@ -84,7 +86,9 @@ Professional desktop app design following **Notion's design principles** (8px ro
 
 ### Buttons
 ```
-Height: 48px (touch-friendly)
+Default height: h-10 (2.5rem / 40px) — shadcn/ui Button default
+Large height: h-11 (2.75rem / 44px) — Button size="lg"
+Touch-friendly height: h-12 (3rem / 48px) — use for standalone actions
 Radius: 0.5rem (8px) - NOT pill-shaped
 Font: 0.875rem, 500 weight
 ```
@@ -104,8 +108,8 @@ Padding: 2.5rem
 
 ### Icons
 ```
-Container: 80×80px with 0.75rem radius
-Icon: 40×40px
+Container: 4rem (64px) dark theme / 5rem (80px) light theme, with 0.75rem radius
+Icon: 2.5rem (40px)
 Background: 10% opacity of primary/secondary
 ```
 
@@ -144,7 +148,7 @@ Icon + text layout
 - ✅ System fonts for native feel
 - ✅ Generous padding (2.5rem cards)
 - ✅ Large, perceptible components (max-w-2xl)
-- ✅ 48px touch targets
+- ✅ 48px touch targets (use `h-12` for standalone actions)
 
 ### Don't
 - ❌ Pill-shaped buttons
@@ -161,7 +165,7 @@ View the HTML mockups:
 - `docs/mockups/wizard-dark.html` - Dark theme welcome screen
 - `docs/mockups/wizard-light.html` - Light theme welcome screen
 
-Open in browser at 700×750px viewport to see actual size.
+Open in browser at 600×650 viewport to see actual size.
 
 ---
 
