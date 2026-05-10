@@ -1,3 +1,57 @@
+## [2.1.4](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.1.3...v2.1.4) (2026-05-04)
+
+### 🐞 Bug Fixes
+
+* update graphifyy[mcp] version to 0.7.5 ([#49](https://github.com/jorge-moreira/ai-brain-tool/issues/49)) ([096595e](https://github.com/jorge-moreira/ai-brain-tool/commit/096595ec265df3af0eca88b47b9b59d20d6873a3))
+
+### 🔧 Maintenance
+
+* update version list in bug report template ([1dbe3fc](https://github.com/jorge-moreira/ai-brain-tool/commit/1dbe3fc39d4bee4d7cc01f66186e120ed7cc4adb))
+
+## [2.1.3](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.1.2...v2.1.3) (2026-05-03)
+
+### 🐞 Bug Fixes
+
+* update graphifyy[mcp] version to 0.6.9 ([#47](https://github.com/jorge-moreira/ai-brain-tool/issues/47)) ([aaee609](https://github.com/jorge-moreira/ai-brain-tool/commit/aaee609655fdbc1c2a98edf3a334d56dc5d26448))
+
+### 📄 Documentation
+
+* regenerate READMEs from README.src.md ([bfd5e8f](https://github.com/jorge-moreira/ai-brain-tool/commit/bfd5e8fe14a1a132a846011aa89e41d43e2a9447))
+* scaffold README.src.md template + Spanish translation ([#15](https://github.com/jorge-moreira/ai-brain-tool/issues/15)) ([#42](https://github.com/jorge-moreira/ai-brain-tool/issues/42)) ([1e194a9](https://github.com/jorge-moreira/ai-brain-tool/commit/1e194a990cd53095d4e4d3f97cbf80d1c0f6c427))
+
+### 🔧 Maintenance
+
+* update version list in bug report template ([29dde69](https://github.com/jorge-moreira/ai-brain-tool/commit/29dde693c4f835519bac11af60ec7831cadd8851))
+
+## [2.1.2](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.1.1...v2.1.2) (2026-05-02)
+
+### 🐞 Bug Fixes
+
+* update graphifyy version to 0.6.5 ([#46](https://github.com/jorge-moreira/ai-brain-tool/issues/46)) ([634688e](https://github.com/jorge-moreira/ai-brain-tool/commit/634688e5bda10dee93c4f2b0c893b7aa308c508e))
+
+### 🔧 Maintenance
+
+* update version list in bug report template ([9aad4df](https://github.com/jorge-moreira/ai-brain-tool/commit/9aad4dfb461b96bd20984b1fe3788cb65efcb155))
+
+## [2.1.1](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.1.0...v2.1.1) (2026-04-30)
+
+### 🐞 Bug Fixes
+
+* update graphifyy version to 0.5.5 ([#43](https://github.com/jorge-moreira/ai-brain-tool/issues/43)) ([d9e21ac](https://github.com/jorge-moreira/ai-brain-tool/commit/d9e21ac848179b66c582e0156b3ccac19073c15c))
+
+### 📄 Documentation
+
+* fix CI badge ([91c2950](https://github.com/jorge-moreira/ai-brain-tool/commit/91c29502efd965496e3fdfa81631e8e1a5726a4b))
+* reorder badges ([cc7bdf8](https://github.com/jorge-moreira/ai-brain-tool/commit/cc7bdf89dbcf6f05d15e904cbb7ee3d7659cf658))
+
+### 🔧 Maintenance
+
+* update version list in bug report template ([2932975](https://github.com/jorge-moreira/ai-brain-tool/commit/2932975e861ac411c3751cc8248e43d928ea9f47))
+
+### ⚙️ CI/CD
+
+* improve workflows behavior to prevent duplicated runs ([#36](https://github.com/jorge-moreira/ai-brain-tool/issues/36)) ([b0d98ae](https://github.com/jorge-moreira/ai-brain-tool/commit/b0d98aee70d9650cbab7f9d37033f60d619263d9))
+
 ## [2.1.0](https://github.com/jorge-moreira/ai-brain-tool/compare/v2.0.2...v2.1.0) (2026-04-26)
 
 ### 🚀 Features
