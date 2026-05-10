@@ -1,5 +1,29 @@
 import { describe, it, expect } from 'vitest'
-import { GraphifyError, GitSyncError, BrainNotFoundError } from '@ai-brain/core/errors'
+import { GraphifyError, GitSyncError, BrainNotFoundError, NotABrainError } from '@ai-brain/core/errors'
+
+describe('NotABrainError', () => {
+  it('should have name NotABrainError', () => {
+    const e = new NotABrainError('/some/path', ['raw', '.graphifyignore'])
+    expect(e.name).toBe('NotABrainError')
+  })
+
+  it('should include path in message', () => {
+    const e = new NotABrainError('/some/path', ['raw', '.graphifyignore'])
+    expect(e.message).toContain('/some/path')
+  })
+
+  it('should include all markers in message', () => {
+    const markers = ['raw', '.graphifyignore', '.brain-config.json']
+    const e = new NotABrainError('/some/path', markers)
+    for (const marker of markers) {
+      expect(e.message).toContain(marker)
+    }
+  })
+
+  it('should be instanceof Error', () => {
+    expect(new NotABrainError('/some/path', [])).toBeInstanceOf(Error)
+  })
+})
 
 describe('BrainNotFoundError', () => {
   it('should have name BrainNotFoundError', () => {

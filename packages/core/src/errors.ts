@@ -10,6 +10,13 @@ export class BrainNotFoundError extends Error {
   }
 }
 
+export class NotABrainError extends Error {
+  constructor(path: string, markers: string[]) {
+    super(`"${path}" is not a valid brain folder. Make sure it contains: ${markers.join(', ')}.`)
+    this.name = 'NotABrainError'
+  }
+}
+
 export class GraphifyError extends Error {
   readonly code: GraphifyErrorCode
   constructor(code: GraphifyErrorCode, message: string, cause?: Error) {

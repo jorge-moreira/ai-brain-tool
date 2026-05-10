@@ -2,7 +2,6 @@ import { input, select, confirm } from '@inquirer/prompts'
 import chalk from 'chalk'
 import ora from 'ora'
 import { join, resolve, basename } from 'path'
-import { existsSync } from 'fs'
 import { execSync } from 'child_process'
 import { homedir } from 'os'
 
@@ -14,17 +13,13 @@ import {
   readConfig,
   writeConfig,
   addBrain,
+  isExistingBrain,
   ensureConfigDir,
   isBrainIdAvailable,
   isInstallationComplete,
   createInitialConfig
 } from '@ai-brain/core/config'
 
-const BRAIN_MARKER = ['raw', '.graphifyignore', '.brain-config.json']
-
-function isExistingBrain(dir: string): boolean {
-  return BRAIN_MARKER.every(f => existsSync(join(dir, f)))
-}
 
 function section(label: string): void {
   console.log(chalk.dim('\n  ─── ' + label + ' ' + '─'.repeat(Math.max(0, 40 - label.length))))

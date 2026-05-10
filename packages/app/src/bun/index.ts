@@ -13,6 +13,7 @@ import {
   readConfig,
   updateConfig,
   addBrain,
+  importBrain,
   removeBrain,
   isInstallationComplete,
   readBrainConfig,
@@ -304,10 +305,7 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
       },
       'import-brain': async ({ path }) => {
         try {
-          // Use folder name as brain ID
-          const brainId = basename(path)
-          addBrain(brainId, path)
-
+          const brainId = importBrain(path)
           return { success: true, brainId }
         } catch (error) {
           return {

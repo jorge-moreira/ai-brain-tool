@@ -2,11 +2,26 @@ import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
 import { readConfig, writeConfig, createInitialConfig } from './state'
-import { BrainNotFoundError } from '../errors'
+import { BrainNotFoundError, NotABrainError } from '../errors'
 import { writeBrainConfig } from '../scaffold'
 import type { BrainConfig, BrainInfo, ResolvedBrain, GetBrainPathOptions } from './types'
 
 const home = () => process.env.HOME || homedir()
+
+const BRAIN_MARKERS = ['raw', '.graphifyignore', '.brain-config.json']
+
+export function isExistingBrain(dir: string): boolean {
+  return BRAIN_MARKERS.every(f => existsSync(join(dir, f)))
+}
+
+export function importBrain(path: string): string {
+  if (!isExistingBrain(path)) {
+    throw new NotABrainError(path, BRAIN_MARKERS)
+  }
+  const brainId = path.split('/').at(-1) ?? path
+  addBrain(brainId, path)
+  return brainId
+}
 
 export function resolveBrain(brainId?: string): ResolvedBrain {
   const config = readConfig()

@@ -18,7 +18,8 @@ import {
   addGraphifyyExtra,
   type Config
 } from '@ai-brain/core/config'
-import { toggleSync, toggleSyncById } from '@ai-brain/core/config/brains'
+import { toggleSync, toggleSyncById, isExistingBrain, importBrain } from '@ai-brain/core/config/brains'
+import { NotABrainError } from '@ai-brain/core/errors'
 
 const emptyConfig: Config = {
   installationComplete: false,
@@ -424,6 +425,60 @@ describe('config', () => {
 
     it('should throw when brain id not found', async () => {
       expect(() => toggleSyncById('nonexistent', true)).toThrow()
+    })
+  })
+
+  describe('isExistingBrain', () => {
+    it('should return false when directory does not exist', () => {
+      expect(isExistingBrain(join(tmpHome, 'nonexistent'))).toBe(false)
+    })
+
+    it('should return false when directory is missing some markers', () => {
+      const dir = join(tmpHome, 'partial-brain')
+      mkdirSync(join(dir, 'raw'), { recursive: true })
+      expect(isExistingBrain(dir)).toBe(false)
+    })
+
+    it('should return false when only raw exists', () => {
+      const dir = join(tmpHome, 'partial-brain2')
+      mkdirSync(join(dir, 'raw'), { recursive: true })
+      expect(isExistingBrain(dir)).toBe(false)
+    })
+
+    it('should return true when all markers are present', () => {
+      const dir = join(tmpHome, 'valid-brain')
+      mkdirSync(join(dir, 'raw'), { recursive: true })
+      writeFileSync(join(dir, '.graphifyignore'), '')
+      writeFileSync(join(dir, '.brain-config.json'), '{}')
+      expect(isExistingBrain(dir)).toBe(true)
+    })
+  })
+
+  describe('importBrain', () => {
+    it('should throw NotABrainError when path is not a valid brain', () => {
+      const dir = join(tmpHome, 'not-a-brain')
+      mkdirSync(dir, { recursive: true })
+      expect(() => importBrain(dir)).toThrow(NotABrainError)
+    })
+
+    it('should add brain to config and return brainId when valid', () => {
+      const dir = join(tmpHome, 'my-brain')
+      mkdirSync(join(dir, 'raw'), { recursive: true })
+      writeFileSync(join(dir, '.graphifyignore'), '')
+      writeFileSync(join(dir, '.brain-config.json'), '{}')
+      const brainId = importBrain(dir)
+      expect(brainId).toBe('my-brain')
+      const config = readConfig()
+      expect(config.brains['my-brain']).toBeDefined()
+    })
+
+    it('should use last segment of path as brainId', () => {
+      const dir = join(tmpHome, 'segment-brain')
+      mkdirSync(join(dir, 'raw'), { recursive: true })
+      writeFileSync(join(dir, '.graphifyignore'), '')
+      writeFileSync(join(dir, '.brain-config.json'), '{}')
+      const brainId = importBrain(dir)
+      expect(brainId).toBe('segment-brain')
     })
   })
 })

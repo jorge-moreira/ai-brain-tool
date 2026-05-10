@@ -8,6 +8,7 @@ import {
   configPath,
   ensureConfigDir,
   isBrainIdAvailable,
+  isExistingBrain,
   isInstallationComplete,
   readConfig
 } from '@ai-brain/core/config'
@@ -75,6 +76,7 @@ vi.mock('@ai-brain/core/config', () => ({
   readConfig: vi.fn(() => ({ graphifyyExtras: [], aiTools: [], brains: {} })),
   writeConfig: vi.fn(),
   addBrain: vi.fn(),
+  isExistingBrain: vi.fn().mockReturnValue(false),
   ensureConfigDir: vi.fn(),
   configPath: vi.fn(),
   isBrainIdAvailable: vi.fn(),
@@ -116,6 +118,7 @@ const mockedConnectBrain = connectBrain as Mock<typeof connectBrain>
 const mockedConfigPath = configPath as Mock<typeof configPath>
 const mockedEnsureConfigDir = ensureConfigDir as Mock<typeof ensureConfigDir>
 const mockedIsBrainIdAvailable = isBrainIdAvailable as Mock<typeof isBrainIdAvailable>
+const mockedIsExistingBrain = isExistingBrain as Mock<typeof isExistingBrain>
 const mockedInitRepo = initRepo as Mock<typeof initRepo>
 const mockedWriteGitignore = writeGitignore as Mock<typeof writeGitignore>
 const mockedExistsSync = existsSync as Mock<typeof existsSync>
@@ -131,6 +134,7 @@ describe('commands/setup', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks()
+    mockedIsExistingBrain.mockReturnValue(false)
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 
@@ -141,11 +145,7 @@ describe('commands/setup', () => {
   it('should run new machine setup when existing brain detected', async () => {
     const tmp = mkdtempSync(join(tmpdir(), 'setup-test-'))
 
-    mockedExistsSync.mockImplementation((path: PathLike) => {
-      const markers = ['raw', '.graphifyignore', '.brain-config.json']
-      return markers.some(m => path.toString().includes(m))
-    })
-
+    mockedIsExistingBrain.mockReturnValue(true)
     mockedWriteFileSync.mockImplementation(() => {})
 
     mockedSelect.mockResolvedValue('brain')
@@ -454,11 +454,7 @@ describe('commands/setup', () => {
   })
 
   it('should handle config parse error in new machine setup', async () => {
-    mockedExistsSync.mockImplementation((path: PathLike) => {
-      const markers = ['raw', '.graphifyignore', '.brain-config.json']
-      return markers.some(m => path.toString().includes(m))
-    })
-
+    mockedIsExistingBrain.mockReturnValue(true)
     mockedWriteFileSync.mockImplementation(() => {})
 
     const badJson = '{ invalid json }'
@@ -569,11 +565,7 @@ describe('commands/setup', () => {
   })
 
   it('should fall back to detected tools when readConfig fails in newMachineSetup', async () => {
-    mockedExistsSync.mockImplementation((path: PathLike) => {
-      const markers = ['raw', '.graphifyignore', '.brain-config.json']
-      return markers.some(m => path.toString().includes(m))
-    })
-
+    mockedIsExistingBrain.mockReturnValue(true)
     mockedWriteFileSync.mockImplementation(() => {})
 
     mockedReadConfig.mockImplementation(() => {
@@ -641,11 +633,7 @@ describe('commands/setup', () => {
   })
 
   it('should propagate error when connectBrain fails in newMachineSetup', async () => {
-    mockedExistsSync.mockImplementation((path: PathLike) => {
-      const markers = ['raw', '.graphifyignore', '.brain-config.json']
-      return markers.some(m => path.toString().includes(m))
-    })
-
+    mockedIsExistingBrain.mockReturnValue(true)
     mockedWriteFileSync.mockImplementation(() => {})
     mockedReadConfig.mockReturnValue({
       aiTools: ['claude'],

@@ -16,6 +16,8 @@ export {
   resolveBrain,
   listBrains,
   addBrain,
+  importBrain,
+  isExistingBrain,
   isBrainIdAvailable,
   removeBrain,
   readBrainConfig,
