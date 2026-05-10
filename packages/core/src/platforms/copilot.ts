@@ -3,6 +3,14 @@ import { homedir } from 'os'
 import { existsSync } from 'fs'
 import { BRAIN_SKILL_MD, installSkillFile } from './shared.js'
 
+const BRAIN_SKILL_MARKER = `---
+name: brain
+description: Personal AI brain — facade over graphify for easy knowledge graph management
+trigger: /brain
+---
+
+`
+
 export function detect(homeDir: string = homedir()): boolean {
   return existsSync(join(homeDir, '.config', 'gh'))
 }
@@ -18,7 +26,7 @@ export async function installSkill({
   installSkillFile({
     dir: skillDir,
     filename: 'SKILL.md',
-    content: BRAIN_SKILL_MD
+    content: BRAIN_SKILL_MARKER + BRAIN_SKILL_MD
   })
 }
 
