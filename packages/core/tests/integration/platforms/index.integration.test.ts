@@ -10,7 +10,7 @@ import {
 } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { detectAll, configureSelected, installSkills, connectBrain } from '@ai-brain/core/index'
+import { detectAll, installSkills, createBrainMCP } from '@ai-brain/core/index'
 import {
   detect as detectClaude,
   patch as patchClaude,
@@ -61,12 +61,13 @@ describe('platforms integration', () => {
 
     it('should patch claude mcp.json with ai-brain server', async () => {
       const brainPath = join(tmpHome.toString(), 'brain')
+      const brainId = 'test-brain'
       mkdirSync(brainPath, { recursive: true })
       mkdirSync(join(tmpHome.toString(), '.claude'), { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
 
-      await patchClaude({ brainPath, homeDir: tmpHome.toString() })
+      await patchClaude({ brainPath, brainId, homeDir: tmpHome.toString() })
 
       const mcpPath = join(tmpHome.toString(), '.claude', 'mcp.json')
       expect(existsSync(mcpPath)).toBe(true)
@@ -74,10 +75,10 @@ describe('platforms integration', () => {
       const config = JSON.parse(readFileSync(mcpPath, 'utf8')) as unknown as {
         mcpServers: Record<string, { command?: string; args?: string[] }>
       }
-      expect(config.mcpServers['ai-brain']).toBeDefined()
-      expect(config.mcpServers['ai-brain'].command).toContain('.venv/bin/python3')
-      expect(config.mcpServers['ai-brain'].args).toContain('-m')
-      expect(config.mcpServers['ai-brain'].args).toContain('graphify.serve')
+      expect(config.mcpServers['ai-brain-test-brain']).toBeDefined()
+      expect(config.mcpServers['ai-brain-test-brain'].command).toContain('.venv/bin/python3')
+      expect(config.mcpServers['ai-brain-test-brain'].args).toContain('-m')
+      expect(config.mcpServers['ai-brain-test-brain'].args).toContain('graphify.serve')
     })
 
     it('should install brain.md skill file', async () => {
@@ -99,12 +100,13 @@ describe('platforms integration', () => {
 
     it('should patch opencode.json with ai-brain mcp entry', async () => {
       const brainPath = join(tmpHome.toString(), 'brain')
+      const brainId = 'test-brain'
       mkdirSync(brainPath, { recursive: true })
       mkdirSync(join(tmpHome.toString(), '.config', 'opencode'), { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
 
-      await patchOpencode({ brainPath, homeDir: tmpHome.toString() })
+      await patchOpencode({ brainPath, brainId, homeDir: tmpHome.toString() })
 
       const configPath = join(tmpHome.toString(), '.config', 'opencode', 'opencode.json')
       expect(existsSync(configPath)).toBe(true)
@@ -112,8 +114,8 @@ describe('platforms integration', () => {
       const config = JSON.parse(readFileSync(configPath, 'utf8')) as unknown as {
         mcp: Record<string, { type?: string }>
       }
-      expect(config.mcp['ai-brain']).toBeDefined()
-      expect(config.mcp['ai-brain'].type).toBe('local')
+      expect(config.mcp['ai-brain-test-brain']).toBeDefined()
+      expect(config.mcp['ai-brain-test-brain'].type).toBe('local')
     })
 
     it('should install SKILL.md to skills/brain directory', async () => {
@@ -142,12 +144,13 @@ describe('platforms integration', () => {
 
     it('should patch cursor mcp.json with ai-brain server', async () => {
       const brainPath = join(tmpHome.toString(), 'brain')
+      const brainId = 'test-brain'
       mkdirSync(brainPath, { recursive: true })
       mkdirSync(join(tmpHome.toString(), '.cursor'), { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
 
-      await patchCursor({ brainPath, homeDir: tmpHome.toString() })
+      await patchCursor({ brainPath, brainId, homeDir: tmpHome.toString() })
 
       const mcpPath = join(tmpHome.toString(), '.cursor', 'mcp.json')
       expect(existsSync(mcpPath)).toBe(true)
@@ -155,7 +158,7 @@ describe('platforms integration', () => {
       const config = JSON.parse(readFileSync(mcpPath, 'utf8')) as unknown as {
         mcpServers: Record<string, unknown>
       }
-      expect(config.mcpServers['ai-brain']).toBeDefined()
+      expect(config.mcpServers['ai-brain-test-brain']).toBeDefined()
     })
 
     it('should install brain.mdc rule file', async () => {
@@ -174,12 +177,13 @@ describe('platforms integration', () => {
 
     it('should patch gemini settings.json with ai-brain mcp server', async () => {
       const brainPath = join(tmpHome.toString(), 'brain')
+      const brainId = 'test-brain'
       mkdirSync(brainPath, { recursive: true })
       mkdirSync(join(tmpHome.toString(), '.gemini'), { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
 
-      await patchGemini({ brainPath, homeDir: tmpHome.toString() })
+      await patchGemini({ brainPath, brainId, homeDir: tmpHome.toString() })
 
       const settingsPath = join(tmpHome.toString(), '.gemini', 'settings.json')
       expect(existsSync(settingsPath)).toBe(true)
@@ -188,7 +192,7 @@ describe('platforms integration', () => {
         mcpServers: Record<string, unknown>
       }
       expect(config.mcpServers).toBeDefined()
-      expect(config.mcpServers['ai-brain']).toBeDefined()
+      expect(config.mcpServers['ai-brain-test-brain']).toBeDefined()
     })
 
     it('should install SKILL.md skill file', async () => {
@@ -272,8 +276,9 @@ describe('platforms integration', () => {
       })
     })
 
-    it('should configure selected platforms', async () => {
+    it('should install skills and configure MCP for selected platforms', async () => {
       const brainPath = join(tmpHome.toString(), 'brain')
+      const brainId = 'test-brain'
       mkdirSync(brainPath, { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
@@ -284,7 +289,13 @@ describe('platforms integration', () => {
       const platforms = await detectAll(tmpHome.toString())
       const selected = platforms.filter(p => p.key === 'claude' || p.key === 'opencode')
 
-      await configureSelected({ selected, brainPath, homeDir: tmpHome.toString() })
+      await installSkills({ selected, homeDir: tmpHome.toString() })
+      await createBrainMCP({
+        configuredPlatforms: selected,
+        brainPath,
+        brainId,
+        homeDir: tmpHome.toString()
+      })
 
       const claudeMcpPath = join(tmpHome.toString(), '.claude', 'mcp.json')
       const opencodeConfigPath = join(tmpHome.toString(), '.config', 'opencode', 'opencode.json')
@@ -367,8 +378,14 @@ describe('platforms integration', () => {
 
       const platforms = await detectAll(tmpHome.toString())
       const selected = platforms.filter(p => p.key === 'claude' || p.key === 'opencode')
+      const brainId = 'test-brain'
 
-      await connectBrain({ selected, brainPath, homeDir: tmpHome.toString() })
+      await createBrainMCP({
+        configuredPlatforms: selected,
+        brainPath,
+        brainId,
+        homeDir: tmpHome.toString()
+      })
 
       const claudeMcpPath = join(tmpHome.toString(), '.claude', 'mcp.json')
       const opencodeConfigPath = join(tmpHome.toString(), '.config', 'opencode', 'opencode.json')
@@ -383,12 +400,13 @@ describe('platforms integration', () => {
         mcp: Record<string, unknown>
       }
 
-      expect(claudeConfig.mcpServers['ai-brain']).toBeDefined()
-      expect(opencodeConfig.mcp['ai-brain']).toBeDefined()
+      expect(claudeConfig.mcpServers['ai-brain-test-brain']).toBeDefined()
+      expect(opencodeConfig.mcp['ai-brain-test-brain']).toBeDefined()
     })
 
     it('should connect brain for multiple platforms', async () => {
       const brainPath = join(tmpHome.toString(), 'brain')
+      const brainId = 'test-brain'
       mkdirSync(brainPath, { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
@@ -402,7 +420,12 @@ describe('platforms integration', () => {
         p => p.key === 'claude' || p.key === 'opencode' || p.key === 'cursor'
       )
 
-      await connectBrain({ selected, brainPath, homeDir: tmpHome.toString() })
+      await createBrainMCP({
+        configuredPlatforms: selected,
+        brainPath,
+        brainId,
+        homeDir: tmpHome.toString()
+      })
 
       const claudeMcpPath = join(tmpHome.toString(), '.claude', 'mcp.json')
       const opencodeConfigPath = join(tmpHome.toString(), '.config', 'opencode', 'opencode.json')
@@ -413,17 +436,19 @@ describe('platforms integration', () => {
       expect(existsSync(cursorMcpPath)).toBe(true)
     })
 
-    it('should handle empty selected array for connectBrain', async () => {
+    it('should handle empty configuredPlatforms array', async () => {
       const brainPath = join(tmpHome.toString(), 'brain')
+      const brainId = 'test-brain'
       mkdirSync(brainPath, { recursive: true })
 
       await expect(
-        connectBrain({ selected: [], brainPath, homeDir: tmpHome.toString() })
+        createBrainMCP({ configuredPlatforms: [], brainPath, brainId, homeDir: tmpHome.toString() })
       ).resolves.toBeUndefined()
     })
 
     it('should install skills and connect brain (full workflow)', async () => {
       const brainPath = join(tmpHome.toString(), 'brain')
+      const brainId = 'test-brain'
       mkdirSync(brainPath, { recursive: true })
       mkdirSync(join(brainPath, '.venv', 'bin'), { recursive: true })
       writeFileSync(join(brainPath, '.venv', 'bin', 'python3'), '', 'utf8')
@@ -438,7 +463,12 @@ describe('platforms integration', () => {
       await installSkills({ selected, homeDir: tmpHome.toString() })
 
       // Then connect brain
-      await connectBrain({ selected, brainPath, homeDir: tmpHome.toString() })
+      await createBrainMCP({
+        configuredPlatforms: selected,
+        brainPath,
+        brainId,
+        homeDir: tmpHome.toString()
+      })
 
       // Verify skills installed
       const claudeSkillPath = join(tmpHome.toString(), '.claude', 'commands', 'brain.md')

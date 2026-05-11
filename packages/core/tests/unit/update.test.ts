@@ -88,7 +88,11 @@ describe('updateBrain', () => {
 describe('updateBrainById', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    ;(resolveBrain as ReturnType<typeof vi.fn>).mockReturnValue({ id: 'work', path: '/tmp/brain', isLocal: true })
+    ;(resolveBrain as ReturnType<typeof vi.fn>).mockReturnValue({
+      id: 'work',
+      path: '/tmp/brain',
+      isLocal: true
+    })
     ;(runGraphify as ReturnType<typeof vi.fn>).mockResolvedValue({ success: true })
     ;(syncBrain as ReturnType<typeof vi.fn>).mockResolvedValue({ status: 'ok' })
   })

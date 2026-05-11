@@ -23,7 +23,7 @@ export function EmptyDashboard({ onCreateBrain, onImportBrain }: EmptyDashboardP
         <div className="flex gap-3 justify-center">
           <Button
             onClick={onCreateBrain}
-            className="bg-gradient-to-br from-primary to-primary-container text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25 w-52"
+            className="bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25 w-52"
           >
             <div className="flex items-center justify-center gap-2">
               <Icons.plus className="w-4 h-4 shrink-0" />

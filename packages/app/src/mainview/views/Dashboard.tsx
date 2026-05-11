@@ -4,7 +4,12 @@ import { Card, CardHeader, CardContent, CardFooter } from '@ai-brain/ui/componen
 import { Skeleton } from '@ai-brain/ui/components/skeleton'
 import type { BrainInfo } from '@/shared/rpc-types'
 import { rpc } from '@/lib/rpc'
-import { CreateBrainDialog, ImportBrainDialog, BrainSettingsDialog } from '@/components/organisms'
+import {
+  CreateBrainDialog,
+  ImportBrainDialog,
+  BrainSettingsDialog,
+  DeleteBrainDialog
+} from '@/components/organisms'
 import { EmptyDashboard, BrainsDashboard } from '@/screens/dashboard'
 
 interface DashboardProps {
@@ -17,6 +22,8 @@ export function Dashboard({ onWizardComplete: _onWizardComplete }: DashboardProp
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false)
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [deleteBrainId, setDeleteBrainId] = useState<string | null>(null)
   const [selectedBrain, setSelectedBrain] = useState<BrainInfo | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
@@ -55,17 +62,21 @@ export function Dashboard({ onWizardComplete: _onWizardComplete }: DashboardProp
   }
 
   async function handleDeleteBrain(brainId: string) {
-    if (
-      confirm(
-        `Are you sure you want to delete "${brainId}"? This will only remove it from the app, not delete the folder.`
-      )
-    ) {
-      try {
-        await rpc.deleteBrain(brainId)
-        loadBrains()
-      } catch (error) {
-        console.error('Failed to delete brain:', error)
-      }
+    setDeleteBrainId(brainId)
+    setIsDeleteDialogOpen(true)
+  }
+
+  async function handleConfirmDelete(brainId: string, deleteFolder: boolean) {
+    try {
+      await rpc.deleteBrain(brainId, deleteFolder)
+      toast.success('Brain deleted', { duration: 2000 })
+      setBrains(prev => prev.filter(b => b.id !== brainId))
+      setDeleteBrainId(null)
+    } catch (error) {
+      toast.error('Failed to delete brain', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+        duration: 2000
+      })
     }
   }
 
@@ -76,7 +87,7 @@ export function Dashboard({ onWizardComplete: _onWizardComplete }: DashboardProp
       if (result.gitSync === 'failed') {
         toast.warning('Brain rebuilt — git sync failed', {
           description: result.gitSyncError?.message ?? result.gitSyncError?.code ?? 'unknown',
-          duration: 3000,
+          duration: 3000
         })
       } else if (result.gitSync === 'ok') {
         toast.success('Brain synced and pushed', { duration: 2000 })
@@ -84,7 +95,10 @@ export function Dashboard({ onWizardComplete: _onWizardComplete }: DashboardProp
         toast.success('Brain rebuilt', { duration: 2000 })
       }
     } catch (error) {
-      toast.error('Sync failed', { description: error instanceof Error ? error.message : 'Unknown error', duration: 2000 })
+      toast.error('Sync failed', {
+        description: error instanceof Error ? error.message : 'Unknown error',
+        duration: 2000
+      })
     } finally {
       setSyncingBrainId(null)
     }
@@ -113,9 +127,13 @@ export function Dashboard({ onWizardComplete: _onWizardComplete }: DashboardProp
 
   async function handleOpenObsidian(brainId: string) {
     try {
-      await rpc.openBrainObsidian(brainId)
+      const result = await rpc.openBrainObsidian(brainId)
+      if (!result.success) {
+        toast.error(result.error || 'Failed to open Obsidian', { duration: 2000 })
+      }
     } catch (error) {
       console.error('Failed to open Obsidian:', error)
+      toast.error('Failed to open Obsidian', { duration: 2000 })
     }
   }
 
@@ -195,8 +213,8 @@ export function Dashboard({ onWizardComplete: _onWizardComplete }: DashboardProp
   return (
     <div className="w-full h-full bg-background">
       {/* Dialog backdrop overlay */}
-      {(isCreateDialogOpen || isImportDialogOpen || isSettingsDialogOpen) && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm" />
+      {(isCreateDialogOpen || isImportDialogOpen || isSettingsDialogOpen || isDeleteDialogOpen) && (
+        <div className="fixed inset-0 z-[40] bg-black/60 backdrop-blur-sm" />
       )}
 
       {brains.length === 0 ? (
@@ -217,6 +235,14 @@ export function Dashboard({ onWizardComplete: _onWizardComplete }: DashboardProp
           onAddTemplate={handleAddTemplate}
         />
       )}
+
+      <DeleteBrainDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        brainId={deleteBrainId}
+        onConfirm={handleConfirmDelete}
+        dialogClassName="fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-[101]"
+      />
 
       <CreateBrainDialog
         open={isCreateDialogOpen}

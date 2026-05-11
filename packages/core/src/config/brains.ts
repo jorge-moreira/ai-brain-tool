@@ -1,17 +1,44 @@
-import { existsSync, readFileSync } from 'fs'
+import { existsSync, readFileSync, rmSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
 import { readConfig, writeConfig, createInitialConfig } from './state'
 import { BrainNotFoundError, NotABrainError } from '../errors'
 import { writeBrainConfig } from '../scaffold'
+import { detectAll } from '../platforms'
 import type { BrainConfig, BrainInfo, ResolvedBrain, GetBrainPathOptions } from './types'
 
 const home = () => process.env.HOME || homedir()
 
-const BRAIN_MARKERS = ['raw', '.graphifyignore', '.brain-config.json']
+const BRAIN_MARKERS: string[] = ['raw', '.graphifyignore', '.brain-config.json']
 
 export function isExistingBrain(dir: string): boolean {
   return BRAIN_MARKERS.every(f => existsSync(join(dir, f)))
+}
+
+export async function removeBrain(brainId: string, deleteFolder = false): Promise<void> {
+  const config = readConfig()
+  if (!config.brains || !config.brains[brainId]) {
+    throw new BrainNotFoundError(brainId)
+  }
+  const brainPath = config.brains[brainId]
+  const aiTools = config.aiTools || []
+  const { [brainId]: _removed, ...remainingBrains } = config.brains
+  config.brains = remainingBrains
+  writeConfig(config)
+
+  const homeDir = home()
+  const platforms = await detectAll(homeDir)
+
+  for (const tool of aiTools) {
+    const platform = platforms.find(p => p.key === tool)
+    if (platform?.module.unpatch) {
+      await platform.module.unpatch({ brainId, homeDir })
+    }
+  }
+
+  if (deleteFolder && brainPath) {
+    rmSync(brainPath, { recursive: true, force: true })
+  }
 }
 
 export function importBrain(path: string): string {
@@ -76,16 +103,6 @@ export function isBrainIdAvailable(brainId: string): boolean {
   } catch {
     return true
   }
-}
-
-export function removeBrain(brainId: string): void {
-  const config = readConfig()
-  if (!config.brains || !config.brains[brainId]) {
-    throw new BrainNotFoundError(brainId)
-  }
-  const { [brainId]: _removed, ...remainingBrains } = config.brains
-  config.brains = remainingBrains
-  writeConfig(config)
 }
 
 export function readBrainConfig(brainPath: string): BrainConfig {

@@ -108,9 +108,10 @@ export const rpc = {
   },
 
   async deleteBrain(
-    brainId: string
+    brainId: string,
+    deleteFolder = false
   ): Promise<ResponseOf<AppRPCType['bun']['requests']['delete-brain']>> {
-    return proxy['delete-brain']({ brainId })
+    return proxy['delete-brain']({ brainId, deleteFolder })
   },
 
   async toggleSync(

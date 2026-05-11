@@ -59,7 +59,7 @@ export function BrainsDashboard({
 
         <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
           <PopoverTrigger asChild>
-            <Button className="bg-gradient-to-br from-primary to-primary-container text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25">
+            <Button className="bg-primary text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/25">
               <div className="flex items-center">
                 <Icons.plus className="w-4 h-4 mr-2" />
                 Brain

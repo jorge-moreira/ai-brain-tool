@@ -18,7 +18,12 @@ import {
   addGraphifyyExtra,
   type Config
 } from '@ai-brain/core/config'
-import { toggleSync, toggleSyncById, isExistingBrain, importBrain } from '@ai-brain/core/config/brains'
+import {
+  toggleSync,
+  toggleSyncById,
+  isExistingBrain,
+  importBrain
+} from '@ai-brain/core/config/brains'
 import { NotABrainError } from '@ai-brain/core/errors'
 
 const emptyConfig: Config = {
@@ -215,13 +220,13 @@ describe('config', () => {
   describe('removeBrain', () => {
     it('should remove brain from config', async () => {
       addBrain('work', join(tmpHome, 'work'))
-      removeBrain('work')
+      await removeBrain('work')
       const config = readConfig()
       expect(config.brains.work).toBeUndefined()
     })
 
     it('should throw when brain not found', async () => {
-      expect(() => removeBrain('nonexistent')).toThrow('not found')
+      await expect(removeBrain('nonexistent')).rejects.toThrow('not found')
     })
   })
 

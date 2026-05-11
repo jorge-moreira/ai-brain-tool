@@ -1,9 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   detectAll,
-  configureSelected,
   installSkills,
-  connectBrain,
+  createBrainMCP,
   type DetectedPlatform
 } from '@ai-brain/core/platforms/index'
 
@@ -65,7 +64,7 @@ describe('platforms/index', () => {
           detect: vi.fn().mockReturnValue(true),
           patch: vi.fn().mockResolvedValue(undefined),
           installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
+          unpatch: vi.fn().mockResolvedValue(undefined)
         }
       }
 
@@ -85,7 +84,7 @@ describe('platforms/index', () => {
           detect: vi.fn().mockReturnValue(true),
           patch: vi.fn().mockResolvedValue(undefined),
           installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
+          unpatch: vi.fn().mockResolvedValue(undefined)
         }
       }
       const platform2: DetectedPlatform = {
@@ -97,7 +96,7 @@ describe('platforms/index', () => {
           detect: vi.fn().mockReturnValue(true),
           patch: vi.fn().mockResolvedValue(undefined),
           installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
+          unpatch: vi.fn().mockResolvedValue(undefined)
         }
       }
 
@@ -117,7 +116,7 @@ describe('platforms/index', () => {
           detect: vi.fn().mockReturnValue(true),
           patch: vi.fn().mockResolvedValue(undefined),
           installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
+          unpatch: vi.fn().mockResolvedValue(undefined)
         }
       }
 
@@ -131,8 +130,8 @@ describe('platforms/index', () => {
     })
   })
 
-  describe('connectBrain', () => {
-    it('should patch and install always-on for selected platforms', async () => {
+  describe('createBrainMCP', () => {
+    it('should patch MCP config for configured platforms', async () => {
       const mockPlatform: DetectedPlatform = {
         name: 'Mock Platform',
         key: 'mock',
@@ -142,28 +141,26 @@ describe('platforms/index', () => {
           detect: vi.fn().mockReturnValue(true),
           patch: vi.fn().mockResolvedValue(undefined),
           installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
+          unpatch: vi.fn().mockResolvedValue(undefined)
         }
       }
 
-      await connectBrain({
-        selected: [mockPlatform],
+      await createBrainMCP({
+        configuredPlatforms: [mockPlatform],
         brainPath: '/tmp/brain',
+        brainId: 'test-brain',
         homeDir: '/tmp/home'
       })
 
       expect(mockPlatform.module.patch).toHaveBeenCalledWith({
         brainPath: '/tmp/brain',
-        homeDir: '/tmp/home'
-      })
-      expect(mockPlatform.module.installAlwaysOn).toHaveBeenCalledWith({
-        brainPath: '/tmp/brain',
+        brainId: 'test-brain',
         homeDir: '/tmp/home'
       })
       expect(mockPlatform.module.installSkill).not.toHaveBeenCalled()
     })
 
-    it('should connect brain for multiple platforms', async () => {
+    it('should configure MCP for multiple platforms', async () => {
       const platform1: DetectedPlatform = {
         name: 'Mock Platform 1',
         key: 'mock1',
@@ -173,7 +170,7 @@ describe('platforms/index', () => {
           detect: vi.fn().mockReturnValue(true),
           patch: vi.fn().mockResolvedValue(undefined),
           installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
+          unpatch: vi.fn().mockResolvedValue(undefined)
         }
       }
       const platform2: DetectedPlatform = {
@@ -185,20 +182,19 @@ describe('platforms/index', () => {
           detect: vi.fn().mockReturnValue(true),
           patch: vi.fn().mockResolvedValue(undefined),
           installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
+          unpatch: vi.fn().mockResolvedValue(undefined)
         }
       }
 
-      await connectBrain({
-        selected: [platform1, platform2],
+      await createBrainMCP({
+        configuredPlatforms: [platform1, platform2],
         brainPath: '/tmp/brain',
+        brainId: 'test-brain',
         homeDir: '/tmp/home'
       })
 
       expect(platform1.module.patch).toHaveBeenCalled()
-      expect(platform1.module.installAlwaysOn).toHaveBeenCalled()
       expect(platform2.module.patch).toHaveBeenCalled()
-      expect(platform2.module.installAlwaysOn).toHaveBeenCalled()
     })
 
     it('should use default homeDir when not provided', async () => {
@@ -211,112 +207,27 @@ describe('platforms/index', () => {
           detect: vi.fn().mockReturnValue(true),
           patch: vi.fn().mockResolvedValue(undefined),
           installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
+          unpatch: vi.fn().mockResolvedValue(undefined)
         }
       }
 
-      await connectBrain({ selected: [mockPlatform], brainPath: '/tmp/brain' })
+      await createBrainMCP({
+        configuredPlatforms: [mockPlatform],
+        brainPath: '/tmp/brain',
+        brainId: 'test-brain'
+      })
 
       expect(mockPlatform.module.patch).toHaveBeenCalled()
-      expect(mockPlatform.module.installAlwaysOn).toHaveBeenCalled()
     })
 
-    it('should handle empty selected array', async () => {
-      await expect(connectBrain({ selected: [], brainPath: '/tmp/brain' })).resolves.toBeUndefined()
-    })
-  })
-
-  describe('configureSelected', () => {
-    it('should configure selected platforms', async () => {
-      const mockPlatform: DetectedPlatform = {
-        name: 'Mock Platform',
-        key: 'mock',
-        detected: true,
-        configHint: '~/.mock',
-        module: {
-          detect: vi.fn().mockReturnValue(true),
-          patch: vi.fn().mockResolvedValue(undefined),
-          installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
-        }
-      }
-
-      await configureSelected({
-        selected: [mockPlatform],
-        brainPath: '/tmp/brain',
-        homeDir: '/tmp/home'
-      })
-
-      expect(mockPlatform.module.patch).toHaveBeenCalledWith({
-        brainPath: '/tmp/brain',
-        homeDir: '/tmp/home'
-      })
-      expect(mockPlatform.module.installSkill).toHaveBeenCalledWith({ homeDir: '/tmp/home' })
-      expect(mockPlatform.module.installAlwaysOn).toHaveBeenCalledWith({
-        brainPath: '/tmp/brain',
-        homeDir: '/tmp/home'
-      })
-    })
-
-    it('should configure multiple platforms', async () => {
-      const platform1: DetectedPlatform = {
-        name: 'Mock Platform 1',
-        key: 'mock1',
-        detected: true,
-        configHint: '~/.mock1',
-        module: {
-          detect: vi.fn().mockReturnValue(true),
-          patch: vi.fn().mockResolvedValue(undefined),
-          installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
-        }
-      }
-      const platform2: DetectedPlatform = {
-        name: 'Mock Platform 2',
-        key: 'mock2',
-        detected: true,
-        configHint: '~/.mock2',
-        module: {
-          detect: vi.fn().mockReturnValue(true),
-          patch: vi.fn().mockResolvedValue(undefined),
-          installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
-        }
-      }
-
-      await configureSelected({
-        selected: [platform1, platform2],
-        brainPath: '/tmp/brain',
-        homeDir: '/tmp/home'
-      })
-
-      expect(platform1.module.patch).toHaveBeenCalled()
-      expect(platform2.module.patch).toHaveBeenCalled()
-    })
-
-    it('should call both installSkills and connectBrain', async () => {
-      const mockPlatform: DetectedPlatform = {
-        name: 'Mock Platform',
-        key: 'mock',
-        detected: true,
-        configHint: '~/.mock',
-        module: {
-          detect: vi.fn().mockReturnValue(true),
-          patch: vi.fn().mockResolvedValue(undefined),
-          installSkill: vi.fn().mockResolvedValue(undefined),
-          installAlwaysOn: vi.fn().mockResolvedValue(undefined)
-        }
-      }
-
-      await configureSelected({
-        selected: [mockPlatform],
-        brainPath: '/tmp/brain',
-        homeDir: '/tmp/home'
-      })
-
-      expect(mockPlatform.module.installSkill).toHaveBeenCalledTimes(1)
-      expect(mockPlatform.module.patch).toHaveBeenCalledTimes(1)
-      expect(mockPlatform.module.installAlwaysOn).toHaveBeenCalledTimes(1)
+    it('should handle empty configuredPlatforms array', async () => {
+      await expect(
+        createBrainMCP({
+          configuredPlatforms: [],
+          brainPath: '/tmp/brain',
+          brainId: 'test-brain'
+        })
+      ).resolves.toBeUndefined()
     })
   })
 })

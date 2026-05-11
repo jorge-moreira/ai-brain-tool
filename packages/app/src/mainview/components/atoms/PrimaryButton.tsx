@@ -10,9 +10,9 @@ export function PrimaryButton({ className, variant = 'default', children, ...pro
   const baseStyles = 'shadow-lg transition-all hover:opacity-90';
   
   const variantStyles = {
-    default: 'bg-gradient-to-br from-primary to-primary-container text-primary-foreground shadow-primary/25',
-    create: 'bg-gradient-to-br from-primary to-primary-container text-primary-foreground shadow-primary/25',
-    import: 'bg-gradient-to-br from-secondary to-blue-500 text-secondary-foreground shadow-secondary/25',
+    default: 'bg-primary text-primary-foreground shadow-primary/25',
+    create: 'bg-primary text-primary-foreground shadow-primary/25',
+    import: 'bg-secondary text-secondary-foreground shadow-secondary/25',
   };
 
   return (

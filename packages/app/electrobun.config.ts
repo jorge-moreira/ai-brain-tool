@@ -23,13 +23,16 @@ export default {
     },
     watchIgnore: ['dist/**'],
     mac: {
-      bundleCEF: false
+      bundleCEF: false,
+      icons: 'assets/icons/ai-brain-tool.icon'
     },
     linux: {
-      bundleCEF: false
+      bundleCEF: false,
+      icon: 'assets/icons/ai-brain-tool.png'
     },
     win: {
-      bundleCEF: false
+      bundleCEF: false,
+      icon: 'assets/icons/ai-brain-tool.ico'
     }
   }
 } satisfies ElectrobunConfig

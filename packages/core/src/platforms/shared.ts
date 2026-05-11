@@ -66,3 +66,31 @@ export function installSkillFile({
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, filename), content, 'utf8')
 }
+
+// Remove an MCP server entry from a JSON config file
+export function unpatchJsonConfig({
+  configPath,
+  configKey,
+  serverName
+}: {
+  configPath: string
+  configKey: string
+  serverName: string
+}): string {
+  if (!existsSync(configPath)) return configPath
+
+  let current: Record<string, unknown> = {}
+  try {
+    current = JSON.parse(readFileSync(configPath, 'utf8')) as Record<string, unknown>
+  } catch {
+    return configPath
+  }
+
+  if (current[configKey]) {
+    const existing = current[configKey] as Record<string, unknown>
+    const { [serverName]: _removed, ...remaining } = existing
+    current[configKey] = remaining
+    writeFileSync(configPath, JSON.stringify(current, null, 2), 'utf8')
+  }
+  return configPath
+}

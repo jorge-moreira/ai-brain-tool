@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { GraphifyError, GitSyncError, BrainNotFoundError, NotABrainError } from '@ai-brain/core/errors'
+import {
+  GraphifyError,
+  GitSyncError,
+  BrainNotFoundError,
+  NotABrainError
+} from '@ai-brain/core/errors'
 
 describe('NotABrainError', () => {
   it('should have name NotABrainError', () => {

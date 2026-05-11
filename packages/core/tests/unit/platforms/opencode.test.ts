@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { detect, patch, installSkill, installAlwaysOn } from '../../../src/platforms/opencode'
-
+import { detect, patch, installSkill } from '@ai-brain/core/platforms/opencode'
 describe('platforms/opencode', () => {
   describe('detect', () => {
     it('should return true when .config/opencode dir exists', async () => {
@@ -28,15 +27,15 @@ describe('platforms/opencode', () => {
     it('should create opencode.json with ai-brain mcp entry', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'opencode-test-'))
 
-      await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
+      await patch({ brainPath: '/tmp/my-brain', brainId: 'test-brain', homeDir: fakeHome })
 
       const configPath = join(fakeHome, '.config', 'opencode', 'opencode.json')
       expect(existsSync(configPath)).toBe(true)
       const config = JSON.parse(readFileSync(configPath, 'utf8')) as {
         mcp: Record<string, { type: string }>
       }
-      expect(config.mcp['ai-brain']).toBeDefined()
-      expect(config.mcp['ai-brain'].type).toBe('local')
+      expect(config.mcp['ai-brain-test-brain']).toBeDefined()
+      expect(config.mcp['ai-brain-test-brain'].type).toBe('local')
 
       rmSync(fakeHome, { recursive: true, force: true })
     })
@@ -52,12 +51,6 @@ describe('platforms/opencode', () => {
       expect(existsSync(skillPath)).toBe(true)
 
       rmSync(fakeHome, { recursive: true, force: true })
-    })
-  })
-
-  describe('installAlwaysOn', () => {
-    it('should be a no-op that resolves', async () => {
-      await expect(installAlwaysOn()).resolves.toBeUndefined()
     })
   })
 })

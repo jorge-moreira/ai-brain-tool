@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { detect, patch, installSkill, installAlwaysOn } from '@ai-brain/core/platforms/cursor'
-
+import { detect, patch, installSkill } from '@ai-brain/core/platforms/cursor'
 describe('platforms/cursor', () => {
   describe('detect', () => {
     it('should return true when .cursor dir exists', async () => {
@@ -28,14 +27,14 @@ describe('platforms/cursor', () => {
     it('should create mcp.json with ai-brain entry', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'cursor-test-'))
 
-      await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
+      await patch({ brainPath: '/tmp/my-brain', brainId: 'test-brain', homeDir: fakeHome })
 
       const mcpPath = join(fakeHome, '.cursor', 'mcp.json')
       expect(existsSync(mcpPath)).toBe(true)
       const mcp = JSON.parse(readFileSync(mcpPath, 'utf8')) as {
         mcpServers: Record<string, { type?: string }>
       }
-      expect(mcp.mcpServers['ai-brain']).toBeDefined()
+      expect(mcp.mcpServers['ai-brain-test-brain']).toBeDefined()
 
       rmSync(fakeHome, { recursive: true, force: true })
     })
@@ -51,12 +50,6 @@ describe('platforms/cursor', () => {
       expect(existsSync(skillPath)).toBe(true)
 
       rmSync(fakeHome, { recursive: true, force: true })
-    })
-  })
-
-  describe('installAlwaysOn', () => {
-    it('should be a no-op that resolves', async () => {
-      await expect(installAlwaysOn()).resolves.toBeUndefined()
     })
   })
 })

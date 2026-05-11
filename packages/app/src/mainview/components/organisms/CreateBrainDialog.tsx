@@ -13,6 +13,7 @@ export interface CreateBrainDialogProps {
     gitSync: boolean
     configureObsidian: boolean
     obsidianDir: string | null
+    openInObsidian?: boolean
   }) => Promise<{ success: boolean; error?: string }>
   onSuccess: () => void
   dialogClassName?: string
@@ -26,6 +27,7 @@ interface FormData {
   gitSync: boolean
   configureObsidian: boolean
   obsidianDir: string
+  openInObsidian: boolean
 }
 
 export function CreateBrainDialog({
@@ -42,7 +44,8 @@ export function CreateBrainDialog({
     gitRemote: '',
     gitSync: false,
     configureObsidian: false,
-    obsidianDir: ''
+    obsidianDir: '',
+    openInObsidian: false
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -64,7 +67,8 @@ export function CreateBrainDialog({
         gitRemote: formData.gitRemote || undefined,
         gitSync: formData.gitSync,
         configureObsidian: formData.configureObsidian,
-        obsidianDir: formData.configureObsidian ? formData.obsidianDir : null
+        obsidianDir: formData.configureObsidian ? formData.obsidianDir : null,
+        openInObsidian: formData.openInObsidian
       })
 
       if (result.success) {
@@ -209,6 +213,26 @@ export function CreateBrainDialog({
                   placeholder="/path/to/obsidian-vault"
                   hint="Leave empty to use the brain folder as vault"
                 />
+                <div className="flex items-start gap-3 pt-2">
+                  <input
+                    type="checkbox"
+                    id="open-in-obsidian"
+                    checked={formData.openInObsidian}
+                    onChange={e => setFormData(prev => ({ ...prev, openInObsidian: e.target.checked }))}
+                    className="w-4.5 h-4.5 mt-0.5 border-2 border-border rounded bg-background text-primary focus:ring-2 focus:ring-primary/20 focus:ring-offset-0"
+                  />
+                  <div className="flex-1 space-y-1">
+                    <label
+                      htmlFor="open-in-obsidian"
+                      className="text-sm font-medium text-foreground cursor-pointer"
+                    >
+                      Open in Obsidian after creation
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      Launch Obsidian and add this brain as a vault (if not already added)
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -233,7 +257,7 @@ export function CreateBrainDialog({
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting || !formData.name || !formData.path}
-            className="px-5 py-2.5 bg-gradient-to-br from-primary to-primary-container text-primary-foreground rounded-md text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Creating...' : 'Create'}
           </button>

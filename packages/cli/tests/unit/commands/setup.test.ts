@@ -1,19 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest'
-import { mkdtempSync, rmSync, existsSync, writeFileSync, PathLike } from 'fs'
+import { mkdtempSync, rmSync, existsSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { select, checkbox, input, confirm } from '@inquirer/prompts'
-import { createBrainFolder } from '@ai-brain/core/scaffold'
+import { createBrain } from '@ai-brain/core/brains'
 import {
   configPath,
   ensureConfigDir,
   isBrainIdAvailable,
   isExistingBrain,
   isInstallationComplete,
-  readConfig
+  readConfig,
+  addBrain
 } from '@ai-brain/core/config'
 import { createVenv, globalVenvExists, ensureUv, createGlobalVenv } from '@ai-brain/core/graphify'
-import { detectAll, connectBrain, type DetectedPlatform } from '@ai-brain/core/index'
+import { detectAll, createBrainMCP, type DetectedPlatform } from '@ai-brain/core/platforms'
 import { initRepo, writeGitignore } from '@ai-brain/core/git'
 import { run } from '../../../src/commands/setup'
 
@@ -49,8 +50,21 @@ vi.mock('@inquirer/prompts', () => ({
   confirm: vi.fn<typeof confirm>()
 }))
 
+vi.mock('@ai-brain/core/brains', () => ({
+  createBrain: vi
+    .fn()
+    .mockResolvedValue({ success: true, brainId: 'test', brainPath: '/tmp/test' }),
+  importBrain: vi.fn(),
+  removeBrain: vi.fn(),
+  isExistingBrain: vi.fn().mockReturnValue(false)
+}))
+
+vi.mock('@ai-brain/core/path-utils', () => ({
+  getPackageRoot: vi.fn().mockReturnValue('/tmp/mock-core'),
+  getPackageResource: vi.fn((path: string) => `/tmp/mock-core/${path}`)
+}))
+
 vi.mock('@ai-brain/core/scaffold', () => ({
-  createBrainFolder: vi.fn<typeof createBrainFolder>(),
   writeBrainConfig: vi.fn()
 }))
 
@@ -62,9 +76,23 @@ vi.mock('@ai-brain/core/graphify', () => ({
   ensureUv: vi.fn()
 }))
 
-vi.mock('@ai-brain/core/index', () => ({
+vi.mock('@ai-brain/core/platforms', () => ({
   detectAll: vi.fn().mockResolvedValue([]),
-  connectBrain: vi.fn()
+  createBrainMCP: vi.fn()
+}))
+
+vi.mock('@ai-brain/core/brains', () => ({
+  createBrain: vi
+    .fn()
+    .mockResolvedValue({ success: true, brainId: 'test', brainPath: '/tmp/test' }),
+  importBrain: vi.fn(),
+  removeBrain: vi.fn(),
+  isExistingBrain: vi.fn().mockReturnValue(false)
+}))
+
+vi.mock('@ai-brain/core/path-utils', () => ({
+  getPackageRoot: vi.fn().mockReturnValue('/tmp/mock-core'),
+  getPackageResource: vi.fn((path: string) => `/tmp/mock-core/${path}`)
 }))
 
 vi.mock('@ai-brain/core/git', () => ({
@@ -111,10 +139,10 @@ const mockedSelect = select as Mock<typeof select>
 const mockedCheckbox = checkbox as Mock<typeof checkbox>
 const mockedInput = input as Mock<typeof input>
 const mockedConfirm = confirm as Mock<typeof confirm>
-const mockedCreateBrainFolder = createBrainFolder as Mock<typeof createBrainFolder>
+const mockedCreateBrain = createBrain as Mock<typeof createBrain>
 const mockedCreateVenv = createVenv as Mock<typeof createVenv>
 const mockedDetectAll = detectAll as unknown as Mock<typeof detectAll>
-const mockedConnectBrain = connectBrain as Mock<typeof connectBrain>
+const mockedCreateBrainMCP = createBrainMCP as Mock<typeof createBrainMCP>
 const mockedConfigPath = configPath as Mock<typeof configPath>
 const mockedEnsureConfigDir = ensureConfigDir as Mock<typeof ensureConfigDir>
 const mockedIsBrainIdAvailable = isBrainIdAvailable as Mock<typeof isBrainIdAvailable>
@@ -128,6 +156,7 @@ const mockedReadConfig = readConfig as Mock<typeof readConfig>
 const mockedGlobalVenvExists = globalVenvExists as Mock<typeof globalVenvExists>
 const mockedEnsureUv = ensureUv as Mock<typeof ensureUv>
 const mockedCreateGlobalVenv = createGlobalVenv as Mock<typeof createGlobalVenv>
+const _mockedAddBrain = addBrain as Mock<typeof addBrain>
 
 describe('commands/setup', () => {
   let consoleLogSpy: Mock<Console['log']>
@@ -135,6 +164,11 @@ describe('commands/setup', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     mockedIsExistingBrain.mockReturnValue(false)
+    mockedCreateBrain.mockResolvedValue({
+      success: true,
+      brainId: 'test-brain',
+      brainPath: '/tmp/test-brain'
+    })
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
   })
 
@@ -160,7 +194,6 @@ describe('commands/setup', () => {
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
@@ -188,12 +221,20 @@ describe('commands/setup', () => {
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
-    expect(mockedInput).toHaveBeenCalledTimes(2)
+    expect(mockedInput).toHaveBeenCalledTimes(1)
     expect(mockedSelect).toHaveBeenCalledTimes(3)
+    expect(mockedCreateBrain).toHaveBeenCalledWith({
+      name: 'ai-brain',
+      basePath: expect.any(String),
+      includeObsidian: false,
+      obsidianDir: null,
+      gitSync: false,
+      useGit: false,
+      gitRemote: undefined
+    })
   })
 
   it('should handle custom location choice', async () => {
@@ -204,8 +245,6 @@ describe('commands/setup', () => {
     mockedSelect.mockResolvedValueOnce('custom')
     mockedInput.mockResolvedValueOnce('/custom/path')
     mockedSelect.mockResolvedValueOnce('local')
-    mockedCheckbox.mockResolvedValueOnce([])
-    mockedCheckbox.mockResolvedValueOnce([])
     mockedSelect.mockResolvedValueOnce('skip')
 
     mockedDetectAll.mockResolvedValue([])
@@ -215,13 +254,15 @@ describe('commands/setup', () => {
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
-    expect(mockedInput).toHaveBeenCalledTimes(3)
-
-    rmSync('/custom/path/ai-brain', { recursive: true, force: true })
+    expect(mockedInput).toHaveBeenCalledTimes(2)
+    expect(mockedCreateBrain).toHaveBeenCalledWith(
+      expect.objectContaining({
+        basePath: '/custom/path'
+      })
+    )
   })
 
   it('should handle git mode with remote', async () => {
@@ -233,9 +274,6 @@ describe('commands/setup', () => {
     mockedSelect.mockResolvedValueOnce('git')
     mockedInput.mockResolvedValueOnce('https://github.com/repo')
     mockedConfirm.mockResolvedValueOnce(true)
-    mockedConfirm.mockResolvedValueOnce(true)
-    mockedCheckbox.mockResolvedValueOnce([])
-    mockedCheckbox.mockResolvedValueOnce([])
     mockedSelect.mockResolvedValueOnce('skip')
 
     mockedDetectAll.mockResolvedValue([])
@@ -244,16 +282,19 @@ describe('commands/setup', () => {
     mockedEnsureConfigDir.mockImplementation(() => {})
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
-    mockedInitRepo.mockResolvedValue()
-    mockedWriteGitignore.mockResolvedValue()
-
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
-    expect(mockedInitRepo).toHaveBeenCalledTimes(1)
-    expect(mockedWriteGitignore).toHaveBeenCalledTimes(1)
+    expect(mockedInitRepo).not.toHaveBeenCalled()
+    expect(mockedWriteGitignore).not.toHaveBeenCalled()
+    expect(mockedCreateBrain).toHaveBeenCalledWith(
+      expect.objectContaining({
+        useGit: true,
+        gitRemote: 'https://github.com/repo',
+        gitSync: true
+      })
+    )
   })
 
   it('should handle extras selection', async () => {
@@ -275,7 +316,6 @@ describe('commands/setup', () => {
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
@@ -289,8 +329,6 @@ describe('commands/setup', () => {
     mockedInput.mockResolvedValueOnce('ai-brain')
     mockedSelect.mockResolvedValueOnce('current')
     mockedSelect.mockResolvedValueOnce('local')
-    mockedCheckbox.mockResolvedValueOnce([])
-    mockedCheckbox.mockResolvedValueOnce([])
     mockedSelect.mockResolvedValueOnce('brain')
 
     mockedDetectAll.mockResolvedValue([])
@@ -300,13 +338,13 @@ describe('commands/setup', () => {
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
-    expect(mockedCreateBrainFolder).toHaveBeenCalledWith(
+    expect(mockedCreateBrain).toHaveBeenCalledWith(
       expect.objectContaining({
-        includeObsidian: true
+        includeObsidian: true,
+        obsidianDir: null
       })
     )
   })
@@ -318,8 +356,6 @@ describe('commands/setup', () => {
     mockedInput.mockResolvedValueOnce('ai-brain')
     mockedSelect.mockResolvedValueOnce('current')
     mockedSelect.mockResolvedValueOnce('local')
-    mockedCheckbox.mockResolvedValueOnce([])
-    mockedCheckbox.mockResolvedValueOnce([])
     mockedSelect.mockResolvedValueOnce('separate')
     mockedInput.mockResolvedValueOnce('/vault/path')
 
@@ -330,11 +366,16 @@ describe('commands/setup', () => {
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
-    expect(mockedInput).toHaveBeenCalledTimes(3)
+    expect(mockedInput).toHaveBeenCalledTimes(2)
+    expect(mockedCreateBrain).toHaveBeenCalledWith(
+      expect.objectContaining({
+        includeObsidian: true,
+        obsidianDir: '/vault/path'
+      })
+    )
   })
 
   it('should handle duplicate brain id by prompting again', async () => {
@@ -344,35 +385,6 @@ describe('commands/setup', () => {
     mockedInput.mockResolvedValueOnce('ai-brain')
     mockedSelect.mockResolvedValueOnce('current')
     mockedSelect.mockResolvedValueOnce('local')
-    mockedCheckbox.mockResolvedValueOnce([])
-    mockedCheckbox.mockResolvedValueOnce([])
-    mockedSelect.mockResolvedValueOnce('skip')
-    mockedInput.mockResolvedValueOnce('duplicate')
-    mockedInput.mockResolvedValueOnce('unique')
-
-    mockedDetectAll.mockResolvedValue([])
-
-    mockedConfigPath.mockReturnValue('/fake/config/path')
-    mockedEnsureConfigDir.mockImplementation(() => {})
-    mockedIsBrainIdAvailable.mockReturnValueOnce(false).mockReturnValueOnce(true)
-
-    mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
-
-    await run()
-
-    expect(mockedIsBrainIdAvailable).toHaveBeenCalledTimes(2)
-  })
-
-  it('should print summary at end of fresh setup', async () => {
-    mockedExistsSync.mockReturnValue(false)
-    mockedWriteFileSync.mockImplementation(() => {})
-
-    mockedInput.mockResolvedValueOnce('ai-brain')
-    mockedSelect.mockResolvedValueOnce('current')
-    mockedSelect.mockResolvedValueOnce('local')
-    mockedCheckbox.mockResolvedValueOnce([])
-    mockedCheckbox.mockResolvedValueOnce([])
     mockedSelect.mockResolvedValueOnce('skip')
 
     mockedDetectAll.mockResolvedValue([])
@@ -382,7 +394,29 @@ describe('commands/setup', () => {
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
+
+    await run()
+
+    expect(mockedInput).toHaveBeenCalledTimes(1)
+    expect(mockedSelect).toHaveBeenCalledTimes(3)
+  })
+
+  it('should print summary at end of fresh setup', async () => {
+    mockedExistsSync.mockReturnValue(false)
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedInput.mockResolvedValueOnce('ai-brain')
+    mockedSelect.mockResolvedValueOnce('current')
+    mockedSelect.mockResolvedValueOnce('local')
+    mockedSelect.mockResolvedValueOnce('skip')
+
+    mockedDetectAll.mockResolvedValue([])
+
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+    mockedIsBrainIdAvailable.mockReturnValue(true)
+
+    mockedCreateVenv.mockResolvedValue()
 
     await run()
 
@@ -403,13 +437,9 @@ describe('commands/setup', () => {
     mockedInput.mockResolvedValueOnce('https://github.com/repo') // remote URL
     mockedConfirm.mockResolvedValueOnce(true) // commit cache
     mockedConfirm.mockResolvedValueOnce(true) // git sync
-    mockedCheckbox.mockResolvedValueOnce(['office']) // extras
     mockedDetectAll.mockResolvedValue([
       { name: 'Claude', detected: true, configHint: '~/.claude' }
     ] as DetectedPlatform[])
-    mockedCheckbox.mockResolvedValueOnce([
-      { name: 'Claude', detected: true, configHint: '~/.claude' }
-    ] as DetectedPlatform[]) // selected platforms
     mockedSelect.mockResolvedValueOnce('brain') // obsidian
 
     mockedConfigPath.mockReturnValue('/fake/config/path')
@@ -417,7 +447,6 @@ describe('commands/setup', () => {
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
@@ -436,9 +465,7 @@ describe('commands/setup', () => {
     mockedInput.mockResolvedValueOnce('')
     mockedConfirm.mockResolvedValueOnce(false)
     mockedConfirm.mockResolvedValueOnce(false)
-    mockedCheckbox.mockResolvedValueOnce([])
     mockedDetectAll.mockResolvedValue([])
-    mockedCheckbox.mockResolvedValueOnce([])
     mockedSelect.mockResolvedValueOnce('skip')
 
     mockedConfigPath.mockReturnValue('/fake/config/path')
@@ -446,7 +473,6 @@ describe('commands/setup', () => {
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
@@ -472,7 +498,6 @@ describe('commands/setup', () => {
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await expect(run()).resolves.not.toThrow()
   })
@@ -484,8 +509,6 @@ describe('commands/setup', () => {
     mockedInput.mockResolvedValueOnce('ai-brain')
     mockedSelect.mockResolvedValueOnce('current')
     mockedSelect.mockResolvedValueOnce('local')
-    mockedCheckbox.mockResolvedValueOnce([])
-    mockedCheckbox.mockResolvedValueOnce([])
     mockedSelect.mockResolvedValueOnce('separate')
     mockedInput.mockResolvedValueOnce('/my/vault')
 
@@ -496,7 +519,6 @@ describe('commands/setup', () => {
     mockedIsBrainIdAvailable.mockReturnValue(true)
 
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
@@ -550,18 +572,17 @@ describe('commands/setup', () => {
     mockedSelect.mockResolvedValueOnce('skip')
 
     mockedDetectAll.mockResolvedValue([
-      { name: 'Claude', detected: true, configHint: '~/.claude' }
+      { name: 'Claude', key: 'claude', detected: true, configHint: '~/.claude' }
     ] as DetectedPlatform[])
 
     mockedConfigPath.mockReturnValue('/fake/config/path')
     mockedEnsureConfigDir.mockImplementation(() => {})
     mockedIsBrainIdAvailable.mockReturnValue(true)
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Found AI tools'))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Claude'))
   })
 
   it('should fall back to detected tools when readConfig fails in newMachineSetup', async () => {
@@ -573,7 +594,7 @@ describe('commands/setup', () => {
     })
 
     mockedDetectAll.mockResolvedValue([
-      { name: 'Codex', detected: true, configHint: '~/.codex' }
+      { name: 'Codex', key: 'codex', detected: true, configHint: '~/.codex' }
     ] as DetectedPlatform[])
 
     mockedSelect.mockResolvedValue('brain')
@@ -582,14 +603,13 @@ describe('commands/setup', () => {
     mockedEnsureConfigDir.mockImplementation(() => {})
     mockedIsBrainIdAvailable.mockReturnValue(true)
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     await run()
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Found AI tools'))
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('codex'))
   })
 
-  it('should propagate error when connectBrain fails in freshSetup', async () => {
+  it('should propagate error when createBrainMCP fails in freshSetup', async () => {
     mockedExistsSync.mockReturnValue(false)
     mockedWriteFileSync.mockImplementation(() => {})
 
@@ -598,8 +618,8 @@ describe('commands/setup', () => {
     mockedSelect.mockResolvedValueOnce('git')
     mockedInput.mockResolvedValueOnce('')
     mockedConfirm.mockResolvedValueOnce(false)
-    mockedConfirm.mockResolvedValueOnce(false)
-    mockedCheckbox.mockResolvedValueOnce([])
+    mockedSelect.mockResolvedValueOnce('skip')
+
     mockedDetectAll.mockResolvedValue([
       {
         name: 'Claude',
@@ -609,30 +629,19 @@ describe('commands/setup', () => {
         configHint: '~/.claude'
       }
     ] as unknown as DetectedPlatform[])
-    mockedCheckbox.mockResolvedValueOnce([
-      {
-        name: 'Claude',
-        detected: true,
-        key: 'claude',
-        module: { patch: vi.fn(), installAlwaysOn: vi.fn() },
-        configHint: '~/.claude'
-      }
-    ] as unknown as DetectedPlatform[])
-    mockedSelect.mockResolvedValueOnce('skip')
 
     mockedConfigPath.mockReturnValue('/fake/config/path')
     mockedEnsureConfigDir.mockImplementation(() => {})
     mockedIsBrainIdAvailable.mockReturnValue(true)
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     const testError = new Error('MCP config failed')
-    mockedConnectBrain.mockRejectedValueOnce(testError)
+    mockedCreateBrain.mockRejectedValueOnce(testError)
 
     await expect(run()).rejects.toThrow('MCP config failed')
   })
 
-  it('should propagate error when connectBrain fails in newMachineSetup', async () => {
+  it('should propagate error when createBrainMCP fails in newMachineSetup', async () => {
     mockedIsExistingBrain.mockReturnValue(true)
     mockedWriteFileSync.mockImplementation(() => {})
     mockedReadConfig.mockReturnValue({
@@ -658,10 +667,9 @@ describe('commands/setup', () => {
     mockedEnsureConfigDir.mockImplementation(() => {})
     mockedIsBrainIdAvailable.mockReturnValue(true)
     mockedCreateVenv.mockResolvedValue()
-    mockedCreateBrainFolder.mockResolvedValue('/tmp/brain')
 
     const testError = new Error('MCP config failed')
-    mockedConnectBrain.mockRejectedValueOnce(testError)
+    mockedCreateBrainMCP.mockRejectedValueOnce(testError)
 
     await expect(run()).rejects.toThrow('MCP config failed')
   })

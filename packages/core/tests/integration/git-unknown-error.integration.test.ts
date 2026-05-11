@@ -1,9 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { GitSyncError } from '@ai-brain/core/errors'
 import { createBrainWithConfig, cleanupBrain } from '../helpers'
-import { writeFileSync } from 'fs'
 import { execSync } from 'child_process'
-import { join } from 'path'
 
 vi.mock('execa', () => ({
   execa: vi.fn().mockRejectedValue(new Error('permission denied: unknown error'))

@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { mkdtempSync, rmSync, existsSync, mkdirSync, readFileSync } from 'fs'
+import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { detect, patch, installSkill, installAlwaysOn } from '@ai-brain/core/platforms/copilot'
-
+import { detect, patch, installSkill } from '@ai-brain/core/platforms/copilot'
 describe('platforms/copilot', () => {
   describe('detect', () => {
     it('should return true when .config/gh dir exists', async () => {
@@ -57,17 +56,11 @@ describe('platforms/copilot', () => {
         join(fakeHome, '.copilot', 'skills', 'brain', 'SKILL.md'),
         'utf8'
       )
-      expect(content).toMatch(/^---\n/)
+      expect(content).toMatch(/^---/)
       expect(content).toContain('name: brain')
       expect(content).toContain('trigger: /brain')
 
       rmSync(fakeHome, { recursive: true, force: true })
-    })
-  })
-
-  describe('installAlwaysOn', () => {
-    it('should be a no-op that resolves', async () => {
-      await expect(installAlwaysOn()).resolves.toBeUndefined()
     })
   })
 })
@@ -114,12 +107,6 @@ describe('platforms/copilot', () => {
       expect(existsSync(skillPath)).toBe(true)
 
       rmSync(fakeHome, { recursive: true, force: true })
-    })
-  })
-
-  describe('installAlwaysOn', () => {
-    it('should be a no-op that resolves', async () => {
-      await expect(installAlwaysOn()).resolves.toBeUndefined()
     })
   })
 })

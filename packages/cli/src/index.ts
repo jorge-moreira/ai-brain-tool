@@ -3,6 +3,14 @@ import { program } from 'commander'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { run as runSetup } from './commands/setup'
+import { run as runUpdate } from './commands/update'
+import { run as runStatus } from './commands/status'
+import { run as runTemplatesList } from './commands/templates/list'
+import { run as runTemplatesAdd } from './commands/templates/add'
+import { run as runUpgrade } from './commands/upgrade'
+import { run as runList } from './commands/list'
+import { run as runSetupObsidian } from './commands/setup-obsidian'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pkg = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf8')) as {
@@ -19,8 +27,7 @@ program
   .description('Run the interactive setup wizard (first-time use or new machine)')
   .option('--non-interactive', 'Install global dependencies with defaults, skip brain creation')
   .action(async (options: { nonInteractive?: boolean }) => {
-    const { run } = await import('./commands/setup.js')
-    await run(options)
+    await runSetup(options)
   })
 
 program
@@ -29,8 +36,7 @@ program
   .argument('[brain-id]', 'Brain identifier to use')
   .option('--brain-id <id>', 'Brain identifier to use')
   .action(async (brainId, options) => {
-    const { run } = await import('./commands/update.js')
-    await run([brainId].filter(Boolean), options)
+    await runUpdate([brainId].filter(Boolean), options)
   })
 
 program
@@ -39,8 +45,7 @@ program
   .argument('[brain-id]', 'Brain identifier to use')
   .option('--brain-id <id>', 'Brain identifier to use')
   .action(async (brainId, options) => {
-    const { run } = await import('./commands/status.js')
-    await run([brainId].filter(Boolean), options)
+    await runStatus([brainId].filter(Boolean), options)
   })
 
 const templates = program
@@ -53,8 +58,7 @@ templates
   .argument('[brain-id]', 'Brain identifier to use')
   .option('--brain-id <id>', 'Brain identifier to use')
   .action(async (brainId, options) => {
-    const { run } = await import('./commands/templates/list.js')
-    await run([brainId].filter(Boolean), options)
+    await runTemplatesList([brainId].filter(Boolean), options)
   })
 
 templates
@@ -63,8 +67,7 @@ templates
   .argument('[brain-id]', 'Brain identifier to use')
   .option('--brain-id <id>', 'Brain identifier to use')
   .action(async (brainId, options) => {
-    const { run } = await import('./commands/templates/add.js')
-    await run([brainId].filter(Boolean), options)
+    await runTemplatesAdd([brainId].filter(Boolean), options)
   })
 
 program
@@ -73,16 +76,14 @@ program
   .argument('[brain-id]', 'Brain identifier to use')
   .option('--brain-id <id>', 'Brain identifier to use')
   .action(async (brainId, options) => {
-    const { run } = await import('./commands/upgrade.js')
-    await run([brainId].filter(Boolean), options || {})
+    await runUpgrade([brainId].filter(Boolean), options || {})
   })
 
 program
   .command('list')
   .description('List all configured brains')
   .action(async () => {
-    const { run } = await import('./commands/list.js')
-    await run()
+    await runList()
   })
 
 program
@@ -92,10 +93,9 @@ program
   .option('--brain-id <id>', 'Brain identifier to use')
   .option('-u, --update', 'update existing vault configuration')
   .action(async (brainId, options: { brainId?: string; update?: boolean }) => {
-    const { run } = await import('./commands/setup-obsidian.js')
     const args = [brainId].filter(Boolean)
     if (options.update) args.push('--update')
-    await run(args, options)
+    await runSetupObsidian(args, options)
   })
 
 program.parse()

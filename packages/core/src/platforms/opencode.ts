@@ -3,11 +3,12 @@ import { homedir } from 'os'
 import { existsSync } from 'fs'
 import {
   patchJsonConfig,
+  unpatchJsonConfig,
   pythonBin,
   graphJson,
   BRAIN_SKILL_MD,
   installSkillFile
-} from './shared.js'
+} from './shared'
 
 const BRAIN_SKILL_MARKER = `---
 name: brain
@@ -23,9 +24,11 @@ export function detect(homeDir: string = homedir()): boolean {
 
 export async function patch({
   brainPath,
+  brainId,
   homeDir = homedir()
 }: {
   brainPath: string
+  brainId: string
   homeDir?: string
 }): Promise<void> {
   const configDir = join(homeDir, '.config', 'opencode')
@@ -35,11 +38,27 @@ export async function patch({
     configPath: configPath,
     configKey: 'mcp',
     serverEntry: {
-      'ai-brain': {
+      [`ai-brain-${brainId}`]: {
         type: 'local',
         command: [pythonBin(brainPath), '-m', 'graphify.serve', graphJson(brainPath)]
       }
     }
+  })
+}
+
+export async function unpatch({
+  brainId,
+  homeDir = homedir()
+}: {
+  brainId: string
+  homeDir?: string
+}): Promise<void> {
+  const configDir = join(homeDir, '.config', 'opencode')
+  const configPath = join(configDir, 'opencode.json')
+  unpatchJsonConfig({
+    configPath,
+    configKey: 'mcp',
+    serverName: `ai-brain-${brainId}`
   })
 }
 
@@ -52,8 +71,4 @@ export async function installSkill({
     filename: 'SKILL.md',
     content: BRAIN_SKILL_MARKER + BRAIN_SKILL_MD
   })
-}
-
-export async function installAlwaysOn(): Promise<void> {
-  // Skills are used instead of always-on rules
 }

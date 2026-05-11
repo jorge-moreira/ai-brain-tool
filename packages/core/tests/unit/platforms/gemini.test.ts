@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { detect, patch, installSkill, installAlwaysOn } from '@ai-brain/core/platforms/gemini'
-
+import { detect, patch, installSkill } from '@ai-brain/core/platforms/gemini'
 describe('platforms/gemini', () => {
   describe('detect', () => {
     it('should return true when .gemini dir exists', async () => {
@@ -28,14 +27,14 @@ describe('platforms/gemini', () => {
     it('should create settings.json with ai-brain mcp entry', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'gemini-test-'))
 
-      await patch({ brainPath: '/tmp/my-brain', homeDir: fakeHome })
+      await patch({ brainPath: '/tmp/my-brain', brainId: 'test-brain', homeDir: fakeHome })
 
       const settingsPath = join(fakeHome, '.gemini', 'settings.json')
       expect(existsSync(settingsPath)).toBe(true)
       const settings = JSON.parse(readFileSync(settingsPath, 'utf8')) as {
         mcpServers: Record<string, { type?: string }>
       }
-      expect(settings.mcpServers['ai-brain']).toBeDefined()
+      expect(settings.mcpServers['ai-brain-test-brain']).toBeDefined()
 
       rmSync(fakeHome, { recursive: true, force: true })
     })
@@ -51,12 +50,6 @@ describe('platforms/gemini', () => {
       expect(existsSync(skillPath)).toBe(true)
 
       rmSync(fakeHome, { recursive: true, force: true })
-    })
-  })
-
-  describe('installAlwaysOn', () => {
-    it('should be a no-op that resolves', async () => {
-      await expect(installAlwaysOn()).resolves.toBeUndefined()
     })
   })
 })

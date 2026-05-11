@@ -1,7 +1,7 @@
 import { join } from 'path'
 import { homedir } from 'os'
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { pythonBin, graphJson, BRAIN_SKILL_MD, installSkillFile } from './shared.js'
+import { pythonBin, graphJson, BRAIN_SKILL_MD, installSkillFile, unpatchJsonConfig } from './shared'
 
 export function detect(homeDir: string = homedir()): boolean {
   return existsSync(join(homeDir, '.codex'))
@@ -42,6 +42,18 @@ export async function installSkill({
   })
 }
 
-export async function installAlwaysOn(): Promise<void> {
-  // Skills are used instead of always-on rules
+export async function unpatch({
+  brainId,
+  homeDir = homedir()
+}: {
+  brainId: string
+  homeDir?: string
+}): Promise<void> {
+  const cursorDir = join(homeDir, '.cursor')
+  const mcpPath = join(cursorDir, 'mcp.json')
+  unpatchJsonConfig({
+    configPath: mcpPath,
+    configKey: 'mcpServers',
+    serverName: `ai-brain-${brainId}`
+  })
 }

@@ -51,6 +51,7 @@ export type AppRPCType = {
           gitSync: boolean
           configureObsidian: boolean
           obsidianDir: string | null
+          openInObsidian?: boolean
         }
         response: { success: boolean; error?: string }
       }
@@ -59,7 +60,7 @@ export type AppRPCType = {
         response: { success: boolean; brainId?: string; error?: string }
       }
       'delete-brain': {
-        params: { brainId: string }
+        params: { brainId: string; deleteFolder?: boolean }
         response: { success: boolean; error?: string }
       }
       'toggle-sync': {

@@ -1,16 +1,16 @@
 import { homedir } from 'os'
-import * as claude from './claude.js'
-import * as opencode from './opencode.js'
-import * as cursor from './cursor.js'
-import * as gemini from './gemini.js'
-import * as copilot from './copilot.js'
-import * as codex from './codex.js'
+import * as claude from './claude'
+import * as opencode from './opencode'
+import * as cursor from './cursor'
+import * as gemini from './gemini'
+import * as copilot from './copilot'
+import * as codex from './codex'
 
 interface PlatformModule {
   detect: (homeDir: string) => boolean
-  patch: (options: { brainPath: string; homeDir: string }) => Promise<void>
+  patch: (options: { brainPath: string; brainId: string; homeDir: string }) => Promise<void>
+  unpatch: (options: { brainId: string; homeDir: string }) => Promise<void>
   installSkill: (options: { homeDir: string }) => Promise<void>
-  installAlwaysOn: (options: { brainPath: string; homeDir: string }) => Promise<void>
 }
 interface Platform {
   name: string
@@ -21,12 +21,6 @@ interface Platform {
 
 interface DetectedPlatform extends Platform {
   detected: boolean
-}
-
-export interface ConfigureSelectedOptions {
-  selected: DetectedPlatform[]
-  brainPath: string
-  homeDir?: string
 }
 
 export type { DetectedPlatform }
@@ -59,26 +53,18 @@ export async function installSkills({
   }
 }
 
-export async function connectBrain({
-  selected,
+export async function createBrainMCP({
+  configuredPlatforms,
   brainPath,
+  brainId,
   homeDir = homedir()
 }: {
-  selected: DetectedPlatform[]
+  configuredPlatforms: DetectedPlatform[]
   brainPath: string
+  brainId: string
   homeDir?: string
 }): Promise<void> {
-  for (const platform of selected) {
-    await platform.module.patch({ brainPath, homeDir })
-    await platform.module.installAlwaysOn({ brainPath, homeDir })
+  for (const platform of configuredPlatforms) {
+    await platform.module.patch({ brainPath, brainId, homeDir })
   }
-}
-
-export async function configureSelected({
-  selected,
-  brainPath,
-  homeDir = homedir()
-}: ConfigureSelectedOptions): Promise<void> {
-  await installSkills({ selected, homeDir })
-  await connectBrain({ selected, brainPath, homeDir })
 }

@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { detect, patch, installSkill, installAlwaysOn } from '@ai-brain/core/platforms/codex'
-
+import { detect, patch, installSkill } from '@ai-brain/core/platforms/codex'
 describe('platforms/codex', () => {
   describe('detect', () => {
     it('should return true when .codex dir exists', async () => {
@@ -64,12 +63,6 @@ describe('platforms/codex', () => {
       expect(existsSync(skillPath)).toBe(true)
 
       rmSync(fakeHome, { recursive: true, force: true })
-    })
-  })
-
-  describe('installAlwaysOn', () => {
-    it('should be a no-op that resolves', async () => {
-      await expect(installAlwaysOn()).resolves.toBeUndefined()
     })
   })
 })

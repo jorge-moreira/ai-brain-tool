@@ -89,7 +89,7 @@ export function ImportBrainDialog({
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting || !importPath}
-            className="px-5 py-2.5 bg-gradient-to-br from-primary to-primary-container text-primary-foreground rounded-md text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-md text-sm font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Importing...' : 'Import'}
           </button>

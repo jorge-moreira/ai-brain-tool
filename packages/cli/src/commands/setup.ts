@@ -1,14 +1,13 @@
 import { input, select, confirm } from '@inquirer/prompts'
 import chalk from 'chalk'
 import ora from 'ora'
-import { join, resolve, basename } from 'path'
+import { resolve, basename } from 'path'
 import { execSync } from 'child_process'
 import { homedir } from 'os'
 
-import { createBrainFolder, writeBrainConfig } from '@ai-brain/core/scaffold'
 import { createGlobalVenv, globalVenvExists, ensureUv } from '@ai-brain/core/graphify'
-import { detectAll, connectBrain, type DetectedPlatform } from '@ai-brain/core/index'
-import { initRepo, writeGitignore } from '@ai-brain/core/git'
+import { detectAll, createBrainMCP } from '@ai-brain/core/platforms'
+import { createBrain } from '@ai-brain/core/brains'
 import {
   readConfig,
   writeConfig,
@@ -19,7 +18,6 @@ import {
   isInstallationComplete,
   createInitialConfig
 } from '@ai-brain/core/config'
-
 
 function section(label: string): void {
   console.log(chalk.dim('\n  ─── ' + label + ' ' + '─'.repeat(Math.max(0, 40 - label.length))))
@@ -167,8 +165,6 @@ async function freshSetup(): Promise<void> {
     baseDir = resolve(customPath)
   }
 
-  let brainPath: string
-
   section('Git')
 
   const gitMode = await select({
@@ -180,7 +176,6 @@ async function freshSetup(): Promise<void> {
   })
 
   let remoteUrl: string | null = null
-  let commitCache = true
   let gitSync = false
 
   if (gitMode === 'git') {
@@ -189,11 +184,6 @@ async function freshSetup(): Promise<void> {
       default: ''
     })
     remoteUrl = remoteUrl.trim() || null
-
-    commitCache = await confirm({
-      message: 'Commit extraction cache to git? (saves AI tokens on every machine — recommended)',
-      default: true
-    })
 
     gitSync = await confirm({
       message: 'Auto-sync after /brain update? (commit + push after each graph rebuild)',
@@ -204,17 +194,20 @@ async function freshSetup(): Promise<void> {
   section('Scaffold')
 
   let obsidianDir: string | null = null
+  let obsidianChoice: 'brain' | 'separate' | 'skip' = 'skip'
 
-  const spinnerScaffold = ora('Creating brain folder...').start()
-  brainPath = await createBrainFolder({ basePath: baseDir, name, includeObsidian: false })
-  writeBrainConfig({ brainPath, gitSync, obsidianDir })
-  spinnerScaffold.succeed(`Created ${brainPath}`)
+  const obsidianChoiceAnswer = await select({
+    message: 'Do you use Obsidian?',
+    choices: [
+      { name: 'Yes, use this brain folder as my Obsidian vault', value: 'brain' },
+      { name: 'Yes, I have a separate Obsidian vault', value: 'separate' },
+      { name: 'No / Skip', value: 'skip' }
+    ]
+  })
+  obsidianChoice = obsidianChoiceAnswer as 'brain' | 'separate' | 'skip'
 
-  if (gitMode === 'git') {
-    const spinnerGit = ora('Initializing git repo...').start()
-    await initRepo({ brainPath, remoteUrl: remoteUrl ?? undefined })
-    await writeGitignore({ brainPath, commitCache })
-    spinnerGit.succeed('Initialized git repo')
+  if (obsidianChoice === 'separate') {
+    obsidianDir = await input({ message: 'Path to your Obsidian vault:' })
   }
 
   section('AI tools')
@@ -238,48 +231,25 @@ async function freshSetup(): Promise<void> {
     console.log(chalk.green(`\n  Found AI tools: ${aiTools.join(', ')}\n`))
   }
 
-  section('Obsidian')
-
-  const obsidianChoice = await select({
-    message: 'Do you use Obsidian?',
-    choices: [
-      { name: 'Yes, use this brain folder as my Obsidian vault', value: 'brain' },
-      { name: 'Yes, I have a separate Obsidian vault', value: 'separate' },
-      { name: 'No / Skip', value: 'skip' }
-    ]
+  const spinnerCreate = ora('Creating brain...').start()
+  const result = await createBrain({
+    name,
+    basePath: baseDir,
+    includeObsidian: obsidianChoice !== 'skip',
+    obsidianDir: obsidianChoice === 'brain' ? null : obsidianDir,
+    gitSync,
+    useGit: gitMode === 'git',
+    gitRemote: remoteUrl ?? undefined
   })
 
-  if (obsidianChoice === 'brain') {
-    const spinnerObs = ora('Configuring Obsidian...').start()
-    await createBrainFolder({ basePath: baseDir, name, includeObsidian: true })
-    obsidianDir = brainPath
-    spinnerObs.succeed('Configured Obsidian vault')
-  } else if (obsidianChoice === 'separate') {
-    const vaultPath = await input({ message: 'Path to your Obsidian vault:' })
-    const spinnerObs = ora('Configuring Obsidian...').start()
-    await createBrainFolder({ basePath: baseDir, name, includeObsidian: true })
-    obsidianDir = vaultPath
-    spinnerObs.succeed(`Configured Obsidian (vault at ${vaultPath})`)
+  if (result.success && result.brainPath) {
+    spinnerCreate.succeed(`Created ${result.brainPath}`)
+  } else {
+    spinnerCreate.fail('Failed to create brain')
+    throw new Error(result.error)
   }
 
-  writeBrainConfig({ brainPath, gitSync, obsidianDir })
-
-  const brainId = await askBrainId(name)
-
-  addBrain(brainId, brainPath)
-
-  // Configure MCP for selected AI tools (connect brain - skills already installed)
-  if (selected.length > 0) {
-    const spinnerMcp = ora('Configuring AI tools...').start()
-    try {
-      await connectBrain({ selected, brainPath, homeDir: homedir() })
-      spinnerMcp.succeed(`Configured: ${aiTools.join(', ')}`)
-    } catch (error) {
-      spinnerMcp.fail('Failed to configure AI tools')
-      throw error
-    }
-  }
-
+  const brainPath = result.brainPath
   const globalExtras = readConfig().graphifyyExtras || []
 
   printSummary({
@@ -345,7 +315,12 @@ async function newMachineSetup(brainPath: string): Promise<void> {
     if (selected.length > 0) {
       const spinnerMcp = ora('Configuring AI tools...').start()
       try {
-        await connectBrain({ selected, brainPath, homeDir: homedir() })
+        await createBrainMCP({
+          configuredPlatforms: selected,
+          brainPath,
+          brainId,
+          homeDir: homedir()
+        })
         spinnerMcp.succeed(`Configured: ${aiTools.join(', ')}`)
       } catch (error) {
         spinnerMcp.fail('Failed to configure AI tools')
@@ -365,7 +340,7 @@ interface PrintSummaryOptions {
   remoteUrl: string | null
   gitSync: boolean
   extras: string[]
-  selected: DetectedPlatform[]
+  selected: { name: string; key: string }[]
   obsidianChoice: string
   aiTools: string[]
 }

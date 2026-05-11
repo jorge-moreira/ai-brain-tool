@@ -10,14 +10,14 @@ const mockSetupObsidianRun = vi.fn().mockResolvedValue(undefined)
 const mockTemplatesAddRun = vi.fn().mockResolvedValue(undefined)
 const mockTemplatesListRun = vi.fn().mockResolvedValue(undefined)
 
-vi.mock('../../src/commands/setup.js', () => ({ run: mockSetupRun }))
-vi.mock('../../src/commands/update.js', () => ({ run: mockUpdateRun }))
-vi.mock('../../src/commands/status.js', () => ({ run: mockStatusRun }))
-vi.mock('../../src/commands/upgrade.js', () => ({ run: mockUpgradeRun }))
-vi.mock('../../src/commands/list.js', () => ({ run: mockListRun }))
-vi.mock('../../src/commands/setup-obsidian.js', () => ({ run: mockSetupObsidianRun }))
-vi.mock('../../src/commands/templates/add.js', () => ({ run: mockTemplatesAddRun }))
-vi.mock('../../src/commands/templates/list.js', () => ({ run: mockTemplatesListRun }))
+vi.mock('../../src/commands/setup', () => ({ run: mockSetupRun }))
+vi.mock('../../src/commands/update', () => ({ run: mockUpdateRun }))
+vi.mock('../../src/commands/status', () => ({ run: mockStatusRun }))
+vi.mock('../../src/commands/upgrade', () => ({ run: mockUpgradeRun }))
+vi.mock('../../src/commands/list', () => ({ run: mockListRun }))
+vi.mock('../../src/commands/setup-obsidian', () => ({ run: mockSetupObsidianRun }))
+vi.mock('../../src/commands/templates/add', () => ({ run: mockTemplatesAddRun }))
+vi.mock('../../src/commands/templates/list', () => ({ run: mockTemplatesListRun }))
 
 describe('cli entry point (src/index.ts)', () => {
   let program: Command

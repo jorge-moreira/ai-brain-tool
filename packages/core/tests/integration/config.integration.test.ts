@@ -219,7 +219,7 @@ describe('config integration', () => {
         aiTools: [],
         brains: {}
       })
-      expect(() => removeBrain('ghost-brain')).toThrow(BrainNotFoundError)
+      await expect(removeBrain('ghost-brain')).rejects.toThrow(BrainNotFoundError)
     })
   })
 

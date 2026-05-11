@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter
-} from '@ai-brain/ui/components/card'
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@ai-brain/ui/components/card'
 import { Icons } from '@ai-brain/ui/components/icons'
 import { getBrainIcon, DEFAULT_BRAIN_ICON, DEFAULT_BRAIN_COLOR } from '@/components/atoms/Icons'
 import { IconButton } from '@/components/atoms/IconButton'
@@ -14,7 +8,6 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuSeparator,
   ContextMenuSub,
   ContextMenuSubContent,
   ContextMenuSubTrigger,
@@ -47,7 +40,7 @@ export function BrainCard({
   onAddTemplate,
   formatSize
 }: BrainCardProps) {
-  const BrainIcon  = getBrainIcon(brain.icon ?? DEFAULT_BRAIN_ICON)
+  const BrainIcon = getBrainIcon(brain.icon ?? DEFAULT_BRAIN_ICON)
   const brainColor = brain.iconColor ?? DEFAULT_BRAIN_COLOR
   return (
     <ContextMenu>
@@ -135,9 +128,10 @@ export function BrainCard({
                       icon={<Icons.sync className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />}
                       onClick={() => !isSyncing && onSync(brain.id)}
                       disabled={isSyncing}
-                      className={isSyncing
-                        ? 'bg-secondary border-secondary text-secondary-foreground hover:bg-secondary hover:border-secondary'
-                        : 'bg-[#2ecc71] border-[#2ecc71] text-[#0b1321] hover:bg-[#27ae60] hover:border-[#27ae60]'
+                      className={
+                        isSyncing
+                          ? 'bg-secondary border-secondary text-secondary-foreground hover:bg-secondary hover:border-secondary'
+                          : 'bg-[#2ecc71] border-[#2ecc71] text-[#0b1321] hover:bg-[#27ae60] hover:border-[#27ae60]'
                       }
                     />
                   </TooltipTrigger>
@@ -152,38 +146,60 @@ export function BrainCard({
         <ContextMenuSub>
           <ContextMenuSubTrigger className="app-context-menu-item w-full data-[state=open]:bg-surface-container-high">
             <Icons.folder className="w-4 h-4" data-icon />
-            Open
+            <span className="flex-1">Open</span>
           </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="app-context-menu w-[12.5rem]" sideOffset={8} alignOffset={-4}>
-            <ContextMenuItem className="app-context-menu-item" onClick={() => onOpenFolder(brain.id)}>
+          <ContextMenuSubContent
+            className="app-context-menu w-[12.5rem]"
+            sideOffset={8}
+            alignOffset={-4}
+          >
+            <ContextMenuItem
+              className="app-context-menu-item"
+              onClick={() => onOpenFolder(brain.id)}
+            >
               <Icons.folder className="w-4 h-4" data-icon />
               Folder
             </ContextMenuItem>
-            <ContextMenuItem className="app-context-menu-item" onClick={() => onOpenObsidian(brain.id)} disabled={!brain.obsidianConfigured}>
+            <ContextMenuItem
+              className="app-context-menu-item"
+              onClick={() => onOpenObsidian(brain.id)}
+              disabled={!brain.obsidianConfigured}
+            >
               <Icons.obsidian className="w-4 h-4" data-icon />
               Obsidian
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
-        <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger className="app-context-menu-item w-full data-[state=open]:bg-surface-container-high">
             <Icons.plus className="w-4 h-4" data-icon />
-            Add Template
+            <span className="flex-1">Add Template</span>
           </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="app-context-menu w-[12.5rem]" sideOffset={8} alignOffset={-4}>
-            <ContextMenuItem className="app-context-menu-item" onClick={() => onAddTemplate(brain.id, 'obsidian')}>
+          <ContextMenuSubContent
+            className="app-context-menu w-[12.5rem]"
+            sideOffset={8}
+            alignOffset={-4}
+          >
+            <ContextMenuItem
+              className="app-context-menu-item"
+              onClick={() => onAddTemplate(brain.id, 'obsidian')}
+            >
               <Icons.obsidian className="w-4 h-4" data-icon />
               Obsidian
             </ContextMenuItem>
-            <ContextMenuItem className="app-context-menu-item" onClick={() => onAddTemplate(brain.id, 'webclipper')}>
+            <ContextMenuItem
+              className="app-context-menu-item"
+              onClick={() => onAddTemplate(brain.id, 'webclipper')}
+            >
               <Icons.globe className="w-4 h-4" data-icon />
               WebClipper
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
-        <ContextMenuSeparator />
-        <ContextMenuItem className="app-context-menu-item destructive" onClick={() => onDelete(brain.id)}>
+        <ContextMenuItem
+          className="app-context-menu-item destructive"
+          onClick={() => onDelete(brain.id)}
+        >
           <Icons.trash className="w-4 h-4" data-icon />
           Delete Brain
         </ContextMenuItem>

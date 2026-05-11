@@ -8,34 +8,37 @@ import Electrobun, {
   type ApplicationMenuItemConfig
 } from 'electrobun/bun'
 import { detectPython, ensureUv, createGlobalVenv, globalVenvExists } from '@ai-brain/core/graphify'
-import { detectAll, installSkills } from '@ai-brain/core/platforms'
+import { createBrain, importBrain, removeBrain } from '@ai-brain/core/brains'
+import { readBrainConfig, resolveBrain } from '@ai-brain/core/config/brains'
 import {
   readConfig,
   updateConfig,
-  addBrain,
-  importBrain,
-  removeBrain,
   isInstallationComplete,
-  readBrainConfig,
-  resolveBrain,
   toggleSyncById,
   getBrainSize,
   countNotes,
   clearGraphifyCacheById,
   getBrainSizeById,
-  countNotesById
+  countNotesById,
+  detectAll,
+  installSkills
 } from '@ai-brain/core'
-import { createBrainFolder, writeBrainConfig } from '@ai-brain/core/scaffold'
-import { initRepo, writeGitignore } from '@ai-brain/core/git'
 import { updateBrainById } from '@ai-brain/core/update'
 import { homedir } from 'os'
 import { exec, execSync } from 'child_process'
 import { promisify } from 'util'
-import { basename, join } from 'path'
+import { join } from 'path'
 import { mkdirSync, readFileSync, writeFileSync } from 'fs'
 import type { AppRPCType, BrainInfo } from '../shared/rpc-types'
 
 const execAsync = promisify(exec)
+
+function expandTilde(filePath: string): string {
+  if (filePath.startsWith('~/') || filePath === '~') {
+    return join(homedir(), filePath.slice(1))
+  }
+  return filePath
+}
 
 const DEV_SERVER_PORT = 5173
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`
@@ -270,65 +273,46 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
         gitRemote,
         gitSync,
         configureObsidian,
-        obsidianDir
+        obsidianDir,
+        openInObsidian
       }) => {
-        try {
-          const brainPath = await createBrainFolder({
-            basePath: path,
-            name,
-            includeObsidian: configureObsidian
-          })
-          const finalObsidianDir =
-            configureObsidian && obsidianDir === ''
-              ? brainPath
-              : configureObsidian
-                ? obsidianDir
-                : null
-          writeBrainConfig({ brainPath, gitSync, obsidianDir: finalObsidianDir })
+        const result = await createBrain({
+          name,
+          basePath: path,
+          includeObsidian: configureObsidian,
+          obsidianDir,
+          gitSync,
+          useGit,
+          gitRemote
+        })
 
-          // Setup git if requested
-          if (useGit) {
-            await initRepo({ brainPath, remoteUrl: gitRemote })
-            await writeGitignore({ brainPath, commitCache: true })
-          }
-
-          // Add to config
-          addBrain(name, brainPath)
-
-          return { success: true }
-        } catch (error) {
-          return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
+        if (result.success && openInObsidian && configureObsidian) {
+          const brainPath = result.brainPath || path
+          const finalObsidianPath = obsidianDir && obsidianDir !== '' ? obsidianDir : brainPath
+          try {
+            if (process.platform === 'darwin') {
+              await execAsync(`open -a Obsidian "${finalObsidianPath}"`)
+            } else if (process.platform === 'win32') {
+              await execAsync(
+                `start obsidian://open?vault=${encodeURIComponent(finalObsidianPath)}`
+              )
+            } else {
+              await execAsync(`obsidian://open?vault=${encodeURIComponent(finalObsidianPath)}`)
+            }
+          } catch (err) {
+            console.error('[create-brain] Failed to open Obsidian:', err)
           }
         }
+
+        return result
       },
       'import-brain': async ({ path }) => {
-        try {
-          const brainId = importBrain(path)
-          return { success: true, brainId }
-        } catch (error) {
-          return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          }
-        }
+        const result = await importBrain(path)
+        return result
       },
-      'delete-brain': async ({ brainId }) => {
-        try {
-          // Remove from config
-          removeBrain(brainId)
-
-          // Note: We don't delete the actual folder, just remove from config
-          // User can manually delete the folder if needed
-
-          return { success: true }
-        } catch (error) {
-          return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          }
-        }
+      'delete-brain': async ({ brainId, deleteFolder = false }) => {
+        const result = await removeBrain(brainId, deleteFolder)
+        return result
       },
       'toggle-sync': async ({ brainId, enabled }) => {
         toggleSyncById(brainId, enabled)
@@ -361,14 +345,22 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
         return { success: true }
       },
       'open-brain-obsidian': async ({ brainId }) => {
-        const { path } = resolveBrain(brainId)
-        const brainConfig = readBrainConfig(path)
-        const obsidianPath = brainConfig.obsidianDir || path
-        if (process.platform === 'darwin') await execAsync(`open -a Obsidian "${obsidianPath}"`)
-        else if (process.platform === 'win32')
-          await execAsync(`start obsidian://open?vault=${obsidianPath}`)
-        else await execAsync(`obsidian://open?vault=${obsidianPath}`)
-        return { success: true }
+        try {
+          const { path } = resolveBrain(brainId)
+          const brainConfig = readBrainConfig(path)
+          const obsidianPath = expandTilde(brainConfig.obsidianDir || path)
+          if (process.platform === 'darwin') await execAsync(`open -a Obsidian "${obsidianPath}"`)
+          else if (process.platform === 'win32')
+            await execAsync(`start obsidian://open?vault=${obsidianPath}`)
+          else await execAsync(`obsidian://open?vault=${obsidianPath}`)
+          return { success: true }
+        } catch (error) {
+          console.error('[RPC open-brain-obsidian] Error:', error)
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to open Obsidian'
+          }
+        }
       },
       'sync-brain': async ({ brainId }) => updateBrainById(brainId),
       'select-folder': async () => {

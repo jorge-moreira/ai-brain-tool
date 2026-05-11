@@ -3,3 +3,6 @@ dist
 coverage
 bun.lock
 *.min.js
+*.md
+*.mdx
+.github/

@@ -72,7 +72,7 @@ export default defineConfig({
   // Force an absolute path so there is no ambiguity
   publicDir: path.resolve(__dirname, 'src/mainview/public'),
   build: {
-    outDir: path.resolve(__dirname, '../../dist'),
+    outDir: path.resolve(__dirname, './dist'),
     emptyOutDir: true
   },
   resolve: {
