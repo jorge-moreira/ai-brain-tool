@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync } from 'fs'
+import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { detect, patch, installSkill } from '@ai-brain/core/platforms/gemini'
+import { detect, patch, installSkill, unpatch } from '@ai-brain/core/platforms/gemini'
 describe('platforms/gemini', () => {
   describe('detect', () => {
     it('should return true when .gemini dir exists', async () => {
@@ -48,6 +48,36 @@ describe('platforms/gemini', () => {
 
       const skillPath = join(fakeHome, '.gemini', 'skills', 'brain', 'SKILL.md')
       expect(existsSync(skillPath)).toBe(true)
+
+      rmSync(fakeHome, { recursive: true, force: true })
+    })
+  })
+
+  describe('unpatch', () => {
+    it('should remove ai-brain from settings.json', async () => {
+      const fakeHome = mkdtempSync(join(tmpdir(), 'gemini-test-'))
+      const geminiDir = join(fakeHome, '.gemini')
+      const settingsPath = join(geminiDir, 'settings.json')
+
+      mkdirSync(geminiDir, { recursive: true })
+      writeFileSync(
+        settingsPath,
+        JSON.stringify({
+          mcpServers: {
+            'ai-brain-test': { command: 'python', args: ['-m', 'graphify'] },
+            other: { command: 'other' }
+          }
+        }),
+        'utf8'
+      )
+
+      await unpatch({ brainId: 'test', homeDir: fakeHome })
+
+      const content = JSON.parse(readFileSync(settingsPath, 'utf8')) as {
+        mcpServers: Record<string, unknown>
+      }
+      expect(content.mcpServers['ai-brain-test']).toBeUndefined()
+      expect(content.mcpServers.other).toBeDefined()
 
       rmSync(fakeHome, { recursive: true, force: true })
     })

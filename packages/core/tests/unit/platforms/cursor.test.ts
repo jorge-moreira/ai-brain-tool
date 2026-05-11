@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync } from 'fs'
+import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { detect, patch, installSkill } from '@ai-brain/core/platforms/cursor'
+import { detect, patch, installSkill, unpatch } from '@ai-brain/core/platforms/cursor'
 describe('platforms/cursor', () => {
   describe('detect', () => {
     it('should return true when .cursor dir exists', async () => {
@@ -48,6 +48,36 @@ describe('platforms/cursor', () => {
 
       const skillPath = join(fakeHome, '.cursor', 'rules', 'brain.mdc')
       expect(existsSync(skillPath)).toBe(true)
+
+      rmSync(fakeHome, { recursive: true, force: true })
+    })
+  })
+
+  describe('unpatch', () => {
+    it('should remove ai-brain from mcp.json', async () => {
+      const fakeHome = mkdtempSync(join(tmpdir(), 'cursor-test-'))
+      const cursorDir = join(fakeHome, '.cursor')
+      const mcpPath = join(cursorDir, 'mcp.json')
+
+      mkdirSync(cursorDir, { recursive: true })
+      writeFileSync(
+        mcpPath,
+        JSON.stringify({
+          mcpServers: {
+            'ai-brain-test': { command: 'python', args: ['-m', 'graphify'] },
+            other: { command: 'other' }
+          }
+        }),
+        'utf8'
+      )
+
+      await unpatch({ brainId: 'test', homeDir: fakeHome })
+
+      const content = JSON.parse(readFileSync(mcpPath, 'utf8')) as {
+        mcpServers: Record<string, unknown>
+      }
+      expect(content.mcpServers['ai-brain-test']).toBeUndefined()
+      expect(content.mcpServers.other).toBeDefined()
 
       rmSync(fakeHome, { recursive: true, force: true })
     })

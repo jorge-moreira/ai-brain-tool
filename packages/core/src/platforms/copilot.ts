@@ -1,7 +1,14 @@
 import { join } from 'path'
 import { homedir } from 'os'
 import { existsSync } from 'fs'
-import { BRAIN_SKILL_MD, installSkillFile, unpatchJsonConfig } from './shared'
+import {
+  BRAIN_SKILL_MD,
+  installSkillFile,
+  patchJsonConfig,
+  unpatchJsonConfig,
+  pythonBin,
+  graphJson
+} from './shared'
 
 const BRAIN_SKILL_MARKER = `---
 name: brain
@@ -12,11 +19,34 @@ trigger: /brain
 `
 
 export function detect(homeDir: string = homedir()): boolean {
-  return existsSync(join(homeDir, '.config', 'gh'))
+  return existsSync(join(homeDir, '.copilot'))
 }
 
-export async function patch(_options: { brainPath: string; homeDir?: string }): Promise<void> {
-  // Copilot CLI does not use a JSON MCP config
+export async function patch({
+  brainPath,
+  brainId,
+  homeDir = homedir()
+}: {
+  brainPath: string
+  brainId: string
+  homeDir?: string
+}): Promise<void> {
+  const configDir = join(homeDir, '.copilot')
+  const configPath = join(configDir, 'mcp-config.json')
+
+  patchJsonConfig({
+    configPath,
+    configKey: 'mcpServers',
+    serverEntry: {
+      [`ai-brain-${brainId}`]: {
+        type: 'local',
+        command: pythonBin(brainPath),
+        args: ['-m', 'graphify.serve', graphJson(brainPath)],
+        env: {},
+        tools: ['*']
+      }
+    }
+  })
 }
 
 export async function installSkill({
@@ -37,10 +67,10 @@ export async function unpatch({
   brainId: string
   homeDir?: string
 }): Promise<void> {
-  const cursorDir = join(homeDir, '.cursor')
-  const mcpPath = join(cursorDir, 'mcp.json')
+  const configDir = join(homeDir, '.copilot')
+  const configPath = join(configDir, 'mcp-config.json')
   unpatchJsonConfig({
-    configPath: mcpPath,
+    configPath,
     configKey: 'mcpServers',
     serverName: `ai-brain-${brainId}`
   })

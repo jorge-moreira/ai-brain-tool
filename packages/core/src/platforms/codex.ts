@@ -49,8 +49,8 @@ export async function unpatch({
   brainId: string
   homeDir?: string
 }): Promise<void> {
-  const cursorDir = join(homeDir, '.cursor')
-  const mcpPath = join(cursorDir, 'mcp.json')
+  const codexDir = join(homeDir, '.codex')
+  const mcpPath = join(codexDir, 'mcp.json')
   unpatchJsonConfig({
     configPath: mcpPath,
     configKey: 'mcpServers',

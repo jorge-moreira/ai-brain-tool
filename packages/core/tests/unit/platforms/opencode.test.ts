@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync } from 'fs'
+import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { detect, patch, installSkill } from '@ai-brain/core/platforms/opencode'
+import { detect, patch, installSkill, unpatch } from '@ai-brain/core/platforms/opencode'
 describe('platforms/opencode', () => {
   describe('detect', () => {
     it('should return true when .config/opencode dir exists', async () => {
@@ -49,6 +49,36 @@ describe('platforms/opencode', () => {
 
       const skillPath = join(fakeHome, '.config', 'opencode', 'skills', 'brain', 'SKILL.md')
       expect(existsSync(skillPath)).toBe(true)
+
+      rmSync(fakeHome, { recursive: true, force: true })
+    })
+  })
+
+  describe('unpatch', () => {
+    it('should remove ai-brain from opencode.json', async () => {
+      const fakeHome = mkdtempSync(join(tmpdir(), 'opencode-test-'))
+      const configDir = join(fakeHome, '.config', 'opencode')
+      const configPath = join(configDir, 'opencode.json')
+
+      mkdirSync(configDir, { recursive: true })
+      writeFileSync(
+        configPath,
+        JSON.stringify({
+          mcp: {
+            'ai-brain-test': { type: 'local', command: ['python', '-m', 'graphify'] },
+            other: { type: 'local', command: ['other'] }
+          }
+        }),
+        'utf8'
+      )
+
+      await unpatch({ brainId: 'test', homeDir: fakeHome })
+
+      const content = JSON.parse(readFileSync(configPath, 'utf8')) as {
+        mcp: Record<string, unknown>
+      }
+      expect(content.mcp['ai-brain-test']).toBeUndefined()
+      expect(content.mcp.other).toBeDefined()
 
       rmSync(fakeHome, { recursive: true, force: true })
     })

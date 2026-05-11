@@ -204,20 +204,25 @@ describe('platforms integration', () => {
   })
 
   describe('copilot platform', () => {
-    it('should detect copilot when .config/gh dir exists', async () => {
-      mkdirSync(join(tmpHome.toString(), '.config', 'gh'), { recursive: true })
+    it('should detect copilot when .copilot dir exists', async () => {
+      mkdirSync(join(tmpHome.toString(), '.copilot'), { recursive: true })
       expect(detectCopilot(tmpHome.toString())).toBe(true)
     })
 
-    it('should skip patch (Copilot uses skills only)', async () => {
+    it('should create mcp-config.json with ai-brain server entry', async () => {
       const brainPath = join(tmpHome.toString(), 'brain')
       mkdirSync(brainPath, { recursive: true })
-      mkdirSync(join(tmpHome.toString(), '.config', 'gh'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.copilot'), { recursive: true })
 
-      await patchCopilot({ brainPath, homeDir: tmpHome.toString() })
+      await patchCopilot({ brainPath, brainId: 'test-brain', homeDir: tmpHome.toString() })
 
-      const mcpPath = join(tmpHome.toString(), '.config', 'gh', 'copilot', 'mcp.json')
-      expect(existsSync(mcpPath)).toBe(false)
+      const mcpPath = join(tmpHome.toString(), '.copilot', 'mcp-config.json')
+      expect(existsSync(mcpPath)).toBe(true)
+
+      const content = JSON.parse(readFileSync(mcpPath, 'utf8')) as {
+        mcpServers: Record<string, unknown>
+      }
+      expect(content.mcpServers['ai-brain-test-brain']).toBeDefined()
     })
 
     it('should install SKILL.md skill file', async () => {
@@ -265,7 +270,7 @@ describe('platforms integration', () => {
       mkdirSync(join(tmpHome.toString(), '.config', 'opencode'), { recursive: true })
       mkdirSync(join(tmpHome.toString(), '.cursor'), { recursive: true })
       mkdirSync(join(tmpHome.toString(), '.gemini'), { recursive: true })
-      mkdirSync(join(tmpHome.toString(), '.config', 'gh'), { recursive: true })
+      mkdirSync(join(tmpHome.toString(), '.copilot'), { recursive: true })
       mkdirSync(join(tmpHome.toString(), '.codex'), { recursive: true })
 
       const platforms = await detectAll(tmpHome.toString())
