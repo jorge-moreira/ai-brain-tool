@@ -1,8 +1,8 @@
 import { writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { execa } from 'execa'
-import { readBrainConfig } from './config'
-import { GitSyncError, type GitSyncErrorCode } from './errors'
+import { readBrainConfig } from '@ai-brain/core/config'
+import { GitSyncError, type GitSyncErrorCode } from '@ai-brain/core/errors'
 
 const GITIGNORE = (commitCache: boolean) => `# macOS
 .DS_Store

@@ -1,10 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { detect, patch, installSkill, unpatch } from '@ai-brain/core/platforms/claude'
 
+vi.mock('@ai-brain/core/graphify', () => ({
+  globalVenvPythonPath: vi.fn(() => '/mock/global-venv/bin/python3')
+}))
+
 describe('platforms/claude', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
   describe('detect', () => {
     it('should return true when .claude dir exists', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'claude-test-'))
@@ -39,6 +46,7 @@ describe('platforms/claude', () => {
       }
       expect(mcp.mcpServers['ai-brain-test-brain']).toBeDefined()
       expect(mcp.mcpServers['ai-brain-test-brain'].type).toBe('stdio')
+      expect(mcp.mcpServers['ai-brain-test-brain'].command).toBe('/mock/global-venv/bin/python3')
 
       rmSync(fakeHome, { recursive: true, force: true })
     })

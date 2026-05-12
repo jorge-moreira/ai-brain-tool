@@ -1,11 +1,11 @@
 import { existsSync, readFileSync, statSync, readdirSync, rmSync } from 'fs'
-import { GraphifyError } from './errors'
 import { join } from 'path'
 import { platform } from 'process'
 import { homedir } from 'os'
 import { execa } from 'execa'
-import { getPackageResource } from './path-utils'
-import { resolveBrain } from './config/brains'
+import { GraphifyError } from '@ai-brain/core/errors'
+import { getPackageResource } from '@ai-brain/core/path-utils'
+import { resolveBrain } from '@ai-brain/core/config/brains'
 
 // Global venv path (shared by all brains)
 export const GLOBAL_VENV_PATH = join(homedir(), '.ai-brain-tool', '.venv')

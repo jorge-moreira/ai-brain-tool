@@ -1,8 +1,8 @@
 import { mkdir, writeFile, cp } from 'fs/promises'
 import { join } from 'path'
 import { writeFileSync, readFileSync, existsSync } from 'fs'
-import { BrainConfig } from './config'
-import { getPackageResource } from './path-utils'
+import { BrainConfig } from '@ai-brain/core/config'
+import { getPackageResource } from '@ai-brain/core/path-utils'
 
 const TEMPLATES_DIR = getPackageResource('src/templates')
 

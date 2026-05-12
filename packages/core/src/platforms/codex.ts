@@ -1,7 +1,8 @@
 import { join } from 'path'
 import { homedir } from 'os'
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { pythonBin, graphJson, BRAIN_SKILL_MD, installSkillFile, unpatchJsonConfig } from './shared'
+import { globalVenvPythonPath } from '@ai-brain/core/graphify'
+import { graphJson, BRAIN_SKILL_MD, installSkillFile, unpatchJsonConfig } from './shared'
 
 export function detect(homeDir: string = homedir()): boolean {
   return existsSync(join(homeDir, '.codex'))
@@ -26,7 +27,7 @@ export async function patch({
 
   // Remove existing ai-brain block if present, then append fresh
   const cleaned = existing.replace(/\[mcp_servers\.ai-brain\][^\[]*/s, '').trim()
-  const entry = `\n\n[mcp_servers.ai-brain]\ncommand = "${pythonBin(brainPath)}"\nargs = ["-m", "graphify.serve", "${graphJson(brainPath)}"]\n`
+  const entry = `\n\n[mcp_servers.ai-brain]\ncommand = "${globalVenvPythonPath()}"\nargs = ["-m", "graphify.serve", "${graphJson(brainPath)}"]\n`
 
   writeFileSync(configPath, cleaned + entry, 'utf8')
 }

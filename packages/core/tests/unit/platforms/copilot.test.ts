@@ -1,10 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { detect, patch, installSkill, unpatch } from '@ai-brain/core/platforms/copilot'
 
+vi.mock('@ai-brain/core/graphify', () => ({
+  globalVenvPythonPath: vi.fn(() => '/mock/global-venv/bin/python3')
+}))
+
 describe('platforms/copilot', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
   describe('detect', () => {
     it('should return true when .copilot dir exists', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'copilot-test-'))
@@ -37,6 +44,9 @@ describe('platforms/copilot', () => {
         mcpServers: Record<string, unknown>
       }
       expect(content.mcpServers['ai-brain-test-brain']).toBeDefined()
+      expect(content.mcpServers['ai-brain-test-brain'].command).toBe(
+        '/mock/global-venv/bin/python3'
+      )
 
       rmSync(fakeHome, { recursive: true, force: true })
     })

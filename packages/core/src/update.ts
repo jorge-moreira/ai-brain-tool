@@ -1,7 +1,7 @@
-import { runGraphify } from './graphify'
-import { syncBrain } from './git'
-import { resolveBrain } from './config/brains'
-import type { GitSyncError } from './errors'
+import { runGraphify } from '@ai-brain/core/graphify'
+import { syncBrain } from '@ai-brain/core/git'
+import { resolveBrain } from '@ai-brain/core/config/brains'
+import type { GitSyncError } from '@ai-brain/core/errors'
 
 export interface UpdateResult {
   gitSync: 'skipped' | 'ok' | 'failed'

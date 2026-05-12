@@ -1,9 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { detect, patch, installSkill, unpatch } from '@ai-brain/core/platforms/cursor'
+
+vi.mock('@ai-brain/core/graphify', () => ({
+  globalVenvPythonPath: vi.fn(() => '/mock/global-venv/bin/python3')
+}))
+
 describe('platforms/cursor', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
   describe('detect', () => {
     it('should return true when .cursor dir exists', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'cursor-test-'))
@@ -35,6 +43,7 @@ describe('platforms/cursor', () => {
         mcpServers: Record<string, { type?: string }>
       }
       expect(mcp.mcpServers['ai-brain-test-brain']).toBeDefined()
+      expect(mcp.mcpServers['ai-brain-test-brain'].command).toBe('/mock/global-venv/bin/python3')
 
       rmSync(fakeHome, { recursive: true, force: true })
     })

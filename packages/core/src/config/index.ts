@@ -1,4 +1,10 @@
-export type { BrainConfig, Config, ResolvedBrain, BrainInfo, GetBrainPathOptions } from './types'
+export type {
+  BrainConfig,
+  Config,
+  ResolvedBrain,
+  BrainInfo,
+  GetBrainPathOptions
+} from '@ai-brain/core/config/types'
 
 export {
   configPath,
@@ -10,7 +16,7 @@ export {
   isInstallationComplete,
   setInstallationComplete,
   addGraphifyyExtra
-} from './state'
+} from '@ai-brain/core/config/state'
 
 export {
   resolveBrain,
@@ -24,4 +30,4 @@ export {
   getBrainPath,
   toggleSync,
   toggleSyncById
-} from './brains'
+} from '@ai-brain/core/config/brains'

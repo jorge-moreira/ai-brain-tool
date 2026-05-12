@@ -1,9 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { detect, patch, installSkill, unpatch } from '@ai-brain/core/platforms/opencode'
+
+vi.mock('@ai-brain/core/graphify', () => ({
+  globalVenvPythonPath: vi.fn(() => '/mock/global-venv/bin/python3')
+}))
+
 describe('platforms/opencode', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
   describe('detect', () => {
     it('should return true when .config/opencode dir exists', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'opencode-test-'))
@@ -36,6 +44,12 @@ describe('platforms/opencode', () => {
       }
       expect(config.mcp['ai-brain-test-brain']).toBeDefined()
       expect(config.mcp['ai-brain-test-brain'].type).toBe('local')
+      expect(config.mcp['ai-brain-test-brain'].command).toEqual([
+        '/mock/global-venv/bin/python3',
+        '-m',
+        'graphify.serve',
+        expect.any(String)
+      ])
 
       rmSync(fakeHome, { recursive: true, force: true })
     })

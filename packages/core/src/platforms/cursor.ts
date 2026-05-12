@@ -1,14 +1,14 @@
 import { join } from 'path'
 import { homedir } from 'os'
 import { existsSync } from 'fs'
+import { globalVenvPythonPath } from '@ai-brain/core/graphify'
 import {
   patchJsonConfig,
   unpatchJsonConfig,
-  pythonBin,
   graphJson,
   BRAIN_SKILL_MD,
   installSkillFile
-} from './shared.js'
+} from './shared'
 
 const BRAIN_SKILL_MARKER = `---
 description: ai-brain skill
@@ -38,7 +38,7 @@ export async function patch({
     configKey: 'mcpServers',
     serverEntry: {
       [`ai-brain-${brainId}`]: {
-        command: pythonBin(brainPath),
+        command: globalVenvPythonPath(),
         args: ['-m', 'graphify.serve', graphJson(brainPath)]
       }
     }

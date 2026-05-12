@@ -1,14 +1,14 @@
 import { join } from 'path'
 import { homedir } from 'os'
 import { existsSync } from 'fs'
+import { globalVenvPythonPath } from '@ai-brain/core/graphify'
 import {
   patchJsonConfig,
   unpatchJsonConfig,
-  pythonBin,
   graphJson,
   BRAIN_SKILL_MD,
   installSkillFile
-} from './shared.js'
+} from './shared'
 
 export function detect(homeDir: string = homedir()): boolean {
   return existsSync(join(homeDir, '.claude'))
@@ -32,7 +32,7 @@ export async function patch({
     serverEntry: {
       [`ai-brain-${brainId}`]: {
         type: 'stdio',
-        command: pythonBin(brainPath),
+        command: globalVenvPythonPath(),
         args: ['-m', 'graphify.serve', graphJson(brainPath)]
       }
     }

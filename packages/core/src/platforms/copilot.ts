@@ -1,12 +1,12 @@
 import { join } from 'path'
 import { homedir } from 'os'
 import { existsSync } from 'fs'
+import { globalVenvPythonPath } from '@ai-brain/core/graphify'
 import {
   BRAIN_SKILL_MD,
   installSkillFile,
   patchJsonConfig,
   unpatchJsonConfig,
-  pythonBin,
   graphJson
 } from './shared'
 
@@ -40,7 +40,7 @@ export async function patch({
     serverEntry: {
       [`ai-brain-${brainId}`]: {
         type: 'local',
-        command: pythonBin(brainPath),
+        command: globalVenvPythonPath(),
         args: ['-m', 'graphify.serve', graphJson(brainPath)],
         env: {},
         tools: ['*']

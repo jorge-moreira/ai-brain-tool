@@ -1,9 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { detect, patch, installSkill, unpatch } from '@ai-brain/core/platforms/codex'
+
+vi.mock('@ai-brain/core/graphify', () => ({
+  globalVenvPythonPath: vi.fn(() => '/mock/global-venv/bin/python3')
+}))
+
 describe('platforms/codex', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
   describe('detect', () => {
     it('should return true when .codex dir exists', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'codex-test-'))
@@ -33,7 +41,7 @@ describe('platforms/codex', () => {
       expect(existsSync(configPath)).toBe(true)
       const content = readFileSync(configPath, 'utf8')
       expect(content.includes('[mcp_servers.ai-brain]')).toBe(true)
-      expect(content.includes('python3')).toBe(true)
+      expect(content.includes('/mock/global-venv/bin/python3')).toBe(true)
 
       rmSync(fakeHome, { recursive: true, force: true })
     })

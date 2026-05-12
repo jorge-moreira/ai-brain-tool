@@ -1,12 +1,18 @@
 import { existsSync, rmSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
-import { readConfig, writeConfig } from './config/state'
-import { BrainNotFoundError, NotABrainError } from './errors'
-import { createBrainFolder, writeBrainConfig as writeBrainConfigFile } from './scaffold'
-import { detectAll, createBrainMCP } from './platforms'
-import { addBrain as addBrainToConfig, importBrain as importBrainToConfig } from './config/brains'
-import type { BrainOperationResult, CreateBrainOptions } from './brains'
+import { readConfig, writeConfig } from '@ai-brain/core/config/state'
+import { BrainNotFoundError, NotABrainError } from '@ai-brain/core/errors'
+import {
+  createBrainFolder,
+  writeBrainConfig as writeBrainConfigFile
+} from '@ai-brain/core/scaffold'
+import { detectAll, createBrainMCP } from '@ai-brain/core/platforms'
+import {
+  addBrain as addBrainToConfig,
+  importBrain as importBrainToConfig
+} from '@ai-brain/core/config/brains'
+import { initRepo, writeGitignore } from '@ai-brain/core/git'
 
 const home = () => process.env.HOME || homedir()
 
@@ -55,7 +61,6 @@ export async function createBrain(options: CreateBrainOptions): Promise<BrainOpe
 
     // Setup git if requested
     if (useGit) {
-      const { initRepo, writeGitignore } = await import('./git')
       await initRepo({ brainPath, remoteUrl: gitRemote ?? '' })
       await writeGitignore({ brainPath, commitCache: true })
     }

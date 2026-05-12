@@ -1,10 +1,10 @@
 import { existsSync, readFileSync, rmSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
-import { readConfig, writeConfig, createInitialConfig } from './state'
-import { BrainNotFoundError, NotABrainError } from '../errors'
-import { writeBrainConfig } from '../scaffold'
-import { detectAll } from '../platforms'
+import { readConfig, writeConfig, createInitialConfig } from '@ai-brain/core/config'
+import { BrainNotFoundError, NotABrainError } from '@ai-brain/core/errors'
+import { writeBrainConfig } from '@ai-brain/core/scaffold'
+import { detectAll } from '@ai-brain/core/platforms'
 import type { BrainConfig, BrainInfo, ResolvedBrain, GetBrainPathOptions } from './types'
 
 const home = () => process.env.HOME || homedir()

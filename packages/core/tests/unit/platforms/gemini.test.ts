@@ -1,9 +1,17 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { detect, patch, installSkill, unpatch } from '@ai-brain/core/platforms/gemini'
+
+vi.mock('@ai-brain/core/graphify', () => ({
+  globalVenvPythonPath: vi.fn(() => '/mock/global-venv/bin/python3')
+}))
+
 describe('platforms/gemini', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
   describe('detect', () => {
     it('should return true when .gemini dir exists', async () => {
       const fakeHome = mkdtempSync(join(tmpdir(), 'gemini-test-'))
@@ -35,6 +43,9 @@ describe('platforms/gemini', () => {
         mcpServers: Record<string, { type?: string }>
       }
       expect(settings.mcpServers['ai-brain-test-brain']).toBeDefined()
+      expect(settings.mcpServers['ai-brain-test-brain'].command).toBe(
+        '/mock/global-venv/bin/python3'
+      )
 
       rmSync(fakeHome, { recursive: true, force: true })
     })
