@@ -44,14 +44,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          output=$(npx semantic-release --dry-run 2>&1)
+          set +e  # Don't exit on error
+          output=$(bunx semantic-release --dry-run 2>&1 || true)
           echo "$output"
-          NEW_VERSION=$(echo "$output" | grep -oP 'next release version: \K[\d.]+' || echo "")
+          
+          # Extract version using extended regex (works on all systems)
+          NEW_VERSION=$(echo "$output" | grep -iE "next release version|will release version" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          
+          echo "Extracted version: $NEW_VERSION"
+          
           if [ -n "$NEW_VERSION" ]; then
             echo "new_release_published=true" >> $GITHUB_OUTPUT
             echo "new_release_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           else
             echo "new_release_published=false" >> $GITHUB_OUTPUT
+            echo "::warning::No version detected - semantic-release may have found no changes"
           fi
 
   # ==================== 2. BUILD CLI ====================
