@@ -4,7 +4,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { createBrain, removeBrain, isExistingBrain, importBrain } from '@ai-brain/core/brains'
 import { writeConfig, ensureConfigDir } from '@ai-brain/core/config/state'
-import { addBrain } from '@ai-brain/core/config/brains'
+import { addBrain, removeBrain as removeBrainFromConfig } from '@ai-brain/core/config/brains'
 import * as scaffold from '@ai-brain/core/scaffold'
 
 describe('brains', () => {
@@ -303,6 +303,123 @@ describe('brains', () => {
       expect(mcpConfig.mcpServers[`ai-brain-${brainName}`]).toBeDefined()
 
       rmSync(brainDir, { recursive: true, force: true })
+    })
+  })
+
+  describe('createBrain with MCP', () => {
+    it('should configure MCP for AI tools when creating brain', async () => {
+      const brainDir = mkdtempSync(join(tmpdir(), 'mcp-create-brain-'))
+      mkdirSync(join(tmpHome, '.claude'), { recursive: true })
+      writeFileSync(join(tmpHome, '.claude', 'mcp.json'), '{}', 'utf8')
+
+      writeConfig({
+        installationComplete: true,
+        graphifyyExtras: [],
+        aiTools: ['claude'],
+        brains: {}
+      })
+
+      const result = await createBrain({
+        name: 'mcp-brain',
+        basePath: tmpHome,
+        includeObsidian: false,
+        gitSync: false,
+        useGit: false
+      })
+
+      expect(result.success).toBe(true)
+
+      const mcpConfig = JSON.parse(readFileSync(join(tmpHome, '.claude', 'mcp.json'), 'utf8')) as {
+        mcpServers: Record<string, unknown>
+      }
+      expect(mcpConfig.mcpServers['ai-brain-mcp-brain']).toBeDefined()
+
+      rmSync(brainDir, { recursive: true, force: true })
+    })
+  })
+
+  describe('removeBrain with unpatch', () => {
+    it('should unpatch AI tools when removing brain', async () => {
+      const brainPath = join(tmpHome, 'unpatch-brain')
+      mkdirSync(brainPath, { recursive: true })
+      mkdirSync(join(brainPath, 'raw'), { recursive: true })
+      writeFileSync(join(brainPath, '.graphifyignore'), '', 'utf8')
+      writeFileSync(join(brainPath, '.brain-config.json'), '{}', 'utf8')
+      mkdirSync(join(tmpHome, '.claude'), { recursive: true })
+      writeFileSync(
+        join(tmpHome, '.claude', 'mcp.json'),
+        JSON.stringify({
+          mcpServers: {
+            'ai-brain-unpatch-brain': {
+              type: 'stdio',
+              command: 'python',
+              args: ['-m', 'graphify.serve']
+            }
+          }
+        }),
+        'utf8'
+      )
+
+      addBrain('unpatch-brain', brainPath)
+      writeConfig({
+        installationComplete: true,
+        graphifyyExtras: [],
+        aiTools: ['claude'],
+        brains: { 'unpatch-brain': brainPath }
+      })
+
+      const result = await removeBrain('unpatch-brain', false)
+
+      expect(result.success).toBe(true)
+
+      const mcpConfig = JSON.parse(readFileSync(join(tmpHome, '.claude', 'mcp.json'), 'utf8')) as {
+        mcpServers: Record<string, unknown>
+      }
+      expect(mcpConfig.mcpServers['ai-brain-unpatch-brain']).toBeUndefined()
+    })
+  })
+
+  describe('config/brains removeBrain', () => {
+    it('should unpatch AI tools and delete folder when calling config/brains.removeBrain', async () => {
+      const brainPath = join(tmpHome, 'config-unpatch-brain')
+      mkdirSync(brainPath, { recursive: true })
+      mkdirSync(join(brainPath, 'raw'), { recursive: true })
+      writeFileSync(join(brainPath, '.graphifyignore'), '', 'utf8')
+      writeFileSync(join(brainPath, '.brain-config.json'), '{}', 'utf8')
+      mkdirSync(join(tmpHome, '.claude'), { recursive: true })
+      writeFileSync(
+        join(tmpHome, '.claude', 'mcp.json'),
+        JSON.stringify({
+          mcpServers: {
+            'ai-brain-config-unpatch-brain': {
+              type: 'stdio',
+              command: 'python',
+              args: ['-m', 'graphify.serve']
+            }
+          }
+        }),
+        'utf8'
+      )
+
+      addBrain('config-unpatch-brain', brainPath)
+      writeConfig({
+        installationComplete: true,
+        graphifyyExtras: [],
+        aiTools: ['claude'],
+        brains: { 'config-unpatch-brain': brainPath }
+      })
+
+      // Call removeBrain from config/brains directly
+      await removeBrainFromConfig('config-unpatch-brain', true)
+
+      // Verify MCP config was unpatched
+      const mcpConfig = JSON.parse(readFileSync(join(tmpHome, '.claude', 'mcp.json'), 'utf8')) as {
+        mcpServers: Record<string, unknown>
+      }
+      expect(mcpConfig.mcpServers['ai-brain-config-unpatch-brain']).toBeUndefined()
+
+      // Verify folder was deleted
+      expect(existsSync(brainPath)).toBe(false)
     })
   })
 })

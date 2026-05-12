@@ -684,4 +684,47 @@ describe('commands/setup', () => {
     // confirm prompts should never be called in non-interactive mode
     expect(mockedConfirm).not.toHaveBeenCalled()
   })
+
+  it('should warn when duplicate brain id is entered', async () => {
+    mockedIsExistingBrain.mockReturnValue(true)
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedIsBrainIdAvailable.mockReturnValueOnce(false).mockReturnValueOnce(true)
+    mockedInput.mockResolvedValueOnce('duplicate')
+    mockedInput.mockResolvedValueOnce('unique')
+    mockedSelect.mockResolvedValue('brain')
+    mockedCheckbox.mockResolvedValue([])
+
+    mockedDetectAll.mockResolvedValue([])
+
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+    mockedCreateVenv.mockResolvedValue()
+
+    await run()
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('already taken'))
+    expect(mockedInput).toHaveBeenCalledTimes(2)
+  })
+
+  it('should handle brain creation failure', async () => {
+    mockedExistsSync.mockReturnValue(false)
+    mockedWriteFileSync.mockImplementation(() => {})
+
+    mockedInput.mockResolvedValueOnce('ai-brain')
+    mockedSelect.mockResolvedValueOnce('current')
+    mockedSelect.mockResolvedValueOnce('local')
+    mockedSelect.mockResolvedValueOnce('skip')
+
+    mockedDetectAll.mockResolvedValue([])
+
+    mockedConfigPath.mockReturnValue('/fake/config/path')
+    mockedEnsureConfigDir.mockImplementation(() => {})
+    mockedIsBrainIdAvailable.mockReturnValue(true)
+    mockedCreateVenv.mockResolvedValue()
+
+    mockedCreateBrain.mockRejectedValueOnce(new Error('Brain creation failed'))
+
+    await expect(run()).rejects.toThrow('Brain creation failed')
+  })
 })
