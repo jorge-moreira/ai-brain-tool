@@ -219,4 +219,4 @@ bun vitest run packages/cli/tests/unit/commands/setup.test.ts
 
 ## License
 
-MIT
+MIT - See [LICENSE](../../LICENSE) for details.

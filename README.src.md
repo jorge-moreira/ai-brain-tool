@@ -13,6 +13,7 @@
 [![npm version](https://img.shields.io/npm/v/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
 [![npm downloads](https://img.shields.io/npm/dm/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
 [![GitHub Release](https://img.shields.io/github/v/release/jorge-moreira/ai-brain-tool?include_prereleases&label=release)](https://github.com/jorge-moreira/ai-brain-tool/releases)
+[![License](https://img.shields.io/github/license/jorge-moreira/ai-brain-tool)](LICENSE)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/jorge-moreira)
 
 [English](README.md) · [Español](docs/i18n/README.es.md)<!--en-->
@@ -26,8 +27,8 @@
 > The knowledge graph engine that turns folders of notes, code, papers, and media into a queryable graph your AI tools can traverse.<!--en-->
 > El motor de grafos de conocimiento que convierte carpetas de notas, código, artículos y multimedia en un grafo consultable que tus herramientas de IA pueden recorrer.<!--es-->
 
-[Quick Start](#quick-start) · [Architecture](#architecture) · [Packages](#packages) · [Contributing](#contributing) · [Credits](#credits)<!--en-->
-[Inicio rápido](#inicio-rápido) · [Arquitectura](#arquitectura) · [Paquetes](#paquetes) · [Contribución](#contribución) · [Créditos](#créditos)<!--es-->
+[Quick Start](#quick-start) · [Architecture](#architecture) · [Packages](#packages) · [Contributing](#contributing) · [License](#license) · [Credits](#credits)<!--en-->
+[Inicio rápido](#inicio-rápido) · [Arquitectura](#arquitectura) · [Paquetes](#paquetes) · [Contribución](#contribución) · [Licencia](#licencia) · [Créditos](#créditos)<!--es-->
 
 </div>
 
@@ -42,11 +43,11 @@
 Download for your platform:<!--en-->
 Descarga para tu plataforma:<!--es-->
 
-| Platform    | Download                                                                             |
-| ----------- | ------------------------------------------------------------------------------------ |
-| **macOS**   | [Download .dmg](https://github.com/jorge-moreira/ai-brain-tool/releases/latest)      |
-| **Windows** | [Download .exe](https://github.com/jorge-moreira/ai-brain-tool/releases/latest)      |
-| **Linux**   | [Download .AppImage](https://github.com/jorge-moreira/ai-brain-tool/releases/latest) |
+| Platform    | Download                                                                         |
+| ----------- | -------------------------------------------------------------------------------- |
+| **macOS**   | [Download .dmg](https://github.com/jorge-moreira/ai-brain-tool/releases/latest)  |
+| **Windows** | [Download .zip](https://github.com/jorge-moreira/ai-brain-tool/releases/latest)  |
+| **Linux**   | [Download .tar.gz](https://github.com/jorge-moreira/ai-brain-tool/releases/latest) |
 
 ### Option 2: CLI<!--en-->
 ### Opción 2: CLI<!--es-->
@@ -191,3 +192,11 @@ Consulta [CONTRIBUTING.md](./CONTRIBUTING.md) para las instrucciones de configur
 
 **ai-brain-tool** is a facade over **[graphify](https://github.com/safishamsi/graphify)** by [@safishamsi](https://github.com/safishamsi). All graph extraction, clustering, wiki generation, Obsidian export, and MCP serving is done by graphify. This tool adds the setup wizard, platform integrations, and `/brain` skill layer on top.<!--en-->
 **ai-brain-tool** es una fachada sobre **[graphify](https://github.com/safishamsi/graphify)** de [@safishamsi](https://github.com/safishamsi). Toda la extracción del grafo, el clustering, la generación de wikis, la exportación a Obsidian y el servidor MCP los hace graphify. Esta herramienta añade encima el asistente de configuración, las integraciones con cada plataforma y la capa de skill `/brain`.<!--es-->
+
+---
+
+## License<!--en-->
+## Licencia<!--es-->
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.<!--en-->
+Este proyecto está licenciado bajo la Licencia MIT - consulta el archivo [LICENSE](LICENSE) para más detalles.<!--es-->

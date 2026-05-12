@@ -199,10 +199,94 @@ See [`.github/workflows/nrg.yml`](.github/workflows/nrg.yml) for the active work
 
 ## Release Process
 
-This project uses semantic-release for automated releases:
+This project uses semantic-release for automated releases. A single version is used for the entire monorepo.
 
-- **CLI:** Published to npm as `@jorge-moreira.dev/ai-brain-tool`
-- **Desktop App:** Executables attached to GitHub Releases (macOS, Windows, Linux)
-- **Version:** Single version for entire monorepo (v2.0.0+)
+### What Gets Released
 
-Releases are triggered automatically on merge to `main` after CI passes.
+| Package | Target | How |
+|---------|--------|-----|
+| **@jorge-moreira.dev/ai-brain-tool** | npm | Published automatically |
+| **@ai-brain/app** | GitHub Releases | Executables for macOS, Windows, Linux |
+| **@ai-brain/core** | Internal | Not published |
+| **@ai-brain/ui** | Internal | Not published |
+
+### Release Workflow
+
+```mermaid
+flowchart LR
+    PUSH[Push to main] --> CI[CI Workflow]
+    CI --> PASS{CI Passes?}
+    PASS -->|Yes| SEMANTIC[Semantic Release]
+    PASS -->|No| STOP[Stop - Fix Required]
+    
+    SEMANTIC --> BUILD[Build All Packages]
+    BUILD --> CLI[CLI Bundle]
+    BUILD --> APP[App Executables]
+    
+    CLI --> NPM[Publish to npm]
+    APP --> GH[GitHub Release]
+    
+    NPM --> DONE[Release Complete]
+    GH --> DONE
+    
+    style PUSH fill:#8b5cf6,color:#fff
+    style CI fill:#3b82f6,color:#fff
+    style SEMANTIC fill:#10b981,color:#fff
+    style NPM fill:#f59e0b,color:#fff
+    style GH fill:#f59e0b,color:#fff
+    style DONE fill:#10b981,color:#fff
+```
+
+### Workflow Steps
+
+1. **CI Workflow** - All tests must pass (unit, integration, E2E)
+2. **Semantic Release** - Determines next version from commit messages
+3. **Build CLI** - Creates `dist/index.js` bundle
+4. **Build App** - Builds executables for macOS, Windows, and Linux in parallel
+5. **GitHub Release** - Creates release with app executables attached
+6. **npm Publish** - Publishes CLI package to npm
+7. **Update Templates** - Triggers workflow to update bug report templates
+
+### Secrets Required
+
+The following secrets must be configured in GitHub repository settings:
+
+| Secret | Purpose |
+|--------|---------|
+| `NPM_TOKEN` | npm publish authentication |
+| `APPLE_ID` | macOS app code signing |
+| `APPLE_TEAM_ID` | Apple team identifier |
+| `APPLE_APP_SPECIFIC_PASSWORD` | Apple app-specific password |
+| `CSC_LINK` | Code signing certificate |
+| `CSC_KEY_PASSWORD` | Certificate password |
+
+### Manual Release
+
+If the automated release fails:
+
+```bash
+# 1. Ensure you're on main with latest changes
+git checkout main
+git pull
+
+# 2. Run semantic-release locally to determine version
+npx semantic-release --dry-run
+
+# 3. Build CLI
+bun run --cwd packages/cli build
+
+# 4. Build App
+bun run --cwd packages/app build
+
+# 5. Publish CLI manually
+cd packages/cli
+npm version <version-from-semantic-release>
+npm publish
+
+# 6. Create GitHub Release manually
+gh release create v<version> --generate-notes
+```
+
+### Release Notes
+
+Release notes are auto-generated from commit messages using semantic-release. The changelog includes changes from all packages in the monorepo.

@@ -1,35 +1,36 @@
 import Electrobun, {
   BrowserWindow,
   BrowserView,
-  Updater,
   Screen,
-  Utils,
+  Updater,
   ApplicationMenu,
-  type ApplicationMenuItemConfig
+  Utils,
+  ApplicationMenuItemConfig
 } from 'electrobun/bun'
-import { detectPython, ensureUv, createGlobalVenv, globalVenvExists } from '@ai-brain/core/graphify'
+import {
+  detectPython,
+  ensureUv,
+  createGlobalVenv,
+  getBrainSizeById,
+  countNotesById,
+  clearGraphifyCacheById
+} from '@ai-brain/core/graphify'
 import { createBrain, importBrain, removeBrain } from '@ai-brain/core/brains'
 import { readBrainConfig, resolveBrain } from '@ai-brain/core/config/brains'
 import {
   readConfig,
   updateConfig,
   isInstallationComplete,
-  toggleSyncById,
-  getBrainSize,
-  countNotes,
-  clearGraphifyCacheById,
-  getBrainSizeById,
-  countNotesById,
-  detectAll,
-  installSkills
-} from '@ai-brain/core'
+  toggleSyncById
+} from '@ai-brain/core/config'
 import { updateBrainById } from '@ai-brain/core/update'
 import { homedir } from 'os'
-import { exec, execSync } from 'child_process'
+import { exec } from 'child_process'
 import { promisify } from 'util'
 import { join } from 'path'
 import { mkdirSync, readFileSync, writeFileSync } from 'fs'
 import type { AppRPCType, BrainInfo } from '../shared/rpc-types'
+import { detectAll, installSkills } from '@ai-brain/core'
 
 const execAsync = promisify(exec)
 
@@ -238,8 +239,8 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
 
           for (const [brainId, rawBrainPath] of Object.entries(config.brains || {})) {
             try {
-              const sizeBytes = getBrainSize(rawBrainPath)
-              const notesCount = countNotes(rawBrainPath)
+              const sizeBytes = getBrainSizeById(brainId)
+              const notesCount = countNotesById(brainId)
               const brainConfig = readBrainConfig(rawBrainPath)
               const obsidianConfigured = !!brainConfig.obsidianDir
               const appearance = prefs.brainAppearance?.[brainId]
@@ -407,20 +408,11 @@ const appRPC = BrowserView.defineRPC<AppRPCType>({
       },
       'check-installation': async () => {
         try {
-          // Check uv
-          try {
-            execSync('uv --version', { stdio: 'ignore' })
-          } catch {
-            return { installed: false }
-          }
-
-          // Check config flag and venv
+          // Just check if installation was completed via config flag
           const configOk = isInstallationComplete()
-          const venvOk = globalVenvExists()
-
-          return { installed: configOk && venvOk }
-        } catch {
-          return { installed: false }
+          return { installed: configOk }
+        } catch (error) {
+          return { installed: false, reason: error instanceof Error ? error.message : 'unknown' }
         }
       }
     }

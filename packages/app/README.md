@@ -85,4 +85,4 @@ bun run app:build
 
 ## License
 
-MIT
+MIT - See [LICENSE](../../LICENSE) for details.

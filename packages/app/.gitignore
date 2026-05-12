@@ -2,6 +2,8 @@
 dist/
 node_modules/
 !lib/
+artifacts/
+build/
 
 # OS files
 .DS_Store
@@ -15,3 +17,4 @@ Thumbs.db
 
 # Logs
 *.log
+

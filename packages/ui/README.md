@@ -72,4 +72,4 @@ npx shadcn@latest add <component-name>
 
 ## License
 
-MIT
+MIT - See [LICENSE](../../LICENSE) for details.

@@ -8,32 +8,24 @@ type View = 'dashboard' | 'settings'
 
 function App() {
   const [isInstalled, setIsInstalled] = useState<boolean | null>(null)
-  const [debugInfo, setDebugInfo] = useState<string>('Checking installation...')
   const [forceDashboard, setForceDashboard] = useState(false)
   const [currentView, setCurrentView] = useState<View>('dashboard')
 
   useEffect(() => {
     // Check if global installation was done (uv + AI tools configured)
-    console.log('App: Starting installation check')
-    setDebugInfo('Starting installation check...')
-
     rpc
       .checkInstallation()
       .then(result => {
-        console.log('App: Installation check result:', result.installed)
-        setDebugInfo(`Installation check: ${result.installed}`)
         setIsInstalled(result.installed)
       })
       .catch(error => {
         console.error('App: Failed to check installation:', error)
-        setDebugInfo(`Error: ${error.message || error}`)
         setIsInstalled(false)
       })
 
     // Keyboard shortcut: Press 'D' to force dashboard
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'd' || e.key === 'D') {
-        console.log('App: Force dashboard enabled')
         setForceDashboard(true)
       }
     }
@@ -69,29 +61,16 @@ function App() {
   }, [])
 
   const handleWizardComplete = () => {
-    console.log('App: Wizard complete')
     setIsInstalled(true)
   }
 
   if (isInstalled === null && !forceDashboard) {
-    console.log('App: Rendering loading state')
     return (
       <div className="flex items-center justify-center w-full h-full bg-background">
-        <div className="text-center space-y-4">
-          <p className="text-muted-foreground">Loading...</p>
-          <p className="text-xs text-muted-foreground">{debugInfo}</p>
-          <p className="text-xs text-secondary">Press 'D' to force Dashboard</p>
-        </div>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     )
   }
-
-  console.log(
-    'App: Rendering',
-    forceDashboard || isInstalled ? 'Dashboard' : 'Wizard',
-    'currentView:',
-    currentView
-  )
 
   return (
     <>

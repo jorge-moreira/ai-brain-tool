@@ -71,4 +71,4 @@ bun run test:core:integration
 
 ## License
 
-MIT
+MIT - See [LICENSE](../../LICENSE) for details.
