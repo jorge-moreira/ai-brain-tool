@@ -15,9 +15,6 @@ permissions:
   id-token: write
   actions: write
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-
 jobs:
   # ==================== 1. SEMANTIC RELEASE (TAGGING) ====================
   prepare-release:
@@ -33,6 +30,11 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -47,11 +49,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          set +e  # Don't exit on error
-          output=$(bunx semantic-release --dry-run 2>&1 || true)
+          set +e
+          output=$(npx semantic-release --dry-run 2>&1 || true)
           echo "$output"
           
-          # Extract version using extended regex (works on all systems)
           NEW_VERSION=$(echo "$output" | grep -iE "next release version|will release version" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
           
           echo "Extracted version: $NEW_VERSION"
