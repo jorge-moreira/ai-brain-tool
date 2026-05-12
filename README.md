@@ -6,10 +6,12 @@
   <h3>Your personal AI memory, connected to all your AI tools</h3>
   <br>
 
-[![Test](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml)
+[![CI](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/jorge-moreira/ai-brain-tool/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/jorge-moreira/ai-brain-tool/graph/badge.svg)](https://codecov.io/gh/jorge-moreira/ai-brain-tool)
 [![npm version](https://img.shields.io/npm/v/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
 [![npm downloads](https://img.shields.io/npm/dm/%40jorge-moreira.dev%2Fai-brain-tool)](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool)
+[![GitHub Release](https://img.shields.io/github/v/release/jorge-moreira/ai-brain-tool?include_prereleases&label=release)](https://github.com/jorge-moreira/ai-brain-tool/releases)
+[![License](https://img.shields.io/github/license/jorge-moreira/ai-brain-tool)](LICENSE)
 [![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/jorge-moreira)
 
 [English](README.md) · [Español](docs/i18n/README.es.md)
@@ -20,231 +22,142 @@
 
 > The knowledge graph engine that turns folders of notes, code, papers, and media into a queryable graph your AI tools can traverse.
 
-[Install](#install) · [Quick Start](#quick-start) · [Multiple Brains](#multiple-brains) · [Commands](#commands) · [Template Ownership](#template-ownership) · [Inside AI Tools](#inside-ai-tools) · [New Machine Setup](#new-machine-setup) · [Options](#options) · [Credits](#credits)
+[Quick Start](#quick-start) · [Architecture](#architecture) · [Packages](#packages) · [Contributing](#contributing) · [License](#license) · [Credits](#credits)
 
 </div>
 
 ---
 
-## Install
+## Quick Start
 
-To install the tool globally:
+### Option 1: Desktop App (Recommended)
+
+Download for your platform:
+
+| Platform    | Download                                                                         |
+| ----------- | -------------------------------------------------------------------------------- |
+| **macOS**   | [Download .dmg](https://github.com/jorge-moreira/ai-brain-tool/releases/latest)  |
+| **Windows** | [Download .zip](https://github.com/jorge-moreira/ai-brain-tool/releases/latest)  |
+| **Linux**   | [Download .tar.gz](https://github.com/jorge-moreira/ai-brain-tool/releases/latest) |
+
+### Option 2: CLI
 
 ```bash
+# Install globally
 npm install -g @jorge-moreira.dev/ai-brain-tool
-```
 
-Then use anywhere:
-
-```bash
-ai-brain <command>
-```
-
-> [!NOTE]
-> You can also opt to use the tool portable using:
->
-> ```bash
-> npx @jorge-moreira.dev/ai-brain-tool <command>
-> ```
-
----
-
-## Quick start
-
-Run the interactive wizard: creates your brain folder, installs graphify, configures every detected AI tool (Claude Code, OpenCode, Cursor, Gemini CLI, GitHub Copilot CLI, OpenAI Codex CLI), and optionally sets up Obsidian.
-
-```bash
+# Or use without installing
 npx @jorge-moreira.dev/ai-brain-tool setup
-ai-brain setup
 ```
+
+### Setup Wizard
+
+Both the app and CLI will guide you through:
+
+1. Creating your brain folder
+2. Installing graphify
+3. Configuring AI tools (Claude Code, OpenCode, Cursor, Gemini CLI, Copilot CLI, Codex CLI)
+4. Optional: Obsidian integration
 
 ---
 
-## Multiple brains
+## Architecture
 
-The tool supports multiple brains. Brains configurations are stored in `~/.ai-brain-tool/config.json`.
-
-### Brain identifier
-
-Every brain has a short identifier (e.g., `work`, `personal`) that identifies it. Use `--brain-id <id>` to target a specific brain:
-
-```bash
-ai-brain <command> personal
-ai-brain <command> --brain-id personal
+```mermaid
+flowchart TB
+    subgraph "User Interfaces"
+        DESKTOP[Desktop App<br/>ElectroBun + React]
+        CLI[CLI Tool<br/>Node.js + Commander]
+        AI[AI Tools<br/>Claude, Cursor, etc.]
+    end
+    
+    subgraph "Core (@ai-brain/core)"
+        CONFIG[Config Management]
+        GRAPHIFY[Graphify Integration]
+        PLATFORMS[Platform Integrations<br/>6 AI Tools]
+        SCAFFOLD[Brain Scaffolding]
+        GIT[Git Sync]
+        MCP[MCP Server]
+    end
+    
+    subgraph "Storage"
+        BRAIN[Brain Folder<br/>graph.json + raw/]
+        VENV[.venv<br/>graphify]
+    end
+    
+    DESKTOP -->|RPC| CONFIG
+    CLI --> CONFIG
+    AI -->|MCP| MCP
+    
+    CONFIG --> BRAIN
+    GRAPHIFY --> VENV
+    PLATFORMS --> AI
+    SCAFFOLD --> BRAIN
+    GIT --> BRAIN
+    MCP --> GRAPHIFY
+    
+    style DESKTOP fill:#8b5cf6,color:#fff
+    style CLI fill:#8b5cf6,color:#fff
+    style AI fill:#8b5cf6,color:#fff
+    style CONFIG fill:#3b82f6,color:#fff
+    style GRAPHIFY fill:#3b82f6,color:#fff
+    style PLATFORMS fill:#3b82f6,color:#fff
+    style SCAFFOLD fill:#3b82f6,color:#fff
+    style GIT fill:#3b82f6,color:#fff
+    style MCP fill:#3b82f6,color:#fff
+    style BRAIN fill:#10b981,color:#fff
+    style VENV fill:#10b981,color:#fff
 ```
 
-> [!NOTE]
-> If you're in a brain folder (or a subfolder), commands automatically detect which brain to use — no need to specify the identifier.
+### Components
 
-### List brains
-
-```bash
-ai-brain list
-```
-
-Shows all registered brains with their identifiers and paths.
+| Component       | Purpose                                                       |
+| --------------- | ------------------------------------------------------------- |
+| **Desktop App** | Native GUI for brain management (ElectroBun + React)          |
+| **CLI**         | Command-line interface for terminal users                     |
+| **Core**        | Shared business logic (config, graphify, platforms, git, MCP) |
+| **AI Tools**    | Integrations with Claude Code, Cursor, Gemini, etc.           |
+| **Brain**       | Your knowledge graph stored in `graph.json`                   |
+| **Graphify**    | Python engine for graph extraction and clustering             |
 
 ---
 
-## Commands
+## Packages
 
-### `ai-brain setup`
+This monorepo contains 4 packages:
 
-Run the interactive setup wizard.
+| Package                              | Description                                                     | Published                                                                   |
+| ------------------------------------ | --------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **@ai-brain/core**                   | Business logic: config, graphify, platforms, scaffold, git, MCP | No                                                                          |
+| **@jorge-moreira.dev/ai-brain-tool** | CLI tool (`ai-brain` command)                                   | Yes — [npm](https://www.npmjs.com/package/@jorge-moreira.dev/ai-brain-tool) |
+| **@ai-brain/app**                    | ElectroBun desktop app (macOS, Windows, Linux)                  | No — GitHub Releases                                                        |
+| **@ai-brain/ui**                     | React component library (shadcn/ui + Tailwind v4)               | No                                                                          |
 
-- **Fresh machine:** full wizard — creates the brain folder, initialises git, installs graphify, configures AI tools, sets up Obsidian, prompts for brain identifier (defaults to folder name).
-- **Inside an existing brain folder** (e.g. after `git clone`): new-machine mode — only recreates `.venv`, patches local AI tool configs, prompts for brain identifier (defaults to folder name).
+**Dependency graph:** `cli → core`, `app → core + ui`, `ui` (standalone).
 
-What the wizard configures per selected AI tool:
-
-- MCP server entry pointing to the brain's `graph.json`
-- `/brain` skill installed globally in the tool
-- Always-on context file written into the brain folder (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/ai-brain.mdc`, or `.github/copilot-instructions.md`)
-
-Git options asked during setup:
-
-- Git repository or local folder only
-- Optional remote URL
-- Whether to commit the extraction cache (saves tokens on new machines)
-- **Auto-sync** — whether `/brain update` should commit and push automatically after each graph rebuild
-
-```bash
-ai-brain setup
+```mermaid
+graph LR
+    CLI["@jorge-moreira.dev/ai-brain-tool<br/>(CLI)"]
+    APP["@ai-brain/app<br/>(Desktop)"]
+    CORE["@ai-brain/core<br/>(Business Logic)"]
+    UI["@ai-brain/ui<br/>(Components)"]
+    
+    CLI --> CORE
+    APP --> CORE
+    APP --> UI
+    
+    style CLI fill:#8b5cf6,color:#fff
+    style APP fill:#8b5cf6,color:#fff
+    style CORE fill:#3b82f6,color:#fff
+    style UI fill:#10b981,color:#fff
 ```
 
----
+See each package's README for details:
 
-### `ai-brain update`
-
-Rebuild the knowledge graph from `raw/` using graphify. If auto-sync was enabled during setup, commits and pushes after the rebuild.
-
-```bash
-ai-brain update                   # Used if already on the brain folder
-ai-brain update --brain-id work   # Specify brain by identifier
-```
-
-> [!NOTE]
-> Inside any AI tool, `/brain update` loads the graphify skill which rebuilds the graph using AI subagents for semantic extraction. If auto-sync was enabled during setup, the skill automatically commits and pushes after the rebuild.
-
----
-
-### `ai-brain status`
-
-Show brain health: tool version, graphify version, graph node/edge count, brain path.
-
-```bash
-ai-brain status         # Used if already on the brain folder
-ai-brain status work    # Specify brain by identifier
-```
-
-Equivalent inside any AI tool: `status`
-
----
-
-### `ai-brain templates list`
-
-List all templates — both tool-managed (`_bundled/`) and yours (`_custom/`).
-
-```bash
-ai-brain templates list
-ai-brain templates list work    # Specify brain by identifier
-```
-
----
-
-### `ai-brain templates add`
-
-Create a new custom template from a minimal starter file. Places the file in `raw/templates/markdown/_custom/` or `raw/templates/web-clipper/_custom/`. Files in `_custom/` are never touched by upgrades.
-
-```bash
-ai-brain templates add
-ai-brain templates add work    # Specify brain by identifier
-```
-
----
-
-### `ai-brain upgrade`
-
-Upgrade graphify in `.venv/` and refresh all bundled templates in `_bundled/`. Your custom templates in `_custom/` are never touched.
-
-```bash
-ai-brain upgrade        # Used if already on the brain folder
-ai-brain upgrade work   # Specify brain by identifier
-```
-
----
-
-### `ai-brain list`
-
-List all registered brains with their identifiers and paths.
-
-```bash
-ai-brain list
-```
-
----
-
-### `ai-brain setup-obsidian`
-
-Setup or update Obsidian vault configuration for a brain.
-
-```bash
-ai-brain setup-obsidian
-ai-brain setup-obsidian --update
-```
-
----
-
-## Template ownership
-
-```
-raw/templates/
-├── markdown/
-│   ├── _bundled/    ← tool-owned, rewritten on upgrade
-│   └── _custom/     ← yours, never touched by the tool
-└── web-clipper/
-    ├── _bundled/    ← tool-owned, rewritten on upgrade
-    └── _custom/     ← yours, never touched by the tool
-```
-
----
-
-## Inside AI tools
-
-After setup, a `/brain` skill is installed in each configured AI tool. Commands run from inside the brain folder manage the brain; query commands work from any project.
-
-```
-/brain update              — rebuild graph from raw/ (+ auto-sync if enabled)
-/brain add <url>           — fetch a URL and add it to raw/
-/brain templates           — list available templates
-/brain wiki                — generate agent-crawlable wiki (graphify-out/wiki/)
-/brain obsidian            — generate Obsidian vault export
-/brain query "<question>"  — query the knowledge graph via MCP
-/brain path "<A>" "<B>"    — find shortest path between two concepts via MCP
-/brain status              — show graph stats and tool version
-```
-
----
-
-## New machine setup
-
-After cloning your brain repo on a new machine:
-
-```bash
-cd your-brain
-ai-brain setup
-```
-
-The tool detects the existing brain, skips scaffolding, and only recreates `.venv` and patches your local AI tool configs.
-
----
-
-## Options
-
-```
---help, -h      Show help for any command
---version, -v   Show the current tool version
-```
+- [packages/core/README.md](packages/core/README.md)
+- [packages/cli/README.md](packages/cli/README.md)
+- [packages/app/README.md](packages/app/README.md)
+- [packages/ui/README.md](packages/ui/README.md)
 
 ---
 
@@ -257,3 +170,9 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions, testing, and co
 ## Credits
 
 **ai-brain-tool** is a facade over **[graphify](https://github.com/safishamsi/graphify)** by [@safishamsi](https://github.com/safishamsi). All graph extraction, clustering, wiki generation, Obsidian export, and MCP serving is done by graphify. This tool adds the setup wizard, platform integrations, and `/brain` skill layer on top.
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
