@@ -130,9 +130,7 @@ jobs:
         run: bun install
 
       - name: Sync version
-        run: |
-          VERSION=${{ needs.prepare-release.outputs.new_version }}
-          bun run -e "const pkg=require('./packages/app/package.json'); pkg.version='$VERSION'; require('fs').writeFileSync('packages/app/package.json', JSON.stringify(pkg, null, 2))"
+        run: bun run -e "const pkg=require('./packages/app/package.json'); pkg.version='${{ needs.prepare-release.outputs.new_version }}'; require('fs').writeFileSync('packages/app/package.json', JSON.stringify(pkg, null, 2))"
 
       - name: Build App
         run: |
