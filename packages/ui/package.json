@@ -1,6 +1,5 @@
 {
   "name": "@ai-brain/ui",
-  "version": "2.1.0",
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
