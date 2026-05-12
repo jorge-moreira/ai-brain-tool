@@ -49,7 +49,7 @@ export function BrainsDashboard({
   return (
     <div className="flex flex-col w-full h-full bg-background p-6 overflow-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+      <div className="flex items-center justify-between mb-6 pb-4 border-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
             <img src="/logo.svg" alt="AI Brain" className="w-7 h-7 text-primary" />
@@ -66,7 +66,7 @@ export function BrainsDashboard({
               </div>
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 bg-card border-border p-2" align="end">
+          <PopoverContent className="w-80 bg-card border-border p-2 mt-2" align="end">
             <AddBrainPopoverContent onCreate={handleCreate} onImport={handleImport} />
           </PopoverContent>
         </Popover>

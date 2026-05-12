@@ -7,14 +7,14 @@ interface StatusBadgeProps {
 export function StatusBadge({ status }: StatusBadgeProps) {
   if (status === 'installed') {
     return (
-      <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/10 text-xs font-medium min-w-[80px] justify-center">
+      <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/10 text-xs font-medium justify-center">
         Installed
       </Badge>
     )
   }
 
   return (
-    <Badge className="bg-muted text-muted-foreground hover:bg-muted text-xs font-medium min-w-[80px] justify-center">
+    <Badge className="bg-muted text-muted-foreground hover:bg-muted text-xs font-medium justify-center">
       Not installed
     </Badge>
   )

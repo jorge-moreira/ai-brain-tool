@@ -89,7 +89,7 @@ export function Settings() {
   return (
     <div className="flex flex-col w-full h-full bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-border">
+      <div className="flex items-center justify-between p-6 border-border">
         <div className="flex items-center gap-3">
           <IconButton
             icon={<Icons.chevronLeft className="w-5 h-5" />}
