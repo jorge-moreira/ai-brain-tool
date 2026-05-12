@@ -211,8 +211,7 @@ jobs:
             --title "v${{ needs.prepare-release.outputs.new_version }}" \
             --generate-notes \
             --verify-tag \
-            $INSTALLERS \
-            --clobber
+            $INSTALLERS
 
   # ==================== 5. NPM PUBLISH ====================
   npm-publish:
