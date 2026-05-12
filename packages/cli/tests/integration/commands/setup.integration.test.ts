@@ -669,4 +669,62 @@ describe('setup integration', () => {
     const platformsModule = await import('@ai-brain/core/platforms')
     expect(platformsModule.detectAll).toHaveBeenCalled()
   })
+
+  it('should run installation with extras prompts when installation incomplete', async () => {
+    // Mock installation as incomplete
+    const graphifyModule = await import('@ai-brain/core/graphify')
+    vi.mocked(graphifyModule.globalVenvExists).mockReturnValue(false)
+
+    const { confirm } = await import('@inquirer/prompts')
+    vi.mocked(confirm).mockImplementation(async ({ message }) => {
+      if (message?.includes('video')) return true
+      if (message?.includes('office')) return false
+      return false
+    })
+
+    const { run } = await import('../../../src/commands/setup')
+    await run()
+
+    // Verify extras prompts were shown
+    const confirmCalls = vi.mocked(confirm).mock.calls
+    expect(confirmCalls.some(c => c[0]?.message?.includes('video'))).toBe(true)
+    expect(confirmCalls.some(c => c[0]?.message?.includes('office'))).toBe(true)
+  })
+
+  it('should use fallback detection when readConfig fails in newMachineSetup', async () => {
+    mkdirSync(join(tmpCwd, 'raw'), { recursive: true })
+    writeFileSync(join(tmpCwd, '.graphifyignore'), '', 'utf8')
+    writeFileSync(
+      join(tmpCwd, '.brain-config.json'),
+      JSON.stringify({ gitSync: false, extras: [], obsidianDir: null }),
+      'utf8'
+    )
+
+    // Corrupt config to trigger catch block
+    writeFileSync(join(tmpHome, '.ai-brain-tool', 'config.json'), 'invalid{{{', 'utf8')
+
+    const graphifyModule = await import('@ai-brain/core/graphify')
+    vi.mocked(graphifyModule.globalVenvExists).mockReturnValue(true)
+
+    const { input, select } = await import('@inquirer/prompts')
+    vi.mocked(input).mockImplementation(async ({ message, default: defaultValue }) => {
+      if (message.includes('Brain identifier')) return 'fallback-brain'
+      return defaultValue || 'default'
+    })
+    vi.mocked(select).mockImplementation(async ({ choices }) => {
+      return (choices[0] as { value: unknown }).value as string
+    })
+
+    // Mock detectAll to return detected platform for fallback
+    const platformsModule = await import('@ai-brain/core/platforms')
+    vi.mocked(platformsModule.detectAll).mockResolvedValue([
+      { name: 'Claude', key: 'claude', detected: true, configHint: '~/.claude' } as never
+    ])
+
+    const { run } = await import('../../../src/commands/setup')
+    await run()
+
+    // Verify detectAll was called as fallback
+    expect(platformsModule.detectAll).toHaveBeenCalled()
+  })
 })
