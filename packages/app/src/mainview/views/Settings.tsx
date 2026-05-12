@@ -72,7 +72,7 @@ export function Settings() {
   function handleGoBack() {
     // Dispatch navigate-to-dashboard event
     if ((window as any).__navigateTo) {
-      (window as any).__navigateTo('dashboard')
+      {(window as any).__navigateTo('dashboard')}
     } else {
       window.dispatchEvent(new CustomEvent('navigate-to', { detail: { view: 'dashboard' } }))
     }
