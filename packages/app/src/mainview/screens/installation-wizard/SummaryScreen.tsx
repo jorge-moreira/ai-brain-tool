@@ -1,35 +1,40 @@
-import { Button } from '@ai-brain/ui/components/button';
-import { useState } from 'react';
-import { rpc } from '@/lib/rpc';
-import { Icons } from '@ai-brain/ui/components/icons';
+import { Button } from '@ai-brain/ui/components/button'
+import { useState } from 'react'
+import { rpc } from '@/lib/rpc'
+import { Icons } from '@ai-brain/ui/components/icons'
 
 interface SummaryScreenProps {
-  selectedExtras: string[];
-  selectedTools: string[];
-  onClose: () => void;
-  onLaunch: () => void;
+  selectedExtras: string[]
+  selectedTools: string[]
+  onClose: () => void
+  onLaunch: () => void
 }
 
-export function SummaryScreen({ selectedExtras, selectedTools, onClose, onLaunch }: SummaryScreenProps) {
-  const [showExtrasTooltip, setShowExtrasTooltip] = useState(false);
-  const [showToolsTooltip, setShowToolsTooltip] = useState(false);
+export function SummaryScreen({
+  selectedExtras,
+  selectedTools,
+  onClose,
+  onLaunch
+}: SummaryScreenProps) {
+  const [showExtrasTooltip, setShowExtrasTooltip] = useState(false)
+  const [showToolsTooltip, setShowToolsTooltip] = useState(false)
 
   const handleLaunch = async () => {
-    await rpc.resizeWindow('dashboard');
-    onLaunch();
-  };
+    await rpc.resizeWindow('dashboard')
+    onLaunch()
+  }
 
   const handleClose = async () => {
-    await rpc.closeWindow();
-  };
+    await rpc.closeWindow()
+  }
 
   const getExtrasLabels = (extras: string[]) => {
     const labels: Record<string, string> = {
-      'video': 'Video Support',
-      'office': 'Office Support'
-    };
-    return extras.map(e => labels[e] || e);
-  };
+      video: 'Video Support',
+      office: 'Office Support'
+    }
+    return extras.map(e => labels[e] || e)
+  }
 
   return (
     <div className="wizard-card">
@@ -40,7 +45,7 @@ export function SummaryScreen({ selectedExtras, selectedTools, onClose, onLaunch
         <h2 className="card-title">Setup Complete</h2>
         <p className="card-description">Ready to launch your AI brain</p>
       </div>
-      
+
       <div className="card-content">
         <p className="text-muted-foreground mb-4">Installed:</p>
         <ul className="summary-list">
@@ -49,7 +54,7 @@ export function SummaryScreen({ selectedExtras, selectedTools, onClose, onLaunch
             <div className="summary-content">
               <div className="summary-title">
                 Graphify Installed
-                <span 
+                <span
                   className="tooltip-container"
                   onMouseEnter={() => setShowExtrasTooltip(true)}
                   onMouseLeave={() => setShowExtrasTooltip(false)}
@@ -61,7 +66,9 @@ export function SummaryScreen({ selectedExtras, selectedTools, onClose, onLaunch
                       <ul className="tooltip-list">
                         {selectedExtras.length > 0 ? (
                           getExtrasLabels(selectedExtras).map(extra => (
-                            <li key={extra} className="tooltip-item">{extra}</li>
+                            <li key={extra} className="tooltip-item">
+                              {extra}
+                            </li>
                           ))
                         ) : (
                           <li className="tooltip-item">None</li>
@@ -84,7 +91,7 @@ export function SummaryScreen({ selectedExtras, selectedTools, onClose, onLaunch
               <div className="summary-title">
                 {selectedTools.length > 0 ? 'AI Tools Setup' : 'AI Tools Skipped'}
                 {selectedTools.length > 0 && (
-                  <span 
+                  <span
                     className="tooltip-container"
                     onMouseEnter={() => setShowToolsTooltip(true)}
                     onMouseLeave={() => setShowToolsTooltip(false)}
@@ -95,7 +102,9 @@ export function SummaryScreen({ selectedExtras, selectedTools, onClose, onLaunch
                         <div className="tooltip-title">Brain Skills Installed For</div>
                         <ul className="tooltip-list">
                           {selectedTools.map(tool => (
-                            <li key={tool} className="tooltip-item">{tool}</li>
+                            <li key={tool} className="tooltip-item">
+                              {tool}
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -104,7 +113,7 @@ export function SummaryScreen({ selectedExtras, selectedTools, onClose, onLaunch
                 )}
               </div>
               <div className="summary-details">
-                {selectedTools.length > 0 
+                {selectedTools.length > 0
                   ? `${selectedTools.length} brain skill${selectedTools.length > 1 ? 's' : ''} installed`
                   : 'No AI tools configured'}
               </div>
@@ -112,7 +121,7 @@ export function SummaryScreen({ selectedExtras, selectedTools, onClose, onLaunch
           </li>
         </ul>
       </div>
-      
+
       <div className="button-row">
         <Button onClick={handleClose} variant="outline" className="flex-1">
           Close
@@ -122,5 +131,5 @@ export function SummaryScreen({ selectedExtras, selectedTools, onClose, onLaunch
         </Button>
       </div>
     </div>
-  );
+  )
 }

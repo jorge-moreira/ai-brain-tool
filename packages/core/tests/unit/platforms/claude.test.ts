@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { detect, patch, installSkill } from '@ai-brain/core/platforms/claude'
+import { detect, patch, installSkill, unpatch } from '@ai-brain/core/platforms/claude'
 
 describe('platforms/claude', () => {
   describe('detect', () => {
@@ -88,6 +88,19 @@ describe('platforms/claude', () => {
 
       const skillPath = join(fakeHome, '.claude', 'commands', 'brain.md')
       expect(existsSync(skillPath)).toBe(true)
+
+      rmSync(fakeHome, { recursive: true, force: true })
+    })
+  })
+
+  describe('unpatch', () => {
+    it('should handle invalid JSON gracefully', async () => {
+      const fakeHome = mkdtempSync(join(tmpdir(), 'claude-test-'))
+      const claudeDir = join(fakeHome, '.claude')
+      mkdirSync(claudeDir, { recursive: true })
+      writeFileSync(join(claudeDir, 'mcp.json'), 'not valid json {{{', 'utf8')
+
+      await expect(unpatch({ brainId: 'test-brain', homeDir: fakeHome })).resolves.not.toThrow()
 
       rmSync(fakeHome, { recursive: true, force: true })
     })

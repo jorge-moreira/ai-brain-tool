@@ -1,8 +1,26 @@
 import {
-  Brain, FolderOpen, HardDrive, FileText, Settings, Trash2,
-  Cloud, CloudOff, Plus, Download, MoreVertical, Moon, Sun,
-  Globe, Loader2, CheckCircle2, Check, XCircle, HelpCircle, File,
-  Wrench, ChevronLeft
+  Brain,
+  FolderOpen,
+  HardDrive,
+  FileText,
+  Settings,
+  Trash2,
+  Cloud,
+  CloudOff,
+  Plus,
+  Download,
+  MoreVertical,
+  Moon,
+  Sun,
+  Globe,
+  Loader2,
+  CheckCircle2,
+  Check,
+  XCircle,
+  HelpCircle,
+  File,
+  Wrench,
+  ChevronLeft
 } from 'lucide-react'
 import { SiObsidian } from 'react-icons/si'
 import { MdSync } from 'react-icons/md'

@@ -36,17 +36,13 @@ export function AIToolsList({ tools, installedTools }: AIToolsListProps) {
 
   const handleShowInstall = (toolKey: string) => {
     setToolStates(prev =>
-      prev.map(tool =>
-        tool.key === toolKey ? { ...tool, showInstallButton: true } : tool
-      )
+      prev.map(tool => (tool.key === toolKey ? { ...tool, showInstallButton: true } : tool))
     )
   }
 
   const handleInstall = async (toolKey: string) => {
     setToolStates(prev =>
-      prev.map(tool =>
-        tool.key === toolKey ? { ...tool, installing: true } : tool
-      )
+      prev.map(tool => (tool.key === toolKey ? { ...tool, installing: true } : tool))
     )
 
     try {
@@ -66,11 +62,12 @@ export function AIToolsList({ tools, installedTools }: AIToolsListProps) {
 
       toast.success(`Skill installed for ${tool.name}`, { duration: 2000 })
     } catch (error) {
-      toast.error(`Failed to install skill: ${error instanceof Error ? error.message : 'Unknown error'}`, { duration: 2000 })
+      toast.error(
+        `Failed to install skill: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { duration: 2000 }
+      )
       setToolStates(prev =>
-        prev.map(tool =>
-          tool.key === toolKey ? { ...tool, installing: false } : tool
-        )
+        prev.map(tool => (tool.key === toolKey ? { ...tool, installing: false } : tool))
       )
     }
   }

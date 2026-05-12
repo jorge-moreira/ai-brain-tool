@@ -187,7 +187,9 @@ export function CreateBrainDialog({
                 type="checkbox"
                 id="configure-obsidian"
                 checked={formData.configureObsidian}
-                onChange={e => setFormData(prev => ({ ...prev, configureObsidian: e.target.checked }))}
+                onChange={e =>
+                  setFormData(prev => ({ ...prev, configureObsidian: e.target.checked }))
+                }
                 className="w-4.5 h-4.5 mt-0.5 border-2 border-border rounded bg-background text-primary focus:ring-2 focus:ring-primary/20 focus:ring-offset-0"
               />
               <div className="flex-1 space-y-1">
@@ -197,9 +199,7 @@ export function CreateBrainDialog({
                 >
                   Configure Obsidian
                 </label>
-                <p className="text-xs text-muted-foreground">
-                  Set up Obsidian vault integration
-                </p>
+                <p className="text-xs text-muted-foreground">Set up Obsidian vault integration</p>
               </div>
             </div>
 
@@ -218,7 +218,9 @@ export function CreateBrainDialog({
                     type="checkbox"
                     id="open-in-obsidian"
                     checked={formData.openInObsidian}
-                    onChange={e => setFormData(prev => ({ ...prev, openInObsidian: e.target.checked }))}
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, openInObsidian: e.target.checked }))
+                    }
                     className="w-4.5 h-4.5 mt-0.5 border-2 border-border rounded bg-background text-primary focus:ring-2 focus:ring-primary/20 focus:ring-offset-0"
                   />
                   <div className="flex-1 space-y-1">

@@ -1,17 +1,30 @@
-import { Button } from '@ai-brain/ui/components/button';
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction } from '@ai-brain/ui/components/alert-dialog';
-import { Checkbox } from '@/components/atoms';
-import { useState } from 'react';
+import { Button } from '@ai-brain/ui/components/button'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction
+} from '@ai-brain/ui/components/alert-dialog'
+import { Checkbox } from '@/components/atoms'
+import { useState } from 'react'
 
 interface GraphifyExtrasScreenProps {
-  selectedExtras: string[];
-  onSelectExtras: (extras: string[]) => void;
-  onContinue: () => void;
-  onSkip: () => void;
+  selectedExtras: string[]
+  onSelectExtras: (extras: string[]) => void
+  onContinue: () => void
+  onSkip: () => void
 }
 
-export function GraphifyExtrasScreen({ selectedExtras, onSelectExtras, onContinue, onSkip }: GraphifyExtrasScreenProps) {
-  const [showAlert, setShowAlert] = useState(false);
+export function GraphifyExtrasScreen({
+  selectedExtras,
+  onSelectExtras,
+  onContinue,
+  onSkip
+}: GraphifyExtrasScreenProps) {
+  const [showAlert, setShowAlert] = useState(false)
 
   const extras = [
     {
@@ -24,46 +37,43 @@ export function GraphifyExtrasScreen({ selectedExtras, onSelectExtras, onContinu
       name: 'Office Support',
       description: 'Word, Excel documents'
     }
-  ];
+  ]
 
   const toggleExtra = (id: string) => {
     if (selectedExtras.includes(id)) {
-      onSelectExtras(selectedExtras.filter(e => e !== id));
+      onSelectExtras(selectedExtras.filter(e => e !== id))
     } else {
-      onSelectExtras([...selectedExtras, id]);
+      onSelectExtras([...selectedExtras, id])
     }
-  };
+  }
 
   const handleContinue = () => {
     if (selectedExtras.length === 0) {
-      setShowAlert(true);
+      setShowAlert(true)
     } else {
-      onContinue();
+      onContinue()
     }
-  };
+  }
 
   const handleAlertConfirm = () => {
-    setShowAlert(false);
-  };
+    setShowAlert(false)
+  }
 
   return (
     <>
       <div className="wizard-card">
         <div className="card-header">
           <div className="logo-container">
-          <img src="/graphify.svg" alt="AI Brain" className="logo" />
-        </div>
+            <img src="/graphify.svg" alt="AI Brain" className="logo" />
+          </div>
           <h2 className="card-title">Graphify Extras</h2>
           <p className="card-description">Select optional features</p>
         </div>
-        
+
         <div className="card-content">
           <div className="extras-list">
             {extras.map(extra => (
-              <div 
-                key={extra.id} 
-                className="extra-item"
-              >
+              <div key={extra.id} className="extra-item">
                 <Checkbox
                   checked={selectedExtras.includes(extra.id)}
                   onCheckedChange={() => toggleExtra(extra.id)}
@@ -76,7 +86,7 @@ export function GraphifyExtrasScreen({ selectedExtras, onSelectExtras, onContinu
             ))}
           </div>
         </div>
-        
+
         <div className="button-row">
           <Button onClick={handleContinue} className="btn-primary flex-1">
             Continue
@@ -103,5 +113,5 @@ export function GraphifyExtrasScreen({ selectedExtras, onSelectExtras, onContinu
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
+  )
 }

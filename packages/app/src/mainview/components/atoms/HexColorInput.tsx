@@ -6,7 +6,7 @@ function isValidHex(hex: string): boolean {
 }
 
 export interface HexColorInputProps {
-  value: string          // current hex color, e.g. '#a187e3'
+  value: string // current hex color, e.g. '#a187e3'
   onApply: (hex: string) => void
 }
 
@@ -20,7 +20,9 @@ export function HexColorInput({ value, onApply }: HexColorInputProps) {
   const [draft, setDraft] = useState(value)
 
   // Keep draft in sync when parent changes value (e.g. hue slider moved)
-  useEffect(() => { setDraft(value) }, [value])
+  useEffect(() => {
+    setDraft(value)
+  }, [value])
 
   const normalized = draft.startsWith('#') ? draft : `#${draft}`
   const isValid = isValidHex(normalized)
@@ -39,7 +41,9 @@ export function HexColorInput({ value, onApply }: HexColorInputProps) {
         type="text"
         value={draft}
         onChange={e => setDraft(e.target.value)}
-        onKeyDown={e => { if (e.key === 'Enter') handleApply() }}
+        onKeyDown={e => {
+          if (e.key === 'Enter') handleApply()
+        }}
         maxLength={7}
         placeholder="#000000"
         className="flex-1 h-8 bg-card border border-border rounded-md px-2 text-foreground text-xs font-mono outline-none focus:border-primary"

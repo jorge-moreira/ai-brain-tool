@@ -12,7 +12,11 @@ export function ToolIcon({ toolKey }: ToolIconProps) {
     opencode: { bg: 'rgba(161, 135, 227, 0.1)', color: 'rgb(161, 135, 227)', label: 'OC' }
   }
 
-  const config = iconConfig[toolKey] || { bg: 'rgba(100, 100, 100, 0.1)', color: 'rgb(100, 100, 100)', label: '?' }
+  const config = iconConfig[toolKey] || {
+    bg: 'rgba(100, 100, 100, 0.1)',
+    color: 'rgb(100, 100, 100)',
+    label: '?'
+  }
 
   return (
     <div

@@ -60,7 +60,9 @@ describe('config/state integration', () => {
 
     it('should read config file created by writeConfig', () => {
       writeConfig(createInitialConfig())
-      const raw = JSON.parse(readFileSync(configPath(), 'utf8'))
+      const raw = JSON.parse(readFileSync(configPath(), 'utf8')) as {
+        installationComplete: boolean
+      }
       expect(raw.installationComplete).toBe(false)
     })
 

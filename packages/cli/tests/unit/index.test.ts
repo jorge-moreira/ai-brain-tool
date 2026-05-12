@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 import type { Command } from 'commander'
+import type { MockedFunction } from 'vitest'
 
 const mockSetupRun = vi.fn().mockResolvedValue(undefined)
 const mockUpdateRun = vi.fn().mockResolvedValue(undefined)
@@ -21,13 +22,13 @@ vi.mock('../../src/commands/templates/list', () => ({ run: mockTemplatesListRun 
 
 describe('cli entry point (src/index.ts)', () => {
   let program: Command
-  let exitSpy: ReturnType<typeof vi.spyOn>
+  let exitSpy: MockedFunction<typeof process.exit>
 
   beforeAll(async () => {
     exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
     await import('../../src/index')
     const { program: p } = await import('commander')
-    program = p
+    program = p as Command
   })
 
   afterAll(() => {
@@ -52,7 +53,7 @@ describe('cli entry point (src/index.ts)', () => {
   })
 
   it('should register templates subcommands', () => {
-    const templates = program.commands.find(c => c.name() === 'templates')
+    const templates = program.commands.find(c => c.name() === 'templates') as Command | undefined
     expect(templates).toBeDefined()
     if (!templates) return
     const subNames = templates.commands.map(c => c.name())

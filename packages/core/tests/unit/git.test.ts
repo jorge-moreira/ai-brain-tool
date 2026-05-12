@@ -142,7 +142,7 @@ describe('syncBrain', () => {
     const commitCall = (execa as unknown as Mock).mock.calls.find(
       (c: unknown[]) =>
         Array.isArray(c) && c[0] === 'git' && Array.isArray(c[1]) && c[1][0] === 'commit'
-    )
+    ) as [string, string[], Record<string, unknown>] | undefined
     expect(commitCall?.[1][2]).toContain('file1.md')
   })
 

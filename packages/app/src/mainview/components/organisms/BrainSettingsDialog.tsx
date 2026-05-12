@@ -10,7 +10,7 @@ import {
   getBrainIcon,
   BRAIN_ICON_OPTIONS,
   DEFAULT_BRAIN_ICON,
-  DEFAULT_BRAIN_COLOR,
+  DEFAULT_BRAIN_COLOR
 } from '@/components/atoms/Icons'
 import { rpc } from '@/lib/rpc'
 import type { BrainInfo } from '@/shared/rpc-types'
@@ -28,11 +28,11 @@ export function BrainSettingsDialog({
   isOpen,
   onClose,
   onSave,
-  dialogClassName,
+  dialogClassName
 }: BrainSettingsDialogProps) {
-  const [syncEnabled, setSyncEnabled]   = useState(false)
-  const [draftIcon, setDraftIcon]       = useState(DEFAULT_BRAIN_ICON)
-  const [draftColor, setDraftColor]     = useState(DEFAULT_BRAIN_COLOR)
+  const [syncEnabled, setSyncEnabled] = useState(false)
+  const [draftIcon, setDraftIcon] = useState(DEFAULT_BRAIN_ICON)
+  const [draftColor, setDraftColor] = useState(DEFAULT_BRAIN_COLOR)
 
   // Reset all local state when dialog opens with a (possibly different) brain
   useEffect(() => {
@@ -45,8 +45,8 @@ export function BrainSettingsDialog({
 
   if (!brain) return null
 
-  const IconComp   = getBrainIcon(draftIcon)
-  const iconLabel  = BRAIN_ICON_OPTIONS.find(o => o.key === draftIcon)?.label ?? 'Brain'
+  const IconComp = getBrainIcon(draftIcon)
+  const iconLabel = BRAIN_ICON_OPTIONS.find(o => o.key === draftIcon)?.label ?? 'Brain'
 
   async function handleSave() {
     if (!brain) return
@@ -82,12 +82,14 @@ export function BrainSettingsDialog({
         </div>
 
         <div className="p-6 space-y-6">
-
           {/* Icon preview + picker */}
           <BrainIconPicker
             icon={draftIcon}
             iconColor={draftColor}
-            onChange={(icon, color) => { setDraftIcon(icon); setDraftColor(color) }}
+            onChange={(icon, color) => {
+              setDraftIcon(icon)
+              setDraftColor(color)
+            }}
             onSave={handlePickerSave}
             onCancel={handlePickerCancel}
           >
@@ -148,7 +150,9 @@ export function BrainSettingsDialog({
 
         {/* Footer */}
         <div className="p-4 border-t border-border flex justify-end gap-2 bg-muted/30">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
           <Button onClick={handleSave}>Save Changes</Button>
         </div>
       </DialogContent>

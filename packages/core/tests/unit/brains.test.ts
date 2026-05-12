@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { createBrain, removeBrain, isExistingBrain, importBrain } from '@ai-brain/core/brains'
 import { writeConfig, ensureConfigDir } from '@ai-brain/core/config/state'
 import { addBrain } from '@ai-brain/core/config/brains'
+import * as scaffold from '@ai-brain/core/scaffold'
 
 describe('brains', () => {
   let tmpHome: string
@@ -130,6 +131,52 @@ describe('brains', () => {
 
       expect(result.success).toBe(true)
       expect(result.brainId).toBe('empty-obsidian-brain')
+    })
+
+    it('should return failure when createBrainFolder throws', async () => {
+      const createBrainFolderSpy = vi
+        .spyOn(scaffold, 'createBrainFolder')
+        .mockRejectedValue(new Error('Failed to create brain folder'))
+
+      try {
+        const result = await createBrain({
+          name: 'error-brain',
+          basePath: tmpHome,
+          includeObsidian: false,
+          gitSync: false,
+          useGit: false
+        })
+
+        expect(result.success).toBe(false)
+        expect(result.error).toBe('Failed to create brain folder')
+        expect(result.brainId).toBeUndefined()
+        expect(result.brainPath).toBeUndefined()
+      } finally {
+        createBrainFolderSpy.mockRestore()
+      }
+    })
+
+    it('should return failure when writeBrainConfig throws', async () => {
+      const writeBrainConfigSpy = vi.spyOn(scaffold, 'writeBrainConfig').mockImplementation(() => {
+        throw new Error('Failed to write brain config')
+      })
+
+      try {
+        const result = await createBrain({
+          name: 'error-brain-config',
+          basePath: tmpHome,
+          includeObsidian: false,
+          gitSync: false,
+          useGit: false
+        })
+
+        expect(result.success).toBe(false)
+        expect(result.error).toBe('Failed to write brain config')
+        expect(result.brainId).toBeUndefined()
+        expect(result.brainPath).toBeUndefined()
+      } finally {
+        writeBrainConfigSpy.mockRestore()
+      }
     })
   })
 

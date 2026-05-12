@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest'
 import { mkdirSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { run } from '../../../src/commands/list'
 import { createBrainWithConfig, cleanupBrain, addBrainToConfig } from '../../helpers'
 
 describe('list command integration', () => {
-  let consoleLogSpy: ReturnType<typeof vi.spyOn>
+  let consoleLogSpy: Mock<Console['log']>
 
   beforeEach(() => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
@@ -37,7 +37,7 @@ describe('list command integration', () => {
 
     await run()
 
-    const output = consoleLogSpy.mock.calls.map((call: unknown[]) => call.join(' ')).join('\n')
+    const output = (consoleLogSpy.mock.calls as [string][]).map(call => call.join(' ')).join('\n')
     expect(output).toContain('brain1')
     expect(output).toContain('personal')
     expect(output).toContain(result.brainPath)
@@ -49,7 +49,7 @@ describe('list command integration', () => {
 
     await run()
 
-    const output = consoleLogSpy.mock.calls.map((call: unknown[]) => call.join(' ')).join('\n')
+    const output = (consoleLogSpy.mock.calls as [string][]).map(call => call.join(' ')).join('\n')
     expect(output).toContain('mybrain')
     cleanupBrain(result)
   })

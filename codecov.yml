@@ -51,18 +51,18 @@ component_management:
 
   individual_components:
     - component_id: core
-      name: "@ai-brain/core"
+      name: '@ai-brain/core'
       paths:
         - packages/core/**
     - component_id: cli
-      name: "@jorge-moreira.dev/ai-brain-tool"
+      name: '@jorge-moreira.dev/ai-brain-tool'
       paths:
         - packages/cli/**
     - component_id: electron
-      name: "@ai-brain/electron"
+      name: '@ai-brain/electron'
       paths:
         - packages/electron/**
     - component_id: ui
-      name: "@ai-brain/ui"
+      name: '@ai-brain/ui'
       paths:
         - packages/ui/**

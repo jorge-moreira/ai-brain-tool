@@ -6,3 +6,5 @@ bun.lock
 *.md
 *.mdx
 .github/
+packages/ui/src/components/ui/
+packages/app/assets/icons/

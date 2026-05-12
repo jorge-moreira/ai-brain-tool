@@ -1,35 +1,35 @@
-import { useEffect, useState } from 'react';
-import { Button } from '@ai-brain/ui/components/button';
-import { rpc } from '@/lib/rpc';
-import { Icons } from '@ai-brain/ui/components/icons';
+import { useEffect, useState } from 'react'
+import { Button } from '@ai-brain/ui/components/button'
+import { rpc } from '@/lib/rpc'
+import { Icons } from '@ai-brain/ui/components/icons'
 
 interface UVInstallScreenProps {
-  onComplete: () => void;
+  onComplete: () => void
 }
 
 export function UVInstallScreen({ onComplete }: UVInstallScreenProps) {
-  const [status, setStatus] = useState<'installing' | 'done'>('installing');
-  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState<'installing' | 'done'>('installing')
+  const [progress, setProgress] = useState(0)
 
   useEffect(() => {
     async function installUv() {
       try {
-        setProgress(30);
+        setProgress(30)
 
-        const result = await rpc.ensureUv();
-        setProgress(60);
+        const result = await rpc.ensureUv()
+        setProgress(60)
 
         if (result.success) {
-          setProgress(100);
-          setStatus('done');
+          setProgress(100)
+          setStatus('done')
         }
       } catch (error) {
-        console.error('Failed to install UV:', error);
+        console.error('Failed to install UV:', error)
       }
     }
 
-    installUv();
-  }, []);
+    installUv()
+  }, [])
 
   return (
     <div className="wizard-card">
@@ -48,18 +48,16 @@ export function UVInstallScreen({ onComplete }: UVInstallScreenProps) {
       <div className="card-content">
         <div className="progress-container">
           <p className="status-text">
-            {status === 'installing' ? 'Downloading and installing UV...' : 'UV installed successfully!'}
+            {status === 'installing'
+              ? 'Downloading and installing UV...'
+              : 'UV installed successfully!'}
           </p>
         </div>
       </div>
 
-      <Button
-        onClick={onComplete}
-        className="btn-primary w-full"
-        disabled={status !== 'done'}
-      >
+      <Button onClick={onComplete} className="btn-primary w-full" disabled={status !== 'done'}>
         Continue
       </Button>
     </div>
-  );
+  )
 }

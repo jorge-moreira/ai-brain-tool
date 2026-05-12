@@ -15,7 +15,7 @@ export default defineConfig({
         'tests/e2e/features/upgrade/upgrade.spec.ts',
         'tests/e2e/features/templates/templates.spec.ts',
         'tests/e2e/features/multi-brain/multi-brain.spec.ts',
-        'tests/e2e/features/obsidian/obsidian.spec.ts',
+        'tests/e2e/features/obsidian/obsidian.spec.ts'
       ]
     },
     timeout: 120000,

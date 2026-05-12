@@ -13,7 +13,13 @@ export interface ColorSwatchProps {
  * Circular color swatch button. Shows a white ring when selected.
  * Used in icon/color pickers.
  */
-export function ColorSwatch({ color, selected = false, onClick, title, className }: ColorSwatchProps) {
+export function ColorSwatch({
+  color,
+  selected = false,
+  onClick,
+  title,
+  className
+}: ColorSwatchProps) {
   return (
     <button
       type="button"

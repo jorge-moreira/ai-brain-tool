@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, mkdirSync, writeFileSync, existsSync, readFileSync
 import { tmpdir } from 'os'
 import { join } from 'path'
 import type { Mock } from 'vitest'
+import type { CreateBrainOptions } from '@ai-brain/core/brains'
 
 vi.mock('@inquirer/prompts', () => ({
   input: vi.fn(),
@@ -33,10 +34,14 @@ vi.mock('@ai-brain/core/graphify', () => ({
   isWindows: vi.fn().mockReturnValue(false)
 }))
 
-vi.mock('@ai-brain/core/platforms', () => ({
-  detectAll: vi.fn().mockResolvedValue([]),
-  createBrainMCP: vi.fn()
-}))
+vi.mock('@ai-brain/core/platforms', async () => {
+  const actual = await vi.importActual('@ai-brain/core/platforms')
+  return {
+    ...actual,
+    detectAll: vi.fn().mockResolvedValue([]),
+    createBrainMCP: vi.fn()
+  }
+})
 
 let mockIsBrainIdAvailable: Mock
 let mockWriteConfig: Mock
@@ -53,7 +58,12 @@ vi.mock('@ai-brain/core/config', async () => {
     readConfig: vi.fn(() => {
       const configPath = join(process.env.HOME || '/tmp', '.ai-brain-tool', 'config.json')
       if (existsSync(configPath)) {
-        return JSON.parse(readFileSync(configPath, 'utf8'))
+        return JSON.parse(readFileSync(configPath, 'utf8')) as {
+          brains: Record<string, string>
+          aiTools?: string[]
+          graphifyyExtras?: string[]
+          installationComplete?: boolean
+        }
       }
       return { brains: {}, aiTools: [], graphifyyExtras: [], installationComplete: true }
     }),
@@ -64,7 +74,9 @@ vi.mock('@ai-brain/core/config', async () => {
     isBrainIdAvailable: vi.fn((brainId: string) => {
       const configPath = join(process.env.HOME || '/tmp', '.ai-brain-tool', 'config.json')
       if (!existsSync(configPath)) return true
-      const config = JSON.parse(readFileSync(configPath, 'utf8'))
+      const config = JSON.parse(readFileSync(configPath, 'utf8')) as {
+        brains?: Record<string, string>
+      }
       return !config.brains || !config.brains[brainId]
     }),
     isInstallationComplete: vi.fn().mockReturnValue(true),
@@ -86,7 +98,7 @@ vi.mock('@ai-brain/core/brains', async () => {
   const actual = await vi.importActual('@ai-brain/core/brains')
   return {
     ...actual,
-    createBrain: vi.fn().mockImplementation(async options => {
+    createBrain: vi.fn().mockImplementation(async (options: CreateBrainOptions) => {
       const brainPath = join(options.basePath, options.name)
       mkdirSync(brainPath, { recursive: true })
       mkdirSync(join(brainPath, 'raw'), { recursive: true })
@@ -114,9 +126,14 @@ vi.mock('@ai-brain/core/brains', async () => {
       }
       // Simulate addBrain call by updating config
       const configPath = join(process.env.HOME || '/tmp', '.ai-brain-tool', 'config.json')
-      let config = { brains: {}, aiTools: [], graphifyyExtras: [], installationComplete: true }
+      let config: {
+        brains: Record<string, string>
+        aiTools: string[]
+        graphifyyExtras: string[]
+        installationComplete: boolean
+      } = { brains: {}, aiTools: [], graphifyyExtras: [], installationComplete: true }
       if (existsSync(configPath)) {
-        config = JSON.parse(readFileSync(configPath, 'utf8'))
+        config = JSON.parse(readFileSync(configPath, 'utf8')) as typeof config
       }
       config.brains[options.name] = brainPath
       writeFileSync(configPath, JSON.stringify(config), 'utf8')
@@ -607,5 +624,49 @@ describe('setup integration', () => {
       readFileSync(join(tmpHome, '.ai-brain-tool', 'config.json'), 'utf8')
     ) as { brains: Record<string, string> }
     expect(configContent.brains['corrupted-brain']).toBeDefined()
+  })
+
+  it('should read aiTools from global config in new machine setup', async () => {
+    mkdirSync(join(tmpCwd, 'raw'), { recursive: true })
+    writeFileSync(join(tmpCwd, '.graphifyignore'), '', 'utf8')
+    writeFileSync(
+      join(tmpCwd, '.brain-config.json'),
+      JSON.stringify({ gitSync: false, extras: [], obsidianDir: null }),
+      'utf8'
+    )
+
+    writeFileSync(
+      join(tmpHome, '.ai-brain-tool', 'config.json'),
+      JSON.stringify({
+        brains: {},
+        aiTools: ['claude'],
+        graphifyyExtras: [],
+        installationComplete: true
+      }),
+      'utf8'
+    )
+
+    const { input, select, checkbox } = await import('@inquirer/prompts')
+
+    vi.mocked(input).mockImplementation(async ({ message, default: defaultValue }) => {
+      if (message.includes('Brain identifier')) return 'config-brain'
+      return defaultValue || 'default'
+    })
+
+    vi.mocked(select).mockImplementation(async ({ choices }) => {
+      return (choices[0] as { value: unknown }).value as string
+    })
+
+    vi.mocked(checkbox).mockImplementation(async ({ message }) => {
+      if (message.includes('AI tools')) return ['claude']
+      return []
+    })
+
+    const { run } = await import('../../../src/commands/setup')
+    await run()
+
+    // Verify detectAll was called (MCP path executed)
+    const platformsModule = await import('@ai-brain/core/platforms')
+    expect(platformsModule.detectAll).toHaveBeenCalled()
   })
 })

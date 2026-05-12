@@ -1,11 +1,11 @@
-import { Checkbox as BaseCheckbox } from '@ai-brain/ui/components/checkbox';
+import { Checkbox as BaseCheckbox } from '@ai-brain/ui/components/checkbox'
 
 export interface CheckboxProps {
-  id?: string;
-  checked?: boolean | 'indeterminate';
-  onCheckedChange?: (checked: boolean | 'indeterminate') => void;
-  className?: string;
-  disabled?: boolean;
+  id?: string
+  checked?: boolean | 'indeterminate'
+  onCheckedChange?: (checked: boolean | 'indeterminate') => void
+  className?: string
+  disabled?: boolean
 }
 
 /**
@@ -22,5 +22,5 @@ export function Checkbox({ id, checked, onCheckedChange, className, disabled }: 
       disabled={disabled}
       className={`h-5 w-5 rounded-md data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground [&>span]:grid [&>span]:place-items-center [&_svg]:h-3 [&_svg]:w-3 ${className || ''}`}
     />
-  );
+  )
 }

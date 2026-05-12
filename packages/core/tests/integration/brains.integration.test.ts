@@ -242,5 +242,59 @@ describe('brains integration', () => {
       expect(mcpConfig.mcpServers['ai-brain-mcp-cleanup-brain']).toBeUndefined()
       expect(mcpConfig.mcpServers['other-server']).toBeDefined()
     })
+
+    it('should call unpatch for each configured AI tool when removing brain', async () => {
+      const brainPath = join(tmpHome, 'unpatch-test-brain')
+      mkdirSync(brainPath, { recursive: true })
+      mkdirSync(join(brainPath, 'raw'), { recursive: true })
+      writeFileSync(join(brainPath, '.graphifyignore'), '', 'utf8')
+      writeFileSync(join(brainPath, '.brain-config.json'), '{}', 'utf8')
+
+      mkdirSync(join(tmpHome, '.claude'), { recursive: true })
+      writeFileSync(
+        join(tmpHome, '.claude', 'mcp.json'),
+        JSON.stringify({
+          mcpServers: {
+            'ai-brain-unpatch-test-brain': {
+              type: 'stdio',
+              command: 'python',
+              args: ['-m', 'graphify.serve']
+            }
+          }
+        }),
+        'utf8'
+      )
+
+      const initialMcpConfig = JSON.parse(
+        readFileSync(join(tmpHome, '.claude', 'mcp.json'), 'utf8')
+      ) as {
+        mcpServers: Record<string, unknown>
+      }
+      expect(initialMcpConfig.mcpServers['ai-brain-unpatch-test-brain']).toBeDefined()
+
+      writeConfig({
+        installationComplete: true,
+        graphifyyExtras: [],
+        aiTools: ['claude'],
+        brains: { 'unpatch-test-brain': brainPath }
+      })
+
+      expect(existsSync(brainPath)).toBe(true)
+
+      const result = await removeBrain('unpatch-test-brain', true)
+
+      expect(result.success).toBe(true)
+      expect(existsSync(brainPath)).toBe(false)
+
+      const config = readConfig()
+      expect(config.brains['unpatch-test-brain']).toBeUndefined()
+
+      const finalMcpConfig = JSON.parse(
+        readFileSync(join(tmpHome, '.claude', 'mcp.json'), 'utf8')
+      ) as {
+        mcpServers: Record<string, unknown>
+      }
+      expect(finalMcpConfig.mcpServers['ai-brain-unpatch-test-brain']).toBeUndefined()
+    })
   })
 })

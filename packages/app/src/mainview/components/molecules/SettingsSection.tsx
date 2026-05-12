@@ -12,9 +12,7 @@ export function SettingsSection({ title, children, showDivider = false }: Settin
       {showDivider && <Separator className="my-6" />}
       <section className="space-y-4">
         <h2 className="text-lg font-medium text-foreground">{title}</h2>
-        <div className="space-y-3">
-          {children}
-        </div>
+        <div className="space-y-3">{children}</div>
       </section>
     </>
   )

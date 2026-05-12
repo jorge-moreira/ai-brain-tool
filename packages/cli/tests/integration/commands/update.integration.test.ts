@@ -208,4 +208,15 @@ describe('commands/update integration', () => {
 
     cleanupBrain(result)
   })
+
+  it('should handle error during update', async () => {
+    const result = createBrainWithConfig('error-brain', {}, ['graphify-out'])
+
+    const graphifyModule = await import('@ai-brain/core/graphify')
+    vi.mocked(graphifyModule.runGraphify).mockRejectedValueOnce(new Error('Test error'))
+
+    await expect(run(['error-brain'], { brainId: 'error-brain' })).rejects.toThrow()
+
+    cleanupBrain(result)
+  })
 })

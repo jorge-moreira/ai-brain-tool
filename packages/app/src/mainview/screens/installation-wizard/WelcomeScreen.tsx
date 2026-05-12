@@ -1,7 +1,7 @@
-import { Button } from '@ai-brain/ui/components/button';
+import { Button } from '@ai-brain/ui/components/button'
 
 interface WelcomeScreenProps {
-  onNext: () => void;
+  onNext: () => void
 }
 
 export function WelcomeScreen({ onNext }: WelcomeScreenProps) {
@@ -14,7 +14,7 @@ export function WelcomeScreen({ onNext }: WelcomeScreenProps) {
         <h2 className="card-title">Welcome to AI Brain</h2>
         <p className="card-description">Set up your local AI brain in minutes</p>
       </div>
-      
+
       <div className="card-content">
         <p className="text-muted-foreground mb-4">This wizard will help you:</p>
         <ul className="feature-list">
@@ -32,10 +32,10 @@ export function WelcomeScreen({ onNext }: WelcomeScreenProps) {
           </li>
         </ul>
       </div>
-      
+
       <Button onClick={onNext} className="btn-primary w-full">
         Get Started
       </Button>
     </div>
-  );
+  )
 }

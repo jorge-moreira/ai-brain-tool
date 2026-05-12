@@ -9,7 +9,7 @@ export default tseslint.config(
     ignores: [
       'node_modules',
       'dist',
-      'coverage',
+      '**/coverage/**',
       'bun.lock',
       'packages/*/dist',
       'packages/*/node_modules'

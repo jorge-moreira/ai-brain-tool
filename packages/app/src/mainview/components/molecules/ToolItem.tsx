@@ -55,7 +55,7 @@ export function ToolItem({
           </div>
           <Button
             size="sm"
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation()
               onInstall?.()
             }}

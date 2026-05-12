@@ -4,22 +4,22 @@ import { Popover, PopoverTrigger, PopoverContent } from '@ai-brain/ui/components
 import { Button } from '@ai-brain/ui/components/button'
 import { Plus } from 'lucide-react'
 import { cn } from '@ai-brain/ui/lib/utils'
-import {
-  BRAIN_ICON_OPTIONS,
-  DEFAULT_BRAIN_COLOR,
-} from '@/components/atoms/Icons'
+import { BRAIN_ICON_OPTIONS, DEFAULT_BRAIN_COLOR } from '@/components/atoms/Icons'
 import { ColorSwatch } from '@/components/atoms/ColorSwatch'
 import { HueSlider } from '@/components/atoms/HueSlider'
 import { HexColorInput } from '@/components/atoms/HexColorInput'
 
 // Color utils
 function hsl2hex(h: number): string {
-  const s = 0.85, l = 0.55
+  const s = 0.85,
+    l = 0.55
   const a = s * Math.min(l, 1 - l)
   const f = (n: number) => {
     const k = (n + h / 30) % 12
     const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
-    return Math.round(255 * color).toString(16).padStart(2, '0')
+    return Math.round(255 * color)
+      .toString(16)
+      .padStart(2, '0')
   }
   return `#${f(0)}${f(8)}${f(4)}`
 }
@@ -28,7 +28,8 @@ function hexToHue(hex: string): number {
   const r = parseInt(hex.slice(1, 3), 16) / 255
   const g = parseInt(hex.slice(3, 5), 16) / 255
   const b = parseInt(hex.slice(5, 7), 16) / 255
-  const max = Math.max(r, g, b), min = Math.min(r, g, b)
+  const max = Math.max(r, g, b),
+    min = Math.min(r, g, b)
   if (max === min) return 0
   const d = max - min
   if (max === r) return ((g - b) / d + (g < b ? 6 : 0)) * 60
@@ -38,13 +39,13 @@ function hexToHue(hex: string): number {
 
 const PRESET_COLORS = [
   { label: 'Purple', value: '#a187e3' },
-  { label: 'Blue',   value: '#2590f9' },
-  { label: 'Teal',   value: '#14b8a6' },
-  { label: 'Green',  value: '#22c55e' },
+  { label: 'Blue', value: '#2590f9' },
+  { label: 'Teal', value: '#14b8a6' },
+  { label: 'Green', value: '#22c55e' },
   { label: 'Yellow', value: '#eab308' },
   { label: 'Orange', value: '#f97316' },
-  { label: 'Red',    value: '#ef4444' },
-  { label: 'Pink',   value: '#ec4899' },
+  { label: 'Red', value: '#ef4444' },
+  { label: 'Pink', value: '#ec4899' }
 ]
 
 export interface BrainIconPickerProps {
@@ -62,7 +63,7 @@ export function BrainIconPicker({
   onChange,
   onSave,
   onCancel,
-  children,
+  children
 }: BrainIconPickerProps) {
   const [open, setOpen] = useState(false)
   const [customOpen, setCustomOpen] = useState(false)
@@ -71,7 +72,9 @@ export function BrainIconPicker({
   const skipCancelRef = useRef(false)
 
   // Sync hue when iconColor changes (preset click)
-  useEffect(() => { setHue(hexToHue(iconColor) || 0) }, [iconColor])
+  useEffect(() => {
+    setHue(hexToHue(iconColor) || 0)
+  }, [iconColor])
 
   function handleOpenChange(next: boolean) {
     if (!next && !skipCancelRef.current) {
@@ -112,9 +115,7 @@ export function BrainIconPicker({
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        {children}
-      </PopoverTrigger>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
 
       <PopoverContent
         align="start"
@@ -122,7 +123,6 @@ export function BrainIconPicker({
         className="w-80 p-0 bg-surface-container-high border-border rounded-xl shadow-2xl z-[200]"
       >
         <div className="p-3.5 flex flex-col gap-3.5">
-
           {/* Icon grid */}
           <div>
             <p className="text-[0.65rem] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">

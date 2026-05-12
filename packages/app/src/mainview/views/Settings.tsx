@@ -104,7 +104,6 @@ export function Settings() {
       {/* Content */}
       <div className="flex-1 p-6 overflow-auto">
         <div className="max-w-2xl space-y-6">
-
           {/* Appearance */}
           <SettingsSection title="Appearance">
             <ThemeSelector
@@ -117,7 +116,6 @@ export function Settings() {
           <SettingsSection title="AI Tools" showDivider>
             <AIToolsList tools={tools} installedTools={installedTools} />
           </SettingsSection>
-
         </div>
       </div>
     </div>

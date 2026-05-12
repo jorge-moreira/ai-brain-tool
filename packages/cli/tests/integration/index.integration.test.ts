@@ -3,18 +3,19 @@ import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import type { Command } from 'commander'
+import type { MockedFunction } from 'vitest'
 
 describe('CLI entrypoint integration', () => {
   let program: Command
   let tmpHome: string
   let originalHome: string | undefined
-  let exitSpy: ReturnType<typeof vi.spyOn>
+  let exitSpy: MockedFunction<typeof process.exit>
 
   beforeAll(async () => {
     exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
     await import('../../src/index')
     const { program: p } = await import('commander')
-    program = p
+    program = p as Command
   })
 
   afterAll(() => {
@@ -56,7 +57,7 @@ describe('CLI entrypoint integration', () => {
 
     await program.parseAsync(['list'], { from: 'user' })
 
-    const output = spy.mock.calls.map(c => c.join(' ')).join('\n')
+    const output = (spy.mock.calls as [string][]).map(c => c.join(' ')).join('\n')
     expect(output).toContain('work')
     expect(output).toContain('personal')
     spy.mockRestore()
@@ -68,7 +69,7 @@ describe('CLI entrypoint integration', () => {
 
     await program.parseAsync(['status', 'my-brain'], { from: 'user' })
 
-    const output = spy.mock.calls.map(c => c.join(' ')).join('\n')
+    const output = (spy.mock.calls as [string][]).map(c => c.join(' ')).join('\n')
     expect(output).toContain('Tool version:')
     expect(output).toContain('Brain path:')
     spy.mockRestore()
@@ -79,7 +80,7 @@ describe('CLI entrypoint integration', () => {
 
     await program.parseAsync(['list'], { from: 'user' })
 
-    const output = spy.mock.calls.map(c => c.join(' ')).join('\n')
+    const output = (spy.mock.calls as [string][]).map(c => c.join(' ')).join('\n')
     expect(output).toContain('No brains configured')
     spy.mockRestore()
   })

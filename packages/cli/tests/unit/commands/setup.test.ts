@@ -141,7 +141,7 @@ const mockedInput = input as Mock<typeof input>
 const mockedConfirm = confirm as Mock<typeof confirm>
 const mockedCreateBrain = createBrain as Mock<typeof createBrain>
 const mockedCreateVenv = createVenv as Mock<typeof createVenv>
-const mockedDetectAll = detectAll as unknown as Mock<typeof detectAll>
+const mockedDetectAll = detectAll as Mock<typeof detectAll>
 const mockedCreateBrainMCP = createBrainMCP as Mock<typeof createBrainMCP>
 const mockedConfigPath = configPath as Mock<typeof configPath>
 const mockedEnsureConfigDir = ensureConfigDir as Mock<typeof ensureConfigDir>
@@ -228,7 +228,7 @@ describe('commands/setup', () => {
     expect(mockedSelect).toHaveBeenCalledTimes(3)
     expect(mockedCreateBrain).toHaveBeenCalledWith({
       name: 'ai-brain',
-      basePath: expect.any(String),
+      basePath: expect.any(String) as string,
       includeObsidian: false,
       obsidianDir: null,
       gitSync: false,

@@ -7,15 +7,10 @@ export interface IconButtonProps extends Omit<ComponentProps<typeof Button>, 'si
   variant?: 'default' | 'destructive'
 }
 
-export function IconButton({
-  icon,
-  variant = 'default',
-  className,
-  ...props
-}: IconButtonProps) {
+export function IconButton({ icon, variant = 'default', className, ...props }: IconButtonProps) {
   const variantStyles = {
     default: 'hover:border-primary hover:bg-muted',
-    destructive: 'hover:border-destructive hover:bg-destructive/10 hover:text-destructive',
+    destructive: 'hover:border-destructive hover:bg-destructive/10 hover:text-destructive'
   }
 
   return (

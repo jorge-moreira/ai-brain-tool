@@ -8,11 +8,7 @@ interface ThemeButtonProps {
 
 export function ThemeButton({ label, active, onClick }: ThemeButtonProps) {
   return (
-    <Button
-      variant={active ? 'default' : 'outline'}
-      onClick={onClick}
-      className="h-10 px-4"
-    >
+    <Button variant={active ? 'default' : 'outline'} onClick={onClick} className="h-10 px-4">
       {label}
     </Button>
   )
