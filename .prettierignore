@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+bun.lock
+*.min.js
+*.md
+*.mdx
+.github/
+packages/ui/src/components/ui/
+packages/app/assets/icons/

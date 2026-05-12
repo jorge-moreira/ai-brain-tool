@@ -1,0 +1,87 @@
+@import '@ai-brain/ui/styles/globals.css';
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  #root {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: var(--font-mono);
+}
+
+/* ── Context Menu ── */
+@layer components {
+  .app-context-menu {
+    @apply bg-card border-border shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-lg p-1.5;
+  }
+
+  .app-context-menu-item {
+    @apply flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm text-foreground outline-none cursor-default select-none transition-colors;
+  }
+
+  .app-context-menu-item > [data-icon] {
+    @apply text-muted-foreground flex-shrink-0;
+  }
+
+  .app-context-menu-item > span {
+    @apply flex-1;
+  }
+
+  .app-context-menu-item [data-lucide='chevron-right'] {
+    @apply ml-auto flex-shrink-0;
+  }
+
+  .app-context-menu-item:hover,
+  .app-context-menu-item:focus,
+  .app-context-menu-item[data-state='open'] {
+    @apply bg-surface-container-high text-foreground;
+  }
+
+  .app-context-menu-item[data-disabled],
+  .app-context-menu-item[data-disabled] [data-icon] {
+    @apply opacity-50 pointer-events-none;
+  }
+
+  .app-context-menu-item.destructive {
+    @apply text-destructive;
+  }
+
+  .app-context-menu-item.destructive [data-icon] {
+    @apply text-destructive;
+  }
+
+  .app-context-menu-item.destructive:focus {
+    @apply bg-surface-container-high text-destructive;
+  }
+
+  .app-context-menu-item [data-lucide='chevron-right'] {
+    @apply ml-auto flex-shrink-0;
+  }
+}
+
+/* HueSlider thumb */
+.hue-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}

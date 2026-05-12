@@ -1,6 +1,6 @@
 name: "\U0001F41E Bug report"
 description: Report an issue that should be fixed
-labels: ["bug"]
+labels: ['bug']
 body:
   - type: textarea
     id: description

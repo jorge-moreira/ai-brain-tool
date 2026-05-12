@@ -1,0 +1,14 @@
+name: ai-brain-tool
+
+services:
+  cli-e2e-tests:
+    build:
+      context: ../../../..
+      dockerfile: packages/cli/tests/e2e/Dockerfile.e2e
+    container_name: cli-e2e-tests
+    volumes:
+      # Mount results to local disk for inspection
+      - ./results:/app/packages/cli/tests/e2e/results/
+    environment:
+      - CI=true
+      - NODE_ENV=test

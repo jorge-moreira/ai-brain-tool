@@ -1,1 +1,44 @@
-npm test
+#!/bin/bash
+set -e
+
+# Check if changes are only documentation or workflow related
+DOCS_ONLY=true
+for file in $(git diff --cached --name-only); do
+  # Skip if file is NOT in docs/workflow categories
+  if [[ ! "$file" =~ ^(\.github/|.*\.md$|docs/|README\.md|CHANGELOG\.md)$ ]]; then
+    DOCS_ONLY=false
+    break
+  fi
+done
+
+if [ "$DOCS_ONLY" = true ]; then
+  echo "📄 Docs/workflow only changes - skipping tests"
+  exit 0
+fi
+
+echo "🧪 Running pre-commit tests (parallel)..."
+
+# Run unit + integration tests in parallel (skip e2e - too slow)
+bun run --cwd packages/core test:unit &
+PID1=$!
+
+bun run --cwd packages/cli test:unit &
+PID2=$!
+
+# Electron has no tests yet, skip for now
+
+# Wait for all to complete
+wait $PID1
+EXIT1=$?
+
+wait $PID2
+EXIT2=$?
+
+# Exit with error if any failed
+if [ $EXIT1 -ne 0 ] || [ $EXIT2 -ne 0 ]; then
+    echo "❌ Pre-commit tests failed!"
+    exit 1
+fi
+
+echo "✅ All tests passed!"
+exit 0

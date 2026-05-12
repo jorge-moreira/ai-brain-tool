@@ -1,0 +1,20 @@
+# Exclude non-CLI packages from npm publish
+packages/electron/
+packages/ui/
+
+# Build artifacts
+dist/
+dist-electron/
+node_modules/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config (keep .releaserc.json, it's needed)
+electron/

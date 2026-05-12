@@ -1,0 +1,45 @@
+FROM docker.io/oven/bun:slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends git curl ca-certificates
+
+WORKDIR /app
+
+# 1. Copy root manifests (Required for 'catalog:' resolution)
+COPY package.json bun.lock tsconfig.json ./
+
+# 3. Copy ONLY package manifests (not source)
+COPY packages/core/package.json ./packages/core/
+COPY packages/cli/package.json ./packages/cli/
+COPY packages/app/package.json ./packages/app/
+COPY packages/ui/package.json ./packages/ui/
+
+# 4. Install dependencies (CACHED unless package.json or bun.lock changes)
+RUN bun install
+
+# 5. Copy source code (INVALIDATED when you change code, but bun install stays cached)
+COPY packages/core/src ./packages/core/src
+COPY packages/core/package.json ./packages/core/
+COPY packages/core/requirements.txt ./packages/core/
+COPY packages/cli/src ./packages/cli/src
+COPY packages/cli/tsconfig.json ./packages/cli/
+
+# 6. Build
+RUN cd /app/packages/cli \
+    && bun run build
+
+# 7. Global Install & Setup
+# bun install -g doesn't work well with workspace deps, create symlink manually
+WORKDIR /app/packages/cli
+RUN ln -s /app/packages/cli/dist/index.js /usr/local/bin/ai-brain
+
+# Create expected package.json path (CLI looks for ../../package.json from dist/)
+RUN mkdir -p /app/packages && ln -s /app/package.json /app/packages/package.json
+
+# Copy E2E test files
+COPY packages/cli/tests/e2e tests/e2e
+
+RUN mkdir -p tests/e2e/results
+ENV HOME=/tmp/ai-brain-home
+RUN mkdir -p $HOME
+
+CMD ["bun", "run", "test:e2e"]
