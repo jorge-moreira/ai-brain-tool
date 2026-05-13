@@ -68,6 +68,12 @@
       }
     ],
     [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "bun pm version --no-git-tag-version ${nextRelease.version} && version=${nextRelease.version} bun run --filter '*' set-version"
+      }
+    ],
+    [
       "@semantic-release/release-notes-generator",
       {
         "preset": "conventionalcommits",
@@ -115,12 +121,6 @@
             }
           ]
         }
-      }
-    ],
-    [
-      "@semantic-release/exec",
-      {
-        "prepareCmd": "bun pm version --no-git-tag-version ${nextRelease.version} && version=${nextRelease.version} bun run --filter '*' set-version"
       }
     ],
     [
