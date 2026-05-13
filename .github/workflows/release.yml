@@ -44,10 +44,13 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        npx semantic-release
-        VERSION=$(node -p "require('./package.json').version")
-        echo "new_release_version=$VERSION" >> $GITHUB_OUTPUT
-        echo "new_release_published=true" >> $GITHUB_OUTPUT
+        if npx semantic-release; then
+          VERSION=$(node -p "require('./package.json').version")
+          echo "new_release_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "new_release_published=true" >> $GITHUB_OUTPUT
+        else
+          echo "new_release_published=false" >> $GITHUB_OUTPUT
+        fi
 
   # Build the CLI and Desktop App bundles in parallel
   build-cli:
