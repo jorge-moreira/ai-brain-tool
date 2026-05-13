@@ -1,6 +1,6 @@
 {
   "name": "@ai-brain/app",
-  "version": "2.1.4",
+  "version": "3.0.0",
   "description": "AI Brain Tool - ElectroBun Desktop App",
   "type": "module",
   "scripts": {
