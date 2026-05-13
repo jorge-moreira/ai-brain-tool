@@ -31,11 +31,13 @@ jobs:
     - name: Setup Bun
       uses: oven-sh/setup-bun@v2
 
+    - name: Install Dependencies
+      run: bun install
+
     - name: Run Semantic Release
       id: semantic
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       run: npx semantic-release
 
   # Build the CLI and Desktop App bundles in parallel
