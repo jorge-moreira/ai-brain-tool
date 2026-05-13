@@ -118,10 +118,9 @@
       }
     ],
     [
-      "@semantic-release/npm",
+      "@semantic-release/exec",
       {
-        "pkgRoot": "packages/cli",
-        "npmPublish": false
+        "prepareCmd": "bun pm version ${nextRelease.version}"
       }
     ],
     [
