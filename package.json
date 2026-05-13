@@ -29,6 +29,7 @@
     "app:build": "bun run --filter @ai-brain/app build",
     "app:build:stable": "bun run --filter @ai-brain/app build:stable",
     "app:dev": "bun run --filter @ai-brain/app dev:hmr",
+    "cli:build": "bun run --filter @jorge-moreira.dev/ai-brain-tool build",
     "cli:start": "bun run --filter @jorge-moreira.dev/ai-brain-tool start",
     "test": "bun run --filter \"*\" test",
     "test:core": "bun run --filter @ai-brain/core test",

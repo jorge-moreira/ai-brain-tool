@@ -2,11 +2,9 @@ name: Release
 
 on:
   workflow_run:
-    workflows: ['CI']
-    types:
-      - completed
-    branches:
-      - main
+    workflows: [ 'CI' ]
+    types: [ completed ]
+    branches: [ main ]
 
 permissions:
   contents: write
@@ -16,295 +14,133 @@ permissions:
   actions: write
 
 jobs:
-  # ==================== 1. SEMANTIC RELEASE (TAGGING) ====================
+  # Version bump and release creation using Semantic Release
   prepare-release:
-    name: Semantic Release
+    name: Prepare Release with Semantic Release
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
       new_version: ${{ steps.semantic.outputs.new_release_version }}
       published: ${{ steps.semantic.outputs.new_release_published }}
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Node.js 24
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+    - name: Run Semantic Release
+      id: semantic
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: npx semantic-release
 
-      - name: Install dependencies
-        run: bun install
-
-      - name: Run Semantic Release
-        id: semantic
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          set +e
-          output=$(npx semantic-release --dry-run 2>&1 || true)
-          echo "$output"
-          
-          NEW_VERSION=$(echo "$output" | grep -iE "next release version|will release version" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-          
-          echo "Extracted version: $NEW_VERSION"
-          
-          if [ -n "$NEW_VERSION" ]; then
-            echo "new_release_published=true" >> $GITHUB_OUTPUT
-            echo "new_release_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "new_release_published=false" >> $GITHUB_OUTPUT
-            echo "::warning::No version detected - semantic-release may have found no changes"
-          fi
-
-  # ==================== 2. BUILD CLI ====================
+  # Build the CLI and Desktop App bundles in parallel
   build-cli:
-    name: Build CLI
-    runs-on: ubuntu-latest
+    name: Build CLI Bundle
     needs: prepare-release
     if: ${{ needs.prepare-release.outputs.published == 'true' }}
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v6
+      with:
+        ref: v${{ needs.prepare-release.outputs.new_version }}
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
 
-      - name: Install dependencies
-        run: bun install
+    - name: Install Dependencies
+      run: bun install
 
-      - name: Build CLI
-        run: bun run --cwd packages/cli build
+    - name: Build CLI
+      run: bun run cli:build
 
-      - name: Upload CLI bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: cli-bundle
-          path: packages/cli/dist/
-          retention-days: 1
+    - name: Upload CLI Bundle
+      uses: actions/upload-artifact@v7
+      with:
+        name: cli-bundle
+        path: packages/cli/dist/
+        retention-days: 1
 
-  # ==================== 3. BUILD APP (PARALLEL MATRIX) ====================
   build-app:
-    name: Build App (${{ matrix.os-name }})
-    runs-on: ${{ matrix.os }}
+    name: Build Desktop App Bundles
     needs: prepare-release
     if: ${{ needs.prepare-release.outputs.published == 'true' }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            os-name: linux
-          - os: macos-latest
-            os-name: macos
-          - os: windows-latest
-            os-name: windows
+        - os: ubuntu-latest
+          name: linux
+        - os: macos-latest
+          name: macos
+        - os: windows-latest
+          name: windows
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v6
+      with:
+        ref: v${{ needs.prepare-release.outputs.new_version }}
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
 
-      - name: Accept Xcode License (macOS only)
-        if: runner.os == 'macOS'
-        run: sudo xcodebuild -license accept
+    - name: Install Dependencies
+      run: bun install
 
-      - name: Install dependencies
-        run: bun install
+    - name: Build App
+      run: bun run app:build:stable
 
-      - name: Sync version
-        run: bun run -e "const pkg=require('./packages/app/package.json'); pkg.version='${{ needs.prepare-release.outputs.new_version }}'; require('fs').writeFileSync('packages/app/package.json', JSON.stringify(pkg, null, 2))"
+    - name: Upload App Bundle
+      uses: actions/upload-artifact@v7
+      with:
+        name: app-${{ matrix.name }}
+        path: packages/app/artifacts/
+        retention-days: 1
 
-      - name: Build App
-        run: |
-          cd packages/app
-          bun run build:stable
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-${{ matrix.os-name }}
-          path: packages/app/artifacts/
-          retention-days: 1
-          if-no-files-found: warn
-
-  # ==================== 4. CREATE GITHUB RELEASE ====================
+  # Distribute the release artifacts
   github-release:
-    name: Create GitHub Release
+    name: Upload Release Assets to GitHub Release
+    needs: [ build-cli, build-app, prepare-release ]
+    if: ${{ success() }}
     runs-on: ubuntu-latest
-    needs: [prepare-release, build-cli, build-app]
-    if: ${{ success() && needs.prepare-release.outputs.published == 'true' }}
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/download-artifact@v8
+      with:
+        path: all-artifacts
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v6
-        with:
-          path: artifacts/
-          pattern: '*'
-          merge-multiple: false
+    - name: Upload Assets
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION="v${{ needs.prepare-release.outputs.new_version }}"
+        gh release upload $VERSION all-artifacts/app-*/* --clobber
 
-      - name: List artifacts
-        run: |
-          echo "=== CLI Bundle ==="
-          ls -la artifacts/cli-bundle/
-          echo "=== App macOS ==="
-          ls -la artifacts/app-macos/ || echo "No macOS artifacts"
-          echo "=== App Windows ==="
-          ls -la artifacts/app-windows/ || echo "No Windows artifacts"
-          echo "=== App Linux ==="
-          ls -la artifacts/app-linux/ || echo "No Linux artifacts"
-
-      - name: Create GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Collect all installer files (stable builds have no channel suffix)
-          INSTALLERS=""
-          
-          # macOS DMG
-          for file in artifacts/app-macos/stable-macos-*.dmg; do
-            [ -f "$file" ] && INSTALLERS="$INSTALLERS $file"
-          done
-          
-          # Windows Setup zip
-          for file in artifacts/app-windows/stable-win-*.zip; do
-            [ -f "$file" ] && INSTALLERS="$INSTALLERS $file"
-          done
-          
-          # Linux Setup tar.gz
-          for file in artifacts/app-linux/stable-linux-*.tar.gz; do
-            [ -f "$file" ] && INSTALLERS="$INSTALLERS $file"
-          done
-          
-          if [ -z "$INSTALLERS" ]; then
-            echo "⚠️ No installer artifacts found!"
-            echo "Checking what's in the artifact folders..."
-            ls -la artifacts/app-macos/ || echo "No macOS artifacts"
-            ls -la artifacts/app-windows/ || echo "No Windows artifacts"
-            ls -la artifacts/app-linux/ || echo "No Linux artifacts"
-            exit 1
-          fi
-          
-          echo "✅ Found installers: $INSTALLERS"
-          gh release create v${{ needs.prepare-release.outputs.new_version }} \
-            --title "v${{ needs.prepare-release.outputs.new_version }}" \
-            --generate-notes \
-            --verify-tag \
-            $INSTALLERS
-
-  # ==================== 5. NPM PUBLISH ====================
   npm-publish:
-    name: Publish npm Package
+    name: Publish CLI bundle to NPM
+    needs: [ github-release, prepare-release ]
+    if: ${{ success() }}
     runs-on: ubuntu-latest
-    needs: [prepare-release, github-release]
-    if: ${{ success() && needs.prepare-release.outputs.published == 'true' }}
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v6
+      with:
+        ref: v${{ needs.prepare-release.outputs.new_version }}
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
 
-      - name: Install dependencies
-        run: bun install
+    - name: Install Dependencies
+      run: bun install
 
-      - name: Get version
-        id: version
-        run: echo "version=${{ needs.prepare-release.outputs.new_version }}" >> $GITHUB_OUTPUT
-
-      - name: Publish to NPM
-        id: npm-publish
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          bun run -e "const pkg=require('./packages/cli/package.json'); pkg.version='${{ steps.version.outputs.version }}'; require('fs').writeFileSync('packages/cli/package.json', JSON.stringify(pkg, null, 2))"
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-
-          if npm view @jorge-moreira.dev/ai-brain-tool@${{ steps.version.outputs.version }} >/dev/null 2>&1; then
-            echo "⚠️ Version already published on npm"
-            echo "already_published=true" >> $GITHUB_OUTPUT
-          else
-            npm publish --access public
-            echo "already_published=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Run semantic-release (for changelog + git tag)
-        if: ${{ steps.npm-publish.outputs.already_published != 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npx semantic-release --no-ci
-
-      - name: Trigger update-bug-report-templates
-        if: ${{ success() && steps.npm-publish.outputs.already_published != 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run update-bug-report-templates.yml
-
-  # ==================== 6. HANDLERS ====================
-  on-build-failure:
-    name: Handle Build Failure
-    runs-on: ubuntu-latest
-    needs: [prepare-release, build-cli, build-app]
-    if: ${{ always() && needs.prepare-release.outputs.published == 'true' && (needs.build-cli.result == 'failure' || needs.build-app.result == 'failure') }}
-    steps:
-      - name: Log failure
-        run: |
-          echo "❌ Build failed!"
-          echo "CLI: ${{ needs.build-cli.result }}"
-          echo "App (Linux): ${{ needs.build-app.result }}"
-          echo "App (macOS): ${{ needs.build-app.result }}"
-          echo "App (Windows): ${{ needs.build-app.result }}"
-          echo ""
-          echo "✅ Nothing was published - safe to fix and retry"
-
-  on-npm-failure:
-    name: Handle npm Failure
-    runs-on: ubuntu-latest
-    needs: [prepare-release, github-release, npm-publish]
-    if: ${{ always() && needs.github-release.result == 'success' && needs.npm-publish.result == 'failure' }}
-    steps:
-      - name: Log failure
-        run: |
-          echo "❌ npm publish failed!"
-          echo ""
-          echo "⚠️  GitHub Release v${{ needs.prepare-release.outputs.new_version }} was created successfully"
-          echo "⚠️  Users can download app executables from GitHub Releases"
-          echo ""
-          echo "=== RETRY OPTIONS ==="
-          echo ""
-          echo "Option 1: Retry from GitHub UI"
-          echo "  1. Go to Actions tab"
-          echo "  2. Select this workflow run"
-          echo "  3. Click 'Re-run jobs' → select 'npm-publish' → Re-run"
-          echo ""
-          echo "Option 2: Manual publish"
-          echo "  cd packages/cli"
-          echo "  npm version ${{ needs.prepare-release.outputs.new_version }}"
-          echo "  npm publish"
+    - name: Publish CLI to NPM
+      env:
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: |
+        echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+        npm publish ./packages/cli --access public
