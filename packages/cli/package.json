@@ -16,7 +16,8 @@
     "test:integration": "vitest run tests/integration",
     "test:integration:ci": "bun run test:integration --coverage --coverage.reportsDirectory=coverage/integration --outputFile.junit=coverage/integration/junit.xml",
     "test:e2e": "vitest run --config tests/e2e/e2e.test.config.js",
-    "test:e2e:local": "vitest run tests/e2e/run-e2e-docker.test.ts"
+    "test:e2e:local": "vitest run tests/e2e/run-e2e-docker.test.ts",
+    "set-version": "bun pm pkg set version=$version"
   },
   "files": [
     "dist"
