@@ -44,12 +44,15 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        if npx semantic-release; then
-          VERSION=$(node -p "require('./package.json').version")
-          echo "new_release_version=$VERSION" >> $GITHUB_OUTPUT
-          echo "new_release_published=true" >> $GITHUB_OUTPUT
-        else
+        VERSION_BEFORE=$(node -p "require('./package.json').version")
+        npx semantic-release
+        VERSION_AFTER=$(node -p "require('./package.json').version")
+        if [ "$VERSION_BEFORE" = "$VERSION_AFTER" ]; then
+          echo "No version bump - skipping release"
           echo "new_release_published=false" >> $GITHUB_OUTPUT
+        else
+          echo "new_release_version=$VERSION_AFTER" >> $GITHUB_OUTPUT
+          echo "new_release_published=true" >> $GITHUB_OUTPUT
         fi
 
   # Build the CLI and Desktop App bundles in parallel
