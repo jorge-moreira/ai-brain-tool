@@ -28,7 +28,7 @@
     "@vitejs/plugin-react": "^6.0.1",
     "autoprefixer": "^10.4.20",
     "concurrently": "^9.1.0",
-    "postcss": "^8.4.49",
+    "postcss": "^8.5.14",
     "tailwindcss": "^4.3.0",
     "typescript": "catalog:",
     "vite": "^8.0.10"
