@@ -32,7 +32,7 @@
     "ora": "^9.4.0"
   },
   "devDependencies": {
-    "@amiceli/vitest-cucumber": "^6.3.0",
+    "@amiceli/vitest-cucumber": "^6.5.0",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "typescript": "catalog:",
