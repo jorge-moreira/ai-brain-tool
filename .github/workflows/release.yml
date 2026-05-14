@@ -48,9 +48,11 @@ jobs:
         npx semantic-release
         VERSION_AFTER=$(node -p "require('./package.json').version")
         if [ "$VERSION_BEFORE" = "$VERSION_AFTER" ]; then
-          echo "No version bump - skipping release"
+          echo "⚠️ No version bump - no breaking changes, features, or fixes since last release"
           echo "new_release_published=false" >> $GITHUB_OUTPUT
+          exit 78  # GitHub Actions special code for "skip"
         else
+          echo "✅ Release created: v$VERSION_AFTER"
           echo "new_release_version=$VERSION_AFTER" >> $GITHUB_OUTPUT
           echo "new_release_published=true" >> $GITHUB_OUTPUT
         fi
